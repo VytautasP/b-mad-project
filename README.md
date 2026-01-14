@@ -6,23 +6,13 @@ TaskFlow is a hierarchical task management application with integrated time trac
 
 ### Prerequisites
 
-- **Node.js** 20+ and npm
-- **Docker Desktop** (for local database)
+- **Node.js** 22+ and npm 10+
+- **Angular CLI** 21+
+- **.NET SDK** 8.0
+- **PostgreSQL** 15+ (or Docker)
 - **Git**
 
-### First-Time Setup
-
-**Before running the application, complete external service provisioning:**
-
-👉 **Follow [Story 0.1: External Service Provisioning](docs/prd/story-0.1-external-service-provisioning.md)**
-
-This one-time setup creates accounts and infrastructure for:
-- Supabase (PostgreSQL database)
-- Fly.io (backend hosting)
-- Vercel (frontend hosting)
-- GitHub secrets configuration
-
-### Local Development
+### Installation
 
 1. **Clone the repository**
    ```bash
@@ -35,69 +25,93 @@ This one-time setup creates accounts and infrastructure for:
    npm install
    ```
 
-3. **Start local PostgreSQL database**
+3. **Setup PostgreSQL database**
+   
+   Option A: Using Docker
    ```bash
    docker-compose up -d
    ```
+   
+   Option B: Local PostgreSQL
+   - Install PostgreSQL 15+
+   - Create database: `createdb taskflow`
 
-4. **Create environment file**
+4. **Backend setup**
    ```bash
-   # Create .env.local in project root (see Story 0.1 for template)
-   # Add database connection string and configuration
+   cd backend
+   dotnet restore
+   dotnet build
+   
+   # Set connection string environment variable
+   $env:CONNECTION_STRING="Host=localhost;Database=taskflow;Username=postgres;Password=postgres"
+   
+   # Apply migrations
+   cd TaskFlow.Api
+   dotnet ef database update
+   
+   # Run the API
+   dotnet run
    ```
+   
+   Backend API will run at `http://localhost:5000`
 
 5. **Run frontend development server**
    ```bash
+   # In root directory
    npm start
    ```
-
-   The application will automatically open at `http://localhost:4200/`
-
-6. **Backend setup** (when ready)
-   ```bash
-   cd backend/TaskFlow.Api
-   dotnet restore
-   dotnet run
-   ```
-
-## 📚 Documentation
-
-- **[Product Requirements Document (PRD)](docs/prd.md)** - Complete product specification
-- **[Architecture Document](docs/architecture.md)** - Technical architecture and design
-- **[Story 0.1: Setup Guide](docs/prd/story-0.1-external-service-provisioning.md)** - External services setup
-- **[Epic 1: Foundation](docs/prd/epic-1-foundation-basic-task-management.md)** - Development stories
+   
+   Frontend will run at `http://localhost:4200`
 
 ## 🏗️ Tech Stack
 
 ### Frontend
-- **Framework:** Angular 20 with standalone components
-- **Language:** TypeScript 5.9
-- **Styling:** Tailwind CSS 4.x + Angular Material 20
-- **Build:** Vite + esbuild (via Angular CLI)
-- **Testing:** Vitest + Jasmine
+- **Framework:** Angular 21 with standalone components
+- **Language:** TypeScript 5.9.3
+- **Build Tool:** Angular CLI 21 (Vite-based with esbuild)
+- **UI Library:** Angular Material 20
+- **State Management:** RxJS 7.8+ Observables with Services
+- **HTTP Client:** Angular HttpClient (built-in)
+- **Styling:** Tailwind CSS 4.x + Angular Material
+- **Testing:** Jasmine 5.1+ and Karma 6.4+
 
-### Backend (Coming Soon)
+### Backend
 - **Framework:** ASP.NET Core 8.0 LTS
-- **Language:** C# 12
+- **Language:** C# 12.0 (.NET 8)
 - **ORM:** Entity Framework Core 8.0
-- **Database:** PostgreSQL 15+ (Supabase)
-- **Authentication:** ASP.NET Core Identity + JWT
+- **Database:** PostgreSQL 15+
+- **Authentication:** ASP.NET Core Identity 8.0 with JWT
+- **Logging:** Serilog 3.1+
+- **API Docs:** Swashbuckle (Swagger) 6.5+
+- **Testing:** xUnit 2.6+ and Moq 4.20+
 
 ### Infrastructure
-- **Frontend Hosting:** Vercel
-- **Backend Hosting:** Fly.io
-- **Database:** Supabase PostgreSQL
+- **Container:** Docker 24+
 - **CI/CD:** GitHub Actions
+- **Hosting:** Fly.io (backend), Vercel (frontend)
+- **Database:** Supabase PostgreSQL
 
 ## 📦 Available Scripts
 
-### Development
+### Frontend Development
 
 ```bash
 npm start              # Start development server (localhost:4200)
 npm run build          # Build for production
 npm run watch          # Build in watch mode
 npm test               # Run unit tests
+ng test                # Run tests with Karma
+```
+
+### Backend Development
+
+```bash
+cd backend
+dotnet build           # Build solution
+dotnet test            # Run tests
+dotnet run --project TaskFlow.Api  # Run API
+dotnet ef migrations add <name> --project TaskFlow.Infrastructure --context ApplicationDbContext  # Create migration
+dotnet ef database update --project TaskFlow.Api  # Apply migrations
 ```
 
 ### Docker
