@@ -1,0 +1,142 @@
+# TaskFlow Backend - Fly.io Configuration
+# Learn more: https://fly.io/docs/reference/configuration/
+
+app = "taskflow-api"  # Change to your unique app name
+primary_region = "iad"  # US East (Ashburn) - closest to Supabase us-east-1
+
+# Kill signal for graceful shutdown
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+# ============================================================================
+# Build Configuration
+# ============================================================================
+[build]
+  # Use Dockerfile in project root
+  dockerfile = "Dockerfile"
+
+# ============================================================================
+# Environment Variables (non-secret)
+# ============================================================================
+[env]
+  ASPNETCORE_ENVIRONMENT = "Production"
+  ASPNETCORE_URLS = "http://+:8080"
+  ASPNETCORE_FORWARDEDHEADERS_ENABLED = "true"
+
+# ============================================================================
+# HTTP Service Configuration
+# ============================================================================
+[[services]]
+  internal_port = 8080  # Must match ASPNETCORE_URLS port
+  protocol = "tcp"
+  auto_stop_machines = "stop"  # Cost optimization: stop when idle
+  auto_start_machines = true
+  min_machines_running = 0
+
+  # Health checks
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true  # Redirect HTTP to HTTPS
+
+  [[services.ports]]
+    port = 443
+    handlers = ["http", "tls"]
+
+  # HTTP health check
+  [services.concurrency]
+    type = "requests"
+    hard_limit = 250
+    soft_limit = 200
+
+  [[services.tcp_checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "10s"
+
+  [[services.http_checks]]
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/api/health"
+    protocol = "http"
+    [services.http_checks.headers]
+      User-Agent = "Fly-Health-Check"
+
+# ============================================================================
+# VM Resources (Free tier: shared-cpu-1x, 256MB RAM)
+# ============================================================================
+[vm]
+  size = "shared-cpu-1x"  # Free tier eligible
+  memory = "256mb"        # Free tier eligible
+
+# ============================================================================
+# Deployment Configuration
+# ============================================================================
+[deploy]
+  release_command = ""  # Run EF Core migrations via fly ssh console separately
+  strategy = "immediate"  # For MVP; use "rolling" or "canary" for production
+
+# ============================================================================
+# Metrics and Monitoring
+# ============================================================================
+[metrics]
+  port = 9091
+  path = "/metrics"
+
+# ============================================================================
+# Setup Instructions (Run Once):
+# ============================================================================
+# 1. Install Fly.io CLI: https://fly.io/docs/hands-on/install-flyctl/
+# 2. Authenticate: fly auth login
+# 3. Launch app: fly launch --no-deploy
+#    - Choose app name (updates "app" field above)
+#    - Select region: iad (US East)
+#    - Skip PostgreSQL setup (using Supabase)
+#    - Skip Redis setup
+#    - Don't deploy yet
+# 4. Set secrets:
+#    fly secrets set ConnectionStrings__DefaultConnection="Host=db.[PROJECT-REF].supabase.co;Port=5432;Database=postgres;Username=postgres;Password=[PASSWORD];Pooling=true;Minimum Pool Size=0;Maximum Pool Size=10"
+#    fly secrets set JwtSettings__SecretKey="[64-CHAR-SECRET]"
+#    fly secrets set JwtSettings__Issuer="TaskFlow"
+#    fly secrets set JwtSettings__Audience="TaskFlow"
+#    fly secrets set JwtSettings__ExpirationMinutes="1440"
+# 5. Deploy: fly deploy
+# 6. View status: fly status
+# 7. View logs: fly logs
+# 8. Open app: fly open
+
+# ============================================================================
+# Common Commands:
+# ============================================================================
+# Deploy:              fly deploy
+# Scale:               fly scale count 1 --region iad
+# View logs:           fly logs
+# SSH into container:  fly ssh console
+# Run migrations:      fly ssh console -C "dotnet TaskFlow.Api.dll -- migrate"
+# List secrets:        fly secrets list
+# Remove secret:       fly secrets unset SECRET_NAME
+# App info:            fly info
+# Open dashboard:      fly dashboard
+
+# ============================================================================
+# Secrets Management:
+# ============================================================================
+# Never commit secrets to this file!
+# All sensitive values should be set via: fly secrets set KEY=VALUE
+# Required secrets:
+# - ConnectionStrings__DefaultConnection (Supabase connection string)
+# - JwtSettings__SecretKey (64-char random string)
+# - JwtSettings__Issuer (default: "TaskFlow")
+# - JwtSettings__Audience (default: "TaskFlow")
+# - JwtSettings__ExpirationMinutes (default: "1440")
+
+# ============================================================================
+# Free Tier Limits (as of 2026):
+# ============================================================================
+# - Up to 3 shared-cpu-1x VMs with 256MB RAM
+# - 160GB outbound data transfer per month
+# - Persistent volumes: 3GB total across all apps
+# - Automatic HTTPS with Let's Encrypt certificates
+# - No credit card required for resources within free tier

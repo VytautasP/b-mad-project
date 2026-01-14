@@ -5,6 +5,10 @@
 /tmp
 /out-tsc
 /bazel-out
+.ignore
+old_refs_d
+.bmad-core
+.github
 
 # Node
 /node_modules
