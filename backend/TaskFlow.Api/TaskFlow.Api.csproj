@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\TaskFlow.Core\TaskFlow.Core.csproj" />
     <ProjectReference Include="..\TaskFlow.Infrastructure\TaskFlow.Infrastructure.csproj" />
+    <ProjectReference Include="..\TaskFlow.Abstractions\TaskFlow.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>
