@@ -1,0 +1,51 @@
+﻿<div class="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+  <mat-card class="w-full max-w-md">
+    <mat-card-header class="pb-4">
+      <mat-card-title class="text-center text-2xl font-bold">Sign In to TaskFlow</mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-4">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" formControlName="email" placeholder="you@example.com">
+          @if (emailControl?.hasError('required') && emailControl?.touched) {
+            <mat-error>Email is required</mat-error>
+          }
+          @if (emailControl?.hasError('email') && emailControl?.touched) {
+            <mat-error>Please enter a valid email address</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" formControlName="password" placeholder="Enter your password">
+          @if (passwordControl?.hasError('required') && passwordControl?.touched) {
+            <mat-error>Password is required</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="flex items-center">
+          <mat-checkbox formControlName="rememberMe">Remember me</mat-checkbox>
+        </div>
+
+        <button 
+          mat-raised-button 
+          color="primary" 
+          type="submit" 
+          class="w-full"
+          [disabled]="loginForm.invalid || isLoading">
+          @if (isLoading) {
+            <mat-spinner diameter="20" class="inline-block mr-2"></mat-spinner>
+          }
+          Sign In
+        </button>
+      </form>
+
+      <div class="mt-4 text-center text-sm">
+        <span class="text-gray-600">Don't have an account?</span>
+        <a routerLink="/register" class="ml-1 text-primary font-medium hover:underline">Sign up</a>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

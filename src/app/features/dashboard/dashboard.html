@@ -1,0 +1,10 @@
+<div class="p-8">
+  <h1 class="text-3xl font-bold mb-4">Dashboard - Coming Soon</h1>
+  @if (currentUser$ | async; as user) {
+    <p class="text-lg">Welcome, {{ user.name }}!</p>
+    <p class="text-gray-600">Email: {{ user.email }}</p>
+  }
+  <div class="mt-8">
+    <p class="text-gray-500">Task management features will be available in Story 1.5</p>
+  </div>
+</div>

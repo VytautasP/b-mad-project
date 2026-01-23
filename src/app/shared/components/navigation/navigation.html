@@ -1,0 +1,14 @@
+<mat-toolbar color="primary" class="flex justify-between items-center">
+  <div class="flex items-center">
+    <span class="text-xl font-bold">TaskFlow</span>
+  </div>
+  
+  @if (currentUser$ | async; as user) {
+    <div class="flex items-center gap-4">
+      <span class="text-sm">{{ user.name }}</span>
+      <button mat-raised-button (click)="logout()" color="accent">
+        Logout
+      </button>
+    </div>
+  }
+</mat-toolbar>
