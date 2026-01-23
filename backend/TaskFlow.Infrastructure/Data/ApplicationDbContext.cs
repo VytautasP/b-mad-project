@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TaskFlow.Abstractions.Entities;
 
 namespace TaskFlow.Infrastructure.Data;
 
@@ -9,9 +10,13 @@ public class ApplicationDbContext : DbContext
     {
     }
 
+    public DbSet<User> Users { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        // Entity configurations will be added here
+        
+        // Apply all entity configurations from the current assembly
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 }
