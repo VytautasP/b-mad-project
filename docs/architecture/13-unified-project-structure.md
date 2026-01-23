@@ -300,7 +300,7 @@ taskflow/                                    # Root repository
 │   │   ├── Dockerfile
 │   │   └── TaskFlow.Api.csproj
 │   │
-│   ├── TaskFlow.Core/                       # Business logic layer
+│   ├── TaskFlow.Abstractions/               # Shared abstractions (no dependencies)
 │   │   ├── Entities/
 │   │   │   ├── User.cs
 │   │   │   ├── Task.cs
@@ -308,23 +308,6 @@ taskflow/                                    # Root repository
 │   │   │   ├── Comment.cs
 │   │   │   ├── TaskAssignee.cs
 │   │   │   └── ActivityLog.cs
-│   │   ├── Interfaces/
-│   │   │   ├── Repositories/
-│   │   │   │   ├── ITaskRepository.cs
-│   │   │   │   ├── IUserRepository.cs
-│   │   │   │   ├── ITimeEntryRepository.cs
-│   │   │   │   └── ICommentRepository.cs
-│   │   │   ├── Services/
-│   │   │   │   ├── IAuthService.cs
-│   │   │   │   ├── ITaskService.cs
-│   │   │   │   ├── ITimeTrackingService.cs
-│   │   │   │   └── IActivityLogService.cs
-│   │   │   └── IUnitOfWork.cs
-│   │   ├── Services/
-│   │   │   ├── AuthService.cs
-│   │   │   ├── TaskService.cs
-│   │   │   ├── TimeTrackingService.cs
-│   │   │   └── ActivityLogService.cs
 │   │   ├── DTOs/
 │   │   │   ├── Auth/
 │   │   │   │   ├── RegisterDto.cs
@@ -338,9 +321,24 @@ taskflow/                                    # Root repository
 │   │   │   ├── TimeEntries/
 │   │   │   │   ├── TimeEntryCreateDto.cs
 │   │   │   │   └── TimeEntryResponseDto.cs
+│   │   │   ├── Comments/
+│   │   │   │   ├── CommentCreateDto.cs
+│   │   │   │   └── CommentResponseDto.cs
 │   │   │   └── Shared/
 │   │   │       ├── PaginationDto.cs
 │   │   │       └── ErrorResponseDto.cs
+│   │   ├── Interfaces/
+│   │   │   ├── Repositories/
+│   │   │   │   ├── ITaskRepository.cs
+│   │   │   │   ├── IUserRepository.cs
+│   │   │   │   ├── ITimeEntryRepository.cs
+│   │   │   │   └── ICommentRepository.cs
+│   │   │   ├── Services/
+│   │   │   │   ├── IAuthService.cs
+│   │   │   │   ├── ITaskService.cs
+│   │   │   │   ├── ITimeTrackingService.cs
+│   │   │   │   └── IActivityLogService.cs
+│   │   │   └── IUnitOfWork.cs
 │   │   ├── Exceptions/
 │   │   │   ├── NotFoundException.cs
 │   │   │   ├── ValidationException.cs
@@ -349,6 +347,16 @@ taskflow/                                    # Root repository
 │   │   │   ├── TaskStatus.cs
 │   │   │   ├── TaskPriority.cs
 │   │   │   └── ActivityType.cs
+│   │   └── TaskFlow.Abstractions.csproj
+│   │
+│   ├── TaskFlow.Core/                       # Business logic layer
+│   │   ├── Services/
+│   │   │   ├── AuthService.cs
+│   │   │   ├── TaskService.cs
+│   │   │   ├── TimeTrackingService.cs
+│   │   │   └── ActivityLogService.cs
+│   │   ├── Validators/
+│   │   │   └── TaskValidator.cs
 │   │   └── TaskFlow.Core.csproj
 │   │
 │   ├── TaskFlow.Infrastructure/             # Data access layer

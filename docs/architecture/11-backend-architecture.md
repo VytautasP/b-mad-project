@@ -42,7 +42,7 @@ backend/
 │   ├── appsettings.json             # Configuration
 │   └── appsettings.Development.json
 │
-├── TaskFlow.Core/                   # Business logic layer
+├── TaskFlow.Abstractions/           # Shared abstractions (no dependencies)
 │   ├── Entities/                    # Domain entities (POCOs)
 │   │   ├── User.cs
 │   │   ├── Task.cs
@@ -50,23 +50,6 @@ backend/
 │   │   ├── Comment.cs
 │   │   ├── TaskAssignee.cs
 │   │   └── ActivityLog.cs
-│   ├── Interfaces/                  # Abstractions
-│   │   ├── Repositories/
-│   │   │   ├── ITaskRepository.cs
-│   │   │   ├── IUserRepository.cs
-│   │   │   ├── ITimeEntryRepository.cs
-│   │   │   └── ICommentRepository.cs
-│   │   ├── Services/
-│   │   │   ├── IAuthService.cs
-│   │   │   ├── ITaskService.cs
-│   │   │   ├── ITimeTrackingService.cs
-│   │   │   └── IActivityLogService.cs
-│   │   └── IUnitOfWork.cs           # Unit of Work pattern
-│   ├── Services/                    # Business logic services
-│   │   ├── AuthService.cs
-│   │   ├── TaskService.cs
-│   │   ├── TimeTrackingService.cs
-│   │   └── ActivityLogService.cs
 │   ├── DTOs/                        # Data Transfer Objects
 │   │   ├── Auth/
 │   │   │   ├── RegisterDto.cs
@@ -83,6 +66,18 @@ backend/
 │   │   └── Shared/
 │   │       ├── PaginationDto.cs
 │   │       └── ErrorResponseDto.cs
+│   ├── Interfaces/                  # Service and repository abstractions
+│   │   ├── Repositories/
+│   │   │   ├── ITaskRepository.cs
+│   │   │   ├── IUserRepository.cs
+│   │   │   ├── ITimeEntryRepository.cs
+│   │   │   └── ICommentRepository.cs
+│   │   ├── Services/
+│   │   │   ├── IAuthService.cs
+│   │   │   ├── ITaskService.cs
+│   │   │   ├── ITimeTrackingService.cs
+│   │   │   └── IActivityLogService.cs
+│   │   └── IUnitOfWork.cs           # Unit of Work pattern
 │   ├── Exceptions/                  # Custom exceptions
 │   │   ├── NotFoundException.cs
 │   │   ├── ValidationException.cs
@@ -91,6 +86,15 @@ backend/
 │       ├── TaskStatus.cs            # Enum for task statuses
 │       ├── TaskPriority.cs
 │       └── ActivityType.cs
+│
+├── TaskFlow.Core/                   # Business logic layer
+│   ├── Services/                    # Business logic services
+│   │   ├── AuthService.cs
+│   │   ├── TaskService.cs
+│   │   ├── TimeTrackingService.cs
+│   │   └── ActivityLogService.cs
+│   └── Validators/                  # Business rule validators
+│       └── TaskValidator.cs
 │
 ├── TaskFlow.Infrastructure/         # Data access layer
 │   ├── Data/
@@ -118,6 +122,44 @@ backend/
     └── Integration/
         └── Controllers/
 ```
+
+## Project Dependencies
+
+The solution follows a clean architecture dependency flow, with `TaskFlow.Abstractions` as the foundation layer with **no dependencies** on other projects:
+
+```
+┌──────────────────────┐
+│   TaskFlow.Api       │  ← Presentation Layer (References: Abstractions, Core, Infrastructure)
+└──────────┬───────────┘
+           │
+    ┌──────┴──────┐
+    │             │
+┌───▼────────┐ ┌─▼─────────────────┐
+│TaskFlow.   │ │ TaskFlow.         │  ← Business & Data Access Layers
+│Core        │ │ Infrastructure    │     (Both reference: Abstractions)
+└────────────┘ └───────────────────┘
+    │                │
+    └────────┬───────┘
+             │
+    ┌────────▼──────────┐
+    │  TaskFlow.        │  ← Shared Contracts (No dependencies)
+    │  Abstractions     │
+    └───────────────────┘
+```
+
+**Dependency Rules:**
+- **TaskFlow.Abstractions**: No dependencies on other projects (only .NET BCL)
+- **TaskFlow.Core**: References `TaskFlow.Abstractions` only
+- **TaskFlow.Infrastructure**: References `TaskFlow.Abstractions` (and EF Core packages)
+- **TaskFlow.Api**: References all projects (Abstractions, Core, Infrastructure)
+- **TaskFlow.Tests**: Can reference any project for testing
+
+**Benefits:**
+- **No Circular Dependencies**: Abstractions layer prevents circular references
+- **Portable Contracts**: DTOs and entities can be shared with clients without pulling in business logic
+- **Clear Boundaries**: Each layer has explicit dependencies and responsibilities
+- **Testability**: Interfaces in Abstractions enable easy mocking
+- **Versioning**: Abstractions can be versioned independently for API contracts
 
 ## Controller Organization
 
