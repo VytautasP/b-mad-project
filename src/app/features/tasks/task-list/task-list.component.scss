@@ -1,0 +1,115 @@
+.task-list-container {
+  padding: 24px;
+  
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    gap: 16px;
+    
+    p {
+      margin: 0;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    
+    h2 {
+      margin: 0 0 8px 0;
+      font-size: 24px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.87);
+    }
+    
+    p {
+      margin: 0;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+  
+  .desktop-view {
+    display: block;
+    
+    .task-table {
+      width: 100%;
+      
+      .task-name {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        
+        strong {
+          font-weight: 500;
+        }
+        
+        small {
+          color: rgba(0, 0, 0, 0.6);
+          font-size: 12px;
+        }
+      }
+      
+      mat-chip {
+        font-size: 12px;
+      }
+    }
+  }
+  
+  .mobile-view {
+    display: none;
+    
+    .task-card {
+      margin-bottom: 16px;
+      
+      mat-card-title {
+        font-size: 18px;
+        font-weight: 500;
+      }
+      
+      .task-description {
+        color: rgba(0, 0, 0, 0.6);
+        margin: 0 0 16px 0;
+      }
+      
+      .task-details {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        
+        .detail-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          
+          .label {
+            font-weight: 500;
+            color: rgba(0, 0, 0, 0.6);
+          }
+          
+          mat-chip {
+            font-size: 12px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive breakpoints
+@media (max-width: 768px) {
+  .task-list-container {
+    padding: 16px;
+    
+    .desktop-view {
+      display: none;
+    }
+    
+    .mobile-view {
+      display: block;
+    }
+  }
+}

@@ -1,0 +1,67 @@
+<form [formGroup]="taskForm" (ngSubmit)="onSubmit()" class="task-form">
+  <h2>Create New Task</h2>
+
+  @if (errorMessage) {
+    <div class="error-message">
+      {{ errorMessage }}
+    </div>
+  }
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Task Name</mat-label>
+    <input matInput formControlName="name" placeholder="Enter task name" required>
+    @if (taskForm.get('name')?.invalid && taskForm.get('name')?.touched) {
+      <mat-error>{{ getErrorMessage('name') }}</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Description</mat-label>
+    <textarea matInput formControlName="description" placeholder="Enter task description" rows="4"></textarea>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Due Date</mat-label>
+    <input matInput [matDatepicker]="picker" formControlName="dueDate">
+    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-datepicker #picker></mat-datepicker>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Priority</mat-label>
+    <mat-select formControlName="priority" required>
+      @for (priority of priorities; track priority) {
+        <mat-option [value]="priority">{{ getPriorityLabel(priority) }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Status</mat-label>
+    <mat-select formControlName="status" required>
+      @for (status of statuses; track status) {
+        <mat-option [value]="status">{{ getStatusLabel(status) }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Type</mat-label>
+    <mat-select formControlName="type" required>
+      @for (type of types; track type) {
+        <mat-option [value]="type">{{ getTypeLabel(type) }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <div class="form-actions">
+    <button mat-raised-button color="primary" type="submit" [disabled]="isSubmitting">
+      @if (isSubmitting) {
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Creating...</span>
+      } @else {
+        <span>Create Task</span>
+      }
+    </button>
+  </div>
+</form>

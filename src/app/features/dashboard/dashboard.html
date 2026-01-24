@@ -1,10 +1,28 @@
-<div class="p-8">
-  <h1 class="text-3xl font-bold mb-4">Dashboard - Coming Soon</h1>
-  @if (currentUser$ | async; as user) {
-    <p class="text-lg">Welcome, {{ user.name }}!</p>
-    <p class="text-gray-600">Email: {{ user.email }}</p>
-  }
-  <div class="mt-8">
-    <p class="text-gray-500">Task management features will be available in Story 1.5</p>
+<div class="dashboard-container">
+  <!-- Header/Toolbar -->
+  <mat-toolbar color="primary" class="dashboard-toolbar">
+    <span class="toolbar-title">TaskFlow</span>
+    <span class="toolbar-spacer"></span>
+    @if (currentUser$ | async; as user) {
+      <span class="user-info">{{ user.name }}</span>
+      <button mat-icon-button (click)="logout()" title="Logout">
+        <mat-icon>logout</mat-icon>
+      </button>
+    }
+  </mat-toolbar>
+
+  <!-- Main Content -->
+  <div class="dashboard-content">
+    <!-- Header with Create Button -->
+    <div class="content-header">
+      <h1>My Tasks</h1>
+      <button mat-raised-button color="primary" (click)="openTaskForm()">
+        <mat-icon>add</mat-icon>
+        Create Task
+      </button>
+    </div>
+
+    <!-- Task List -->
+    <app-task-list></app-task-list>
   </div>
 </div>
