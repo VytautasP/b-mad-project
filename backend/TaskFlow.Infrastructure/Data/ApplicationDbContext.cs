@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskFlow.Abstractions.Entities;
+using TaskEntity = TaskFlow.Abstractions.Entities.Task;
 
 namespace TaskFlow.Infrastructure.Data;
 
@@ -11,6 +12,7 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; } = null!;
+    public DbSet<TaskEntity> Tasks { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
