@@ -61,6 +61,19 @@
               <mat-cell *matCellDef="let task">{{ getTypeLabel(task.type) }}</mat-cell>
             </ng-container>
 
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+              <mat-cell *matCellDef="let task">
+                <button mat-icon-button (click)="onEdit(task)" matTooltip="Edit task" color="primary">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button (click)="onDelete(task)" matTooltip="Delete task" color="warn">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </mat-cell>
+            </ng-container>
+
             <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
             <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
           </mat-table>
@@ -100,6 +113,14 @@
                   </div>
                 </div>
               </mat-card-content>
+              <mat-card-actions>
+                <button mat-icon-button (click)="onEdit(task)" matTooltip="Edit task" color="primary">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button (click)="onDelete(task)" matTooltip="Delete task" color="warn">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </mat-card-actions>
             </mat-card>
           }
         </div>

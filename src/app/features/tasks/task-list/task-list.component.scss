@@ -56,6 +56,20 @@
       mat-chip {
         font-size: 12px;
       }
+
+      // Actions column styling
+      .mat-column-actions {
+        width: 120px;
+        text-align: right;
+        
+        button {
+          margin-left: 4px;
+          
+          &:hover {
+            opacity: 0.8;
+          }
+        }
+      }
     }
   }
   
@@ -92,6 +106,19 @@
           
           mat-chip {
             font-size: 12px;
+          }
+        }
+      }
+      
+      mat-card-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding: 8px 16px;
+        gap: 8px;
+        
+        button {
+          &:hover {
+            opacity: 0.8;
           }
         }
       }

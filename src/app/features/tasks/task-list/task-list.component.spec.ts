@@ -1,9 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 import { TaskListComponent } from './task-list.component';
 import { TaskService } from '../services/task.service';
 import { Task, TaskPriority, TaskStatus, TaskType } from '../../../shared/models/task.model';
+import { ConfirmationDialogComponent } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 
 describe('TaskListComponent', () => {
   let component: TaskListComponent;
@@ -11,6 +14,9 @@ describe('TaskListComponent', () => {
   let taskService: Partial<TaskService>;
   let tasksSubject: BehaviorSubject<Task[]>;
   let getTasksSpy: any;
+  let deleteTaskSpy: any;
+  let mockDialog: { open: any };
+  let mockSnackBar: { open: any };
 
   const mockTask: Task = {
     id: '123',
@@ -31,10 +37,19 @@ describe('TaskListComponent', () => {
   beforeEach(async () => {
     tasksSubject = new BehaviorSubject<Task[]>([]);
     getTasksSpy = vi.fn();
+    deleteTaskSpy = vi.fn();
+    mockDialog = {
+      open: vi.fn(),
+      openDialogs: []
+    } as any;
+    mockSnackBar = {
+      open: vi.fn()
+    };
     
     taskService = {
       tasks$: tasksSubject.asObservable(),
-      getTasks: getTasksSpy
+      getTasks: getTasksSpy,
+      deleteTask: deleteTaskSpy
     };
 
     await TestBed.configureTestingModule({
@@ -43,7 +58,9 @@ describe('TaskListComponent', () => {
         NoopAnimationsModule
       ],
       providers: [
-        { provide: TaskService, useValue: taskService }
+        { provide: TaskService, useValue: taskService },
+        { provide: MatDialog, useValue: mockDialog },
+        { provide: MatSnackBar, useValue: mockSnackBar }
       ]
     }).compileComponents();
 
@@ -161,5 +178,122 @@ describe('TaskListComponent', () => {
     expect(component.getStatusColor(TaskStatus.Done)).toBe('primary');
     expect(component.getStatusColor(TaskStatus.InProgress)).toBe('accent');
     expect(component.getStatusColor(TaskStatus.Blocked)).toBe('warn');
+  });
+
+  // Edit functionality tests
+  describe('Edit functionality', () => {
+    it('should open dialog when edit is clicked', () => {
+      const mockDialogRef = {
+        componentInstance: { mode: '', taskToEdit: null },
+        afterClosed: () => of(null)
+      } as any;
+      mockDialog.open.mockReturnValue(mockDialogRef);
+
+      component.onEdit(mockTask);
+
+      expect(mockDialog.open).toHaveBeenCalled();
+      expect(mockDialogRef.componentInstance.mode).toBe('edit');
+      expect(mockDialogRef.componentInstance.taskToEdit).toEqual(mockTask);
+    });
+
+    it('should reload tasks and show success message after successful edit', () => {
+      const mockDialogRef = {
+        componentInstance: { mode: '', taskToEdit: null },
+        afterClosed: () => of(mockTask)
+      } as any;
+      mockDialog.open.mockReturnValue(mockDialogRef);
+      getTasksSpy.mockReturnValue(of([mockTask]));
+
+      component.onEdit(mockTask);
+
+      expect(mockSnackBar.open).toHaveBeenCalledWith('Task updated successfully', 'Close', expect.any(Object));
+      expect(getTasksSpy).toHaveBeenCalled();
+    });
+
+    it('should not reload tasks when edit dialog is cancelled', () => {
+      const mockDialogRef = {
+        componentInstance: { mode: '', taskToEdit: null },
+        afterClosed: () => of(null)
+      } as any;
+      mockDialog.open.mockReturnValue(mockDialogRef);
+      getTasksSpy.mockClear();
+
+      component.onEdit(mockTask);
+
+      expect(getTasksSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  // Delete functionality tests
+  describe('Delete functionality', () => {
+    it('should open confirmation dialog when delete is clicked', () => {
+      const mockDialogRef = {
+        afterClosed: () => of(false)
+      } as any;
+      mockDialog.open.mockReturnValue(mockDialogRef);
+
+      component.onDelete(mockTask);
+
+      expect(mockDialog.open).toHaveBeenCalledWith(
+        ConfirmationDialogComponent,
+        expect.objectContaining({
+          width: '400px'
+        })
+      );
+    });
+
+    it('should delete task and show success message when confirmed', () => {
+      const mockDialogRef = {
+        afterClosed: () => of(true)
+      } as any;
+      mockDialog.open.mockReturnValue(mockDialogRef);
+      deleteTaskSpy.mockReturnValue(of(null));
+      getTasksSpy.mockReturnValue(of([]));
+
+      component.onDelete(mockTask);
+
+      expect(deleteTaskSpy).toHaveBeenCalledWith('123');
+      expect(mockSnackBar.open).toHaveBeenCalledWith('Task deleted successfully', 'Close', expect.any(Object));
+      expect(getTasksSpy).toHaveBeenCalled();
+    });
+
+    it('should not delete task when cancelled', () => {
+      const mockDialogRef = {
+        afterClosed: () => of(false)
+      } as any;
+      mockDialog.open.mockReturnValue(mockDialogRef);
+
+      component.onDelete(mockTask);
+
+      expect(deleteTaskSpy).not.toHaveBeenCalled();
+    });
+
+    it('should show error message when delete fails', () => {
+      const mockDialogRef = {
+        afterClosed: () => of(true)
+      } as any;
+      mockDialog.open.mockReturnValue(mockDialogRef);
+      deleteTaskSpy.mockReturnValue(
+        throwError(() => ({ error: { message: 'Delete failed' } }))
+      );
+
+      component.onDelete(mockTask);
+
+      expect(mockSnackBar.open).toHaveBeenCalledWith('Delete failed', 'Close', expect.any(Object));
+    });
+
+    it('should show generic error message when delete fails without message', () => {
+      const mockDialogRef = {
+        afterClosed: () => of(true)
+      } as any;
+      mockDialog.open.mockReturnValue(mockDialogRef);
+      deleteTaskSpy.mockReturnValue(
+        throwError(() => ({}))
+      );
+
+      component.onDelete(mockTask);
+
+      expect(mockSnackBar.open).toHaveBeenCalledWith('Failed to delete task. Please try again.', 'Close', expect.any(Object));
+    });
   });
 });

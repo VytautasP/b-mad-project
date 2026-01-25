@@ -4,10 +4,17 @@ import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { TaskService } from '../services/task.service';
 import { Task, TaskPriority, TaskStatus, TaskType } from '../../../shared/models/task.model';
+import { TaskFormComponent } from '../task-form/task-form.component';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 
 @Component({
   selector: 'app-task-list',
@@ -17,17 +24,24 @@ import { Task, TaskPriority, TaskStatus, TaskType } from '../../../shared/models
     MatTableModule,
     MatCardModule,
     MatProgressSpinnerModule,
-    MatChipsModule
+    MatChipsModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatDialogModule,
+    MatSnackBarModule
   ],
   templateUrl: './task-list.component.html',
   styleUrl: './task-list.component.scss'
 })
 export class TaskListComponent implements OnInit {
   private readonly taskService = inject(TaskService);
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
   
   tasks$: Observable<Task[]>;
   isLoading = true;
-  displayedColumns: string[] = ['name', 'dueDate', 'priority', 'status', 'type'];
+  displayedColumns: string[] = ['name', 'dueDate', 'priority', 'status', 'type', 'actions'];
   
   TaskPriority = TaskPriority;
   TaskStatus = TaskStatus;
@@ -99,5 +113,63 @@ export class TaskListComponent implements OnInit {
   formatDate(date: Date | null): string {
     if (!date) return '-';
     return new Date(date).toLocaleDateString();
+  }
+
+  onEdit(task: Task): void {
+    const dialogRef = this.dialog.open(TaskFormComponent, {
+      width: '600px',
+      data: { mode: 'edit', task }
+    });
+
+    dialogRef.componentInstance.mode = 'edit';
+    dialogRef.componentInstance.taskToEdit = task;
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadTasks();
+        this.snackBar.open('Task updated successfully', 'Close', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top'
+        });
+      }
+    });
+  }
+
+  onDelete(task: Task): void {
+    const dialogData: ConfirmationDialogData = {
+      title: 'Delete Task',
+      message: 'Are you sure you want to delete this task? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel'
+    };
+
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed === true) {
+        this.taskService.deleteTask(task.id).subscribe({
+          next: () => {
+            this.loadTasks();
+            this.snackBar.open('Task deleted successfully', 'Close', {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+          },
+          error: (error) => {
+            const errorMessage = error.error?.message || 'Failed to delete task. Please try again.';
+            this.snackBar.open(errorMessage, 'Close', {
+              duration: 5000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+          }
+        });
+      }
+    });
   }
 }

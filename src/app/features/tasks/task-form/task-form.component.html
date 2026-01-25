@@ -1,5 +1,5 @@
 <form [formGroup]="taskForm" (ngSubmit)="onSubmit()" class="task-form">
-  <h2>Create New Task</h2>
+  <h2>{{ mode === 'edit' ? 'Edit Task' : 'Create New Task' }}</h2>
 
   @if (errorMessage) {
     <div class="error-message">
@@ -58,9 +58,9 @@
     <button mat-raised-button color="primary" type="submit" [disabled]="isSubmitting">
       @if (isSubmitting) {
         <mat-spinner diameter="20"></mat-spinner>
-        <span>Creating...</span>
+        <span>{{ mode === 'edit' ? 'Updating...' : 'Creating...' }}</span>
       } @else {
-        <span>Create Task</span>
+        <span>{{ mode === 'edit' ? 'Update Task' : 'Create Task' }}</span>
       }
     </button>
   </div>
