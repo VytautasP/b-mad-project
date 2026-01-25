@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
@@ -32,7 +32,8 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../sh
     MatSnackBarModule
   ],
   templateUrl: './task-list.component.html',
-  styleUrl: './task-list.component.scss'
+  styleUrl: './task-list.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TaskListComponent implements OnInit {
   private readonly taskService = inject(TaskService);
@@ -40,7 +41,7 @@ export class TaskListComponent implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
   
   tasks$: Observable<Task[]>;
-  isLoading = true;
+  isLoading = signal(true);
   displayedColumns: string[] = ['name', 'dueDate', 'priority', 'status', 'type', 'actions'];
   
   TaskPriority = TaskPriority;
@@ -59,14 +60,16 @@ export class TaskListComponent implements OnInit {
   }
 
   loadTasks(): void {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.taskService.getTasks().subscribe({
-      next: () => {
-        this.isLoading = false;
+      next: (tasks) => {
+        console.log('Tasks loaded successfully:', tasks);
+        this.isLoading.set(false);
+        console.log('Loading state set to false, tasks count:', tasks.length);
       },
       error: (error) => {
         console.error('Failed to load tasks:', error);
-        this.isLoading = false;
+        this.isLoading.set(false);
       }
     });
   }

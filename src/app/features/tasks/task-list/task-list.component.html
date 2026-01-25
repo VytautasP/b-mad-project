@@ -1,11 +1,11 @@
 <div class="task-list-container">
-  @if (isLoading) {
+  @let tasks = (tasks$ | async);
+  @if (isLoading()) {
     <div class="loading-container">
       <mat-spinner></mat-spinner>
       <p>Loading tasks...</p>
     </div>
   } @else {
-    @let tasks = (tasks$ | async);
     @if (tasks) {
       @if (tasks.length === 0) {
         <div class="empty-state">

@@ -105,7 +105,9 @@ export class TaskFormComponent implements OnInit {
 
       this.taskService.updateTask(this.taskToEdit.id, dto).subscribe({
         next: (updatedTask) => {
-          this.isSubmitting = false;
+          setTimeout(() => {
+            this.isSubmitting = false;
+          });
           this.taskUpdated.emit(updatedTask);
           if (this.dialogRef) {
             this.dialogRef.close(updatedTask);
@@ -113,7 +115,9 @@ export class TaskFormComponent implements OnInit {
         },
         error: (error) => {
           this.errorMessage = error.error?.message || 'Failed to update task. Please try again.';
-          this.isSubmitting = false;
+          setTimeout(() => {
+            this.isSubmitting = false;
+          });
         }
       });
     } else {
@@ -133,12 +137,16 @@ export class TaskFormComponent implements OnInit {
             status: TaskStatus.ToDo,
             type: TaskType.Task
           });
-          this.isSubmitting = false;
+          setTimeout(() => {
+            this.isSubmitting = false;
+          });
           this.taskCreated.emit();
         },
         error: (error) => {
           this.errorMessage = error.error?.message || 'Failed to create task. Please try again.';
-          this.isSubmitting = false;
+          setTimeout(() => {
+            this.isSubmitting = false;
+          });
         }
       });
     }

@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatNativeDateModule } from '@angular/material/core';
 import { AuthService } from '../../core/services/auth.service';
 import { TaskFormComponent } from '../tasks/task-form/task-form.component';
 import { TaskListComponent } from '../tasks/task-list/task-list.component';
@@ -18,6 +19,7 @@ import { TaskListComponent } from '../tasks/task-list/task-list.component';
     MatIconModule, 
     MatSnackBarModule,
     MatDialogModule,
+    MatNativeDateModule,
     TaskListComponent
   ],
   templateUrl: './dashboard.html',
