@@ -40,10 +40,10 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet]
-    public async System.Threading.Tasks.Task<IActionResult> GetUserTasks([FromQuery] TaskFlow.Abstractions.Constants.TaskStatus? status, CancellationToken ct)
+    public async System.Threading.Tasks.Task<IActionResult> GetUserTasks([FromQuery] TaskFlow.Abstractions.Constants.TaskStatus? status, [FromQuery] string? search, CancellationToken ct)
     {
         var userId = GetCurrentUserId();
-        var tasks = await _taskService.GetUserTasksAsync(userId, status, ct);
+        var tasks = await _taskService.GetUserTasksAsync(userId, status, search, ct);
         return Ok(tasks);
     }
 

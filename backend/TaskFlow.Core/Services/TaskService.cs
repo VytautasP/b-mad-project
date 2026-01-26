@@ -66,9 +66,9 @@ public class TaskService : ITaskService
         return MapToResponseDto(task);
     }
 
-    public async System.Threading.Tasks.Task<List<TaskResponseDto>> GetUserTasksAsync(Guid userId, TaskFlow.Abstractions.Constants.TaskStatus? status, CancellationToken ct = default)
+    public async System.Threading.Tasks.Task<List<TaskResponseDto>> GetUserTasksAsync(Guid userId, TaskFlow.Abstractions.Constants.TaskStatus? status, string? searchTerm = null, CancellationToken ct = default)
     {
-        var tasks = await _unitOfWork.Tasks.GetUserTasksAsync(userId, status, ct);
+        var tasks = await _unitOfWork.Tasks.GetUserTasksAsync(userId, status, searchTerm, ct);
         return tasks.Select(MapToResponseDto).ToList();
     }
 

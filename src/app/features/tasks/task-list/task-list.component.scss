@@ -1,6 +1,39 @@
 .task-list-container {
   padding: 24px;
   
+  .search-filter-container {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    align-items: center;
+    
+    .search-field {
+      flex: 1;
+      max-width: 400px;
+    }
+    
+    .status-filter {
+      width: 200px;
+    }
+    
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 12px;
+      
+      .search-field,
+      .status-filter {
+        width: 100%;
+        max-width: none;
+      }
+    }
+  }
+  
+  .task-count {
+    margin-bottom: 16px;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 14px;
+  }
+  
   .loading-container {
     display: flex;
     flex-direction: column;

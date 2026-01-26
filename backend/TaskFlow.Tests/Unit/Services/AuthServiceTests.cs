@@ -38,7 +38,7 @@ public class AuthServiceTests
     }
 
     [Fact]
-    public async Task RegisterAsync_ValidatesPasswordRequirements()
+    public async System.Threading.Tasks.Task RegisterAsync_ValidatesPasswordRequirements()
     {
         // Arrange
         var dto = new RegisterDto
@@ -53,7 +53,7 @@ public class AuthServiceTests
     }
 
     [Fact]
-    public async Task RegisterAsync_ThrowsConflictExceptionForDuplicateEmail()
+    public async System.Threading.Tasks.Task RegisterAsync_ThrowsConflictExceptionForDuplicateEmail()
     {
         // Arrange
         var dto = new RegisterDto
@@ -71,7 +71,7 @@ public class AuthServiceTests
     }
 
     [Fact]
-    public async Task RegisterAsync_HashesPasswordBeforeStoring()
+    public async System.Threading.Tasks.Task RegisterAsync_HashesPasswordBeforeStoring()
     {
         // Arrange
         var dto = new RegisterDto
@@ -107,7 +107,7 @@ public class AuthServiceTests
     }
 
     [Fact]
-    public async Task LoginAsync_ReturnsTokenForValidCredentials()
+    public async System.Threading.Tasks.Task LoginAsync_ReturnsTokenForValidCredentials()
     {
         // Arrange
         var dto = new LoginDto
@@ -145,7 +145,7 @@ public class AuthServiceTests
     }
 
     [Fact]
-    public async Task LoginAsync_ThrowsUnauthorizedExceptionForInvalidCredentials()
+    public async System.Threading.Tasks.Task LoginAsync_ThrowsUnauthorizedExceptionForInvalidCredentials()
     {
         // Arrange
         var dto = new LoginDto

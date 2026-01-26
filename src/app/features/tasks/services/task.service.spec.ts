@@ -63,6 +63,70 @@ describe('TaskService', () => {
       expect(receivedTasks?.length).toBe(1);
     });
 
+    it('should include search query parameter when provided', () => {
+      const searchTerm = 'test search';
+      const mockTasks: Task[] = [mockTask];
+
+      service.getTasks(searchTerm).subscribe();
+
+      const req = httpMock.expectOne(req => req.url === apiUrl && req.params.has('search'));
+      expect(req.request.method).toBe('GET');
+      expect(req.request.params.get('search')).toBe(searchTerm);
+      req.flush(mockTasks);
+    });
+
+    it('should include status query parameter when provided', () => {
+      const status = TaskStatus.InProgress;
+      const mockTasks: Task[] = [mockTask];
+
+      service.getTasks(undefined, status).subscribe();
+
+      const req = httpMock.expectOne(req => req.url === apiUrl && req.params.has('status'));
+      expect(req.request.method).toBe('GET');
+      expect(req.request.params.get('status')).toBe(status.toString());
+      req.flush(mockTasks);
+    });
+
+    it('should include both search and status query parameters when provided', () => {
+      const searchTerm = 'important';
+      const status = TaskStatus.InProgress;
+      const mockTasks: Task[] = [mockTask];
+
+      service.getTasks(searchTerm, status).subscribe();
+
+      const req = httpMock.expectOne(req => 
+        req.url === apiUrl && 
+        req.params.has('search') && 
+        req.params.has('status')
+      );
+      expect(req.request.method).toBe('GET');
+      expect(req.request.params.get('search')).toBe(searchTerm);
+      expect(req.request.params.get('status')).toBe(status.toString());
+      req.flush(mockTasks);
+    });
+
+    it('should not include search parameter when empty string provided', () => {
+      const mockTasks: Task[] = [mockTask];
+
+      service.getTasks('').subscribe();
+
+      const req = httpMock.expectOne(apiUrl);
+      expect(req.request.method).toBe('GET');
+      expect(req.request.params.keys().length).toBe(0);
+      req.flush(mockTasks);
+    });
+
+    it('should trim and include search parameter', () => {
+      const searchTerm = '  test  ';
+      const mockTasks: Task[] = [mockTask];
+
+      service.getTasks(searchTerm).subscribe();
+
+      const req = httpMock.expectOne(req => req.url === apiUrl && req.params.has('search'));
+      expect(req.request.params.get('search')).toBe('test');
+      req.flush(mockTasks);
+    });
+
     it('should handle errors when fetching tasks', () => {
       let errorResponse: any;
 

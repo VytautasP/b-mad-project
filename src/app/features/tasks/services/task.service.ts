@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { Task, TaskCreateDto, TaskUpdateDto } from '../../../shared/models/task.model';
+import { Task, TaskCreateDto, TaskUpdateDto, TaskStatus } from '../../../shared/models/task.model';
 
 @Injectable({
   providedIn: 'root'
@@ -17,10 +17,20 @@ export class TaskService {
   public tasks$ = this.tasksSubject.asObservable();
 
   /**
-   * Fetch all tasks for the current user
+   * Fetch all tasks for the current user with optional search and status filters
    */
-  getTasks(): Observable<Task[]> {
-    return this.http.get<Task[]>(this.apiUrl).pipe(
+  getTasks(search?: string, status?: TaskStatus): Observable<Task[]> {
+    let params = new HttpParams();
+    
+    if (search && search.trim()) {
+      params = params.set('search', search.trim());
+    }
+    
+    if (status !== undefined && status !== null) {
+      params = params.set('status', status.toString());
+    }
+    
+    return this.http.get<Task[]>(this.apiUrl, { params }).pipe(
       tap(tasks => this.tasksSubject.next(tasks)),
       catchError(this.handleError)
     );

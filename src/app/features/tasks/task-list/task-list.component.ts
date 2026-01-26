@@ -1,5 +1,6 @@
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -9,8 +10,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { Observable, Subject } from 'rxjs';
+import { map, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { TaskService } from '../services/task.service';
 import { Task, TaskPriority, TaskStatus, TaskType } from '../../../shared/models/task.model';
 import { TaskFormComponent } from '../task-form/task-form.component';
@@ -21,6 +25,7 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../sh
   standalone: true,
   imports: [
     CommonModule,
+    ReactiveFormsModule,
     MatTableModule,
     MatCardModule,
     MatProgressSpinnerModule,
@@ -29,39 +34,94 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../sh
     MatButtonModule,
     MatTooltipModule,
     MatDialogModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatSelectModule
   ],
   templateUrl: './task-list.component.html',
   styleUrl: './task-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TaskListComponent implements OnInit {
+export class TaskListComponent implements OnInit, OnDestroy {
   private readonly taskService = inject(TaskService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly destroy$ = new Subject<void>();
   
   tasks$: Observable<Task[]>;
   isLoading = signal(true);
   displayedColumns: string[] = ['name', 'dueDate', 'priority', 'status', 'type', 'actions'];
   
+  // Search and filter controls
+  searchControl = new FormControl('');
+  statusFilterControl = new FormControl<TaskStatus | null>(null);
+  
+  // Filter state
+  searchTerm = '';
+  statusFilter: TaskStatus | null = null;
+  totalTaskCount = signal(0);
+  filteredTaskCount = signal(0);
+  
   TaskPriority = TaskPriority;
   TaskStatus = TaskStatus;
   TaskType = TaskType;
+  
+  // Status filter options
+  statusOptions = [
+    { value: null, label: 'All' },
+    { value: TaskStatus.ToDo, label: 'To Do' },
+    { value: TaskStatus.InProgress, label: 'In Progress' },
+    { value: TaskStatus.Blocked, label: 'Blocked' },
+    { value: TaskStatus.Waiting, label: 'Waiting' },
+    { value: TaskStatus.Done, label: 'Done' }
+  ];
 
   constructor() {
     // Subscribe to tasks with sorting
     this.tasks$ = this.taskService.tasks$.pipe(
-      map(tasks => this.sortTasksByDate(tasks))
+      map(tasks => this.sortTasksByDate(tasks)),
+      map(tasks => {
+        this.filteredTaskCount.set(tasks.length);
+        return tasks;
+      })
     );
   }
 
   ngOnInit(): void {
     this.loadTasks();
+    this.setupSearchDebounce();
+    this.setupStatusFilter();
+  }
+  
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  
+  private setupSearchDebounce(): void {
+    this.searchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(searchTerm => {
+      this.searchTerm = searchTerm || '';
+      this.loadTasks();
+    });
+  }
+  
+  private setupStatusFilter(): void {
+    this.statusFilterControl.valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(status => {
+      this.statusFilter = status;
+      this.loadTasks();
+    });
   }
 
   loadTasks(): void {
     this.isLoading.set(true);
-    this.taskService.getTasks().subscribe({
+    this.taskService.getTasks(this.searchTerm, this.statusFilter ?? undefined).subscribe({
       next: (tasks) => {
         console.log('Tasks loaded successfully:', tasks);
         this.isLoading.set(false);
@@ -70,8 +130,17 @@ export class TaskListComponent implements OnInit {
       error: (error) => {
         console.error('Failed to load tasks:', error);
         this.isLoading.set(false);
+        this.snackBar.open('Failed to load tasks', 'Close', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top'
+        });
       }
     });
+  }
+  
+  clearSearch(): void {
+    this.searchControl.setValue('');
   }
 
   private sortTasksByDate(tasks: Task[]): Task[] {
