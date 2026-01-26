@@ -81,7 +81,7 @@ public class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
 
         // Self-referencing relationship
         builder.HasOne(t => t.ParentTask)
-            .WithMany()
+            .WithMany(t => t.Children)
             .HasForeignKey(t => t.ParentTaskId)
             .OnDelete(DeleteBehavior.Restrict);
 

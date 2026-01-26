@@ -70,4 +70,44 @@ public class TasksController : ControllerBase
         await _taskService.DeleteTaskAsync(id, userId, ct);
         return NoContent();
     }
+
+    [HttpGet("{id}/children")]
+    public async System.Threading.Tasks.Task<IActionResult> GetChildren(Guid id, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        var children = await _taskService.GetChildrenAsync(id, userId, ct);
+        return Ok(children);
+    }
+
+    [HttpGet("{id}/ancestors")]
+    public async System.Threading.Tasks.Task<IActionResult> GetAncestors(Guid id, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        var ancestors = await _taskService.GetAncestorsAsync(id, userId, ct);
+        return Ok(ancestors);
+    }
+
+    [HttpGet("{id}/descendants")]
+    public async System.Threading.Tasks.Task<IActionResult> GetDescendants(Guid id, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        var descendants = await _taskService.GetDescendantsAsync(id, userId, ct);
+        return Ok(descendants);
+    }
+
+    [HttpPut("{id}/parent")]
+    public async System.Threading.Tasks.Task<IActionResult> SetParent(Guid id, [FromBody] SetParentDto dto, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        await _taskService.SetParentTaskAsync(id, dto.ParentTaskId, userId, ct);
+        return NoContent();
+    }
+
+    [HttpDelete("{id}/parent")]
+    public async System.Threading.Tasks.Task<IActionResult> RemoveParent(Guid id, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        await _taskService.RemoveParentAsync(id, userId, ct);
+        return NoContent();
+    }
 }

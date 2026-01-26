@@ -10,4 +10,11 @@ public interface ITaskService
     System.Threading.Tasks.Task<List<TaskResponseDto>> GetUserTasksAsync(Guid userId, TaskFlow.Abstractions.Constants.TaskStatus? status, string? searchTerm = null, CancellationToken ct = default);
     System.Threading.Tasks.Task<TaskResponseDto> UpdateTaskAsync(Guid id, TaskUpdateDto dto, Guid currentUserId, CancellationToken ct = default);
     System.Threading.Tasks.Task DeleteTaskAsync(Guid id, Guid currentUserId, CancellationToken ct = default);
+    
+    // Hierarchy methods
+    System.Threading.Tasks.Task SetParentTaskAsync(Guid taskId, Guid parentTaskId, Guid userId, CancellationToken ct = default);
+    System.Threading.Tasks.Task RemoveParentAsync(Guid taskId, Guid userId, CancellationToken ct = default);
+    System.Threading.Tasks.Task<List<TaskResponseDto>> GetChildrenAsync(Guid taskId, Guid userId, CancellationToken ct = default);
+    System.Threading.Tasks.Task<List<TaskHierarchyDto>> GetAncestorsAsync(Guid taskId, Guid userId, CancellationToken ct = default);
+    System.Threading.Tasks.Task<List<TaskHierarchyDto>> GetDescendantsAsync(Guid taskId, Guid userId, CancellationToken ct = default);
 }

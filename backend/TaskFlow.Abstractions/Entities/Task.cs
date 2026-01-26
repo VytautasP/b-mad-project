@@ -21,4 +21,5 @@ public class Task
     // Navigation properties
     public User CreatedByUser { get; set; } = null!;
     public Task? ParentTask { get; set; }
+    public ICollection<Task> Children { get; set; } = new List<Task>();
 }

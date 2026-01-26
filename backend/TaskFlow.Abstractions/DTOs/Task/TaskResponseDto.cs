@@ -8,6 +8,7 @@ public class TaskResponseDto
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public Guid? ParentTaskId { get; set; }
+    public bool HasChildren { get; set; }
     public Guid CreatedByUserId { get; set; }
     public string CreatedByUserName { get; set; } = string.Empty;
     public DateTime CreatedDate { get; set; }
