@@ -193,13 +193,30 @@ describe('TaskTreeComponent', () => {
       expect(component.previousParentId).toBeNull();
     });
 
-    it('should set drop target node on drag enter', () => {
+    it('should set drop target node on mouse enter', () => {
+      const draggedNode = component.dataSource.data[0];
+      const targetNode = component.dataSource.data[1];
+      
+      component.draggedNode = draggedNode;
+      component.onNodeMouseEnter(targetNode);
+      
+      expect(component.dropTargetNode).toBe(targetNode);
+    });
+
+    it('should not set drop target on mouse enter when not dragging', () => {
       const node = component.dataSource.data[1];
-      const event = {} as any;
       
-      component.onDragEnter(event, node);
+      component.onNodeMouseEnter(node);
       
-      expect(component.dropTargetNode).toBe(node);
+      expect(component.dropTargetNode).toBeNull();
+    });
+
+    it('should clear drop target on mouse leave', () => {
+      component.dropTargetNode = component.dataSource.data[0];
+      
+      component.onNodeMouseLeave();
+      
+      expect(component.dropTargetNode).toBeNull();
     });
 
     it('should reset drag state on drag end', () => {

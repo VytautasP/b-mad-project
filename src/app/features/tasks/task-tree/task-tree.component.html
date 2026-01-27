@@ -11,21 +11,24 @@
       <p>Create your first task to get started</p>
     </div>
   } @else {
-    <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="task-tree" cdkDropList
-              (cdkDropListDropped)="onDrop($event, null)">
-      <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding
-                     cdkDrag
-                     [cdkDragData]="node"
-                     (cdkDragStarted)="onDragStart($any($event), node)"
-                     (cdkDragEnded)="onDragEnd()"
-                     [class.dragging]="draggedNode && draggedNode.task.id === node.task.id">
+    <div cdkDropList 
+         [cdkDropListSortingDisabled]="true"
+         (cdkDropListDropped)="onDrop($event, null)"
+         class="drop-zone-container">
+      <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="task-tree">
+        <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding
+                       cdkDrag
+                       [cdkDragData]="node"
+                       (cdkDragStarted)="onDragStart($any($event), node)"
+                       (cdkDragEnded)="onDragEnd()"
+                       [class.dragging]="draggedNode && draggedNode.task.id === node.task.id">
         <button mat-icon-button disabled></button>
-        <div class="tree-node-content" 
-             cdkDropList
-             (cdkDropListDropped)="onDrop($event, node)"
-             (cdkDropListEntered)="onDragEnter($any($event), node)"
+        <div class="tree-node-content"
+             (mouseenter)="onNodeMouseEnter(node)"
+             (mouseleave)="onNodeMouseLeave()"
              [class.valid-drop-target]="isValidDropTarget(node) && dropTargetNode && dropTargetNode.task.id === node.task.id"
-             [class.invalid-drop-target]="!isValidDropTarget(node) && dropTargetNode && dropTargetNode.task.id === node.task.id">
+             [class.invalid-drop-target]="!isValidDropTarget(node) && dropTargetNode && dropTargetNode.task.id === node.task.id"
+             [class.drop-target-active]="draggedNode && dropTargetNode && dropTargetNode.task.id === node.task.id">
           <mat-icon class="type-icon">{{ getTypeIcon(node.task.type) }}</mat-icon>
           <mat-icon class="status-icon" [ngClass]="getStatusClass(node.task.status)">
             {{ getStatusIcon(node.task.status) }}
@@ -52,11 +55,11 @@
             </mat-icon>
           </button>
           <div class="tree-node-content"
-               cdkDropList
-               (cdkDropListDropped)="onDrop($event, node)"
-               (cdkDropListEntered)="onDragEnter($any($event), node)"
+               (mouseenter)="onNodeMouseEnter(node)"
+               (mouseleave)="onNodeMouseLeave()"
                [class.valid-drop-target]="isValidDropTarget(node) && dropTargetNode && dropTargetNode.task.id === node.task.id"
-               [class.invalid-drop-target]="!isValidDropTarget(node) && dropTargetNode && dropTargetNode.task.id === node.task.id">
+               [class.invalid-drop-target]="!isValidDropTarget(node) && dropTargetNode && dropTargetNode.task.id === node.task.id"
+               [class.drop-target-active]="draggedNode && dropTargetNode && dropTargetNode.task.id === node.task.id">
             <mat-icon class="type-icon">{{ getTypeIcon(node.task.type) }}</mat-icon>
             <mat-icon class="status-icon" [ngClass]="getStatusClass(node.task.status)">
               {{ getStatusIcon(node.task.status) }}
@@ -72,5 +75,6 @@
         </div>
       </mat-nested-tree-node>
     </mat-tree>
+    </div>
   }
 </div>

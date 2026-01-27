@@ -1,13 +1,13 @@
-﻿import { Component, OnInit, OnDestroy, inject, signal, output } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, inject, signal, output, ElementRef, Renderer2 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { DragDropModule, CdkDragDrop, CdkDragEnter, CdkDragStart } from '@angular/cdk/drag-drop';
+import { DragDropModule, CdkDragDrop, CdkDragStart, CdkDragMove } from '@angular/cdk/drag-drop';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, fromEvent } from 'rxjs';
 import { TaskService } from '../services/task.service';
 import { Task, TaskStatus, TaskPriority, TaskType } from '../../../shared/models/task.model';
 
@@ -34,8 +34,11 @@ interface TreeNode {
 export class TaskTreeComponent implements OnInit, OnDestroy {
   private readonly taskService = inject(TaskService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly elementRef = inject(ElementRef);
+  private readonly renderer = inject(Renderer2);
   private readonly destroy$ = new Subject<void>();
   private readonly EXPAND_STATE_KEY = 'taskflow_tree_expanded_nodes';
+  private nodeElements = new Map<string, HTMLElement>();
 
   // Signals for reactive state
   isLoading = signal(true);
@@ -295,13 +298,80 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
     this.draggedNode = node;
     this.draggedTaskId = node.task.id;
     this.previousParentId = node.task.parentTaskId;
+    
+    // Set up drag move listener to detect hover over nodes
+    const dragRef = event.source._dragRef;
+    const moveSubscription = dragRef.moved.pipe(takeUntil(this.destroy$)).subscribe((moveEvent) => {
+      this.onDragMove(moveEvent);
+    });
+    
+    // Clean up on drag end
+    dragRef.ended.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      moveSubscription.unsubscribe();
+    });
   }
 
   /**
-   * Handle drag enter event (hovering over a drop target)
+   * Handle drag move to detect hover over nodes
    */
-  onDragEnter(event: CdkDragEnter, targetNode: TreeNode | null): void {
-    this.dropTargetNode = targetNode;
+  onDragMove(event: any): void {
+    const point = event.pointerPosition;
+    const elements = document.elementsFromPoint(point.x, point.y);
+    
+    // Find the closest tree node content element
+    const nodeContent = elements.find(el => 
+      el.classList.contains('tree-node-content')
+    ) as HTMLElement;
+    
+    if (nodeContent) {
+      // Get the node data from the tree structure
+      const taskName = nodeContent.querySelector('.task-name')?.textContent?.trim();
+      if (taskName) {
+        const node = this.findNodeByTaskName(taskName);
+        if (node && node.task.id !== this.draggedNode?.task.id) {
+          this.dropTargetNode = node;
+          return;
+        }
+      }
+    }
+    
+    // If not over a valid node, clear drop target
+    this.dropTargetNode = null;
+  }
+
+  /**
+   * Find node by task name
+   */
+  private findNodeByTaskName(taskName: string): TreeNode | null {
+    const findInNodes = (nodes: TreeNode[]): TreeNode | null => {
+      for (const node of nodes) {
+        if (node.task.name === taskName) {
+          return node;
+        }
+        if (node.children.length > 0) {
+          const found = findInNodes(node.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    return findInNodes(this.dataSource.data);
+  }
+
+  /**
+   * Handle mouse enter on node (for drop target highlighting)
+   */
+  onNodeMouseEnter(node: TreeNode): void {
+    if (this.draggedNode && this.draggedNode.task.id !== node.task.id) {
+      this.dropTargetNode = node;
+    }
+  }
+
+  /**
+   * Handle mouse leave from node
+   */
+  onNodeMouseLeave(): void {
+    this.dropTargetNode = null;
   }
 
   /**
@@ -311,7 +381,8 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
     if (!this.draggedNode) return;
 
     const draggedTaskId = this.draggedNode.task.id;
-    const targetParentId = targetNode?.task.id ?? null;
+    // Use the current drop target if available, otherwise use the targetNode parameter
+    const targetParentId = this.dropTargetNode?.task.id ?? targetNode?.task.id ?? null;
 
     // Validate drop
     if (!this.isValidDrop(draggedTaskId, targetParentId)) {
