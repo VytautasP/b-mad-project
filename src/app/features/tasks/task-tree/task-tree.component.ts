@@ -1,4 +1,4 @@
-﻿import { Component, OnInit, OnDestroy, inject, signal, output, ElementRef, Renderer2 } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, inject, signal, output, ElementRef, Renderer2, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { NestedTreeControl } from '@angular/cdk/tree';
@@ -36,6 +36,7 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
   private readonly snackBar = inject(MatSnackBar);
   private readonly elementRef = inject(ElementRef);
   private readonly renderer = inject(Renderer2);
+  private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroy$ = new Subject<void>();
   private readonly EXPAND_STATE_KEY = 'taskflow_tree_expanded_nodes';
   private nodeElements = new Map<string, HTMLElement>();
@@ -115,12 +116,18 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
         const parent = taskMap.get(task.parentTaskId);
         if (parent) {
           parent.children.push(node);
+          console.log(`Added ${task.name} as child of parent (hasChildren=${parent.task.hasChildren})`);
         } else {
           rootNodes.push(node); // Parent not found, treat as root
         }
       } else {
         rootNodes.push(node); // No parent, is root
       }
+    });
+
+    console.log('Tree structure details:');
+    taskMap.forEach((node, id) => {
+      console.log(`  ${node.task.name}: hasChildren=${node.task.hasChildren}, children.length=${node.children.length}, parentId=${node.task.parentTaskId}`);
     });
 
     return rootNodes;
@@ -130,7 +137,7 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
    * Check if node has children
    */
   hasChild = (_: number, node: TreeNode): boolean => {
-    return node.task.hasChildren && node.children.length > 0;
+    return node.children.length > 0;
   };
 
   /**
@@ -155,9 +162,19 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
    * Save expanded node state to localStorage
    */
   private saveExpandedState(): void {
-    const expandedIds = this.treeControl.dataNodes
-      ?.filter(node => this.treeControl.isExpanded(node))
-      .map(node => node.task.id) || [];
+    // Collect all expanded node IDs by traversing the tree
+    const expandedIds: string[] = [];
+    const collectExpanded = (nodes: TreeNode[]) => {
+      for (const node of nodes) {
+        if (this.treeControl.isExpanded(node)) {
+          expandedIds.push(node.task.id);
+        }
+        if (node.children.length > 0) {
+          collectExpanded(node.children);
+        }
+      }
+    };
+    collectExpanded(this.dataSource.data);
     localStorage.setItem(this.EXPAND_STATE_KEY, JSON.stringify(expandedIds));
   }
 
@@ -299,16 +316,18 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
     this.draggedTaskId = node.task.id;
     this.previousParentId = node.task.parentTaskId;
     
-    // Set up drag move listener to detect hover over nodes
-    const dragRef = event.source._dragRef;
-    const moveSubscription = dragRef.moved.pipe(takeUntil(this.destroy$)).subscribe((moveEvent) => {
-      this.onDragMove(moveEvent);
-    });
-    
-    // Clean up on drag end
-    dragRef.ended.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      moveSubscription.unsubscribe();
-    });
+    // Set up drag move listener to detect hover over nodes (only if dragRef available)
+    if (event.source?._dragRef) {
+      const dragRef = event.source._dragRef;
+      const moveSubscription = dragRef.moved.pipe(takeUntil(this.destroy$)).subscribe((moveEvent) => {
+        this.onDragMove(moveEvent);
+      });
+      
+      // Clean up on drag end
+      dragRef.ended.pipe(takeUntil(this.destroy$)).subscribe(() => {
+        moveSubscription.unsubscribe();
+      });
+    }
   }
 
   /**
@@ -371,23 +390,67 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
    * Handle mouse leave from node
    */
   onNodeMouseLeave(): void {
-    this.dropTargetNode = null;
+    // Don't clear drop target during drag - let it persist until drop or drag end
+    // Only clear visual feedback, keep the target for drop processing
+  }
+
+  /**
+   * Handle node click (for drop target during drag)
+   */
+  onNodeClick(event: Event, node: TreeNode): void {
+    // If dragging, use click as drop action
+    if (this.draggedNode && this.draggedNode.task.id !== node.task.id) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.performDropOnNode(node);
+    }
+  }
+
+  /**
+   * Handle cdkDragDropped event on a node
+   */
+  onNodeDrop(event: any, node: TreeNode): void {
+    console.log('onNodeDrop called', { event, node, draggedNode: this.draggedNode });
+    if (this.draggedNode && this.draggedNode.task.id !== node.task.id) {
+      this.performDropOnNode(node);
+    }
+  }
+
+  /**
+   * Perform drop operation on a specific node
+   */
+  private performDropOnNode(targetNode: TreeNode): void {
+    if (!this.draggedNode) return;
+
+    const draggedTaskId = this.draggedNode.task.id;
+    const targetParentId = targetNode.task.id;
+
+    console.log('performDropOnNode:', { draggedTaskId, targetParentId });
+
+    // Validate drop
+    if (!this.isValidDrop(draggedTaskId, targetParentId)) {
+      this.snackBar.open('Cannot move task: Invalid drop location', 'Close', { duration: 3000 });
+      this.resetDragState();
+      return;
+    }
+
+    // Perform reparenting
+    this.performReparenting(draggedTaskId, targetParentId);
   }
 
   /**
    * Handle drop event
    */
-  onDrop(event: CdkDragDrop<TreeNode>, targetNode: TreeNode | null): void {
+  onDrop(event: CdkDragDrop<TreeNode>): void {
     if (!this.draggedNode) {
       this.resetDragState();
       return;
     }
 
     const draggedTaskId = this.draggedNode.task.id;
-    // Use the current drop target if available, otherwise use the targetNode parameter
-    const targetParentId = this.dropTargetNode?.task.id ?? targetNode?.task.id ?? null;
-
-    console.log('Drop event:', { draggedTaskId, targetParentId, dropTargetNode: this.dropTargetNode });
+    // Get target from the drop container's data
+    const targetNode = event.container.data;
+    const targetParentId = targetNode?.task.id ?? null;
 
     // Validate drop
     if (!this.isValidDrop(draggedTaskId, targetParentId)) {
@@ -404,12 +467,12 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
    * Handle drag end event (only called if drag is cancelled without drop)
    */
   onDragEnd(): void {
-    // Delay clearing state slightly to allow drop event to fire first
+    // Delay reset to allow drop event to fire first
     setTimeout(() => {
       if (this.draggedNode) {
         this.resetDragState();
       }
-    }, 50);
+    }, 100);
   }
 
   /**
@@ -458,18 +521,27 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          // Update local state optimistically
-          const currentTasks = this.tasks();
-          const taskIndex = currentTasks.findIndex(t => t.id === taskId);
-          if (taskIndex !== -1) {
-            const updatedTasks = [...currentTasks];
-            updatedTasks[taskIndex] = {
-              ...updatedTasks[taskIndex],
-              parentTaskId: newParentId
-            };
-            this.tasks.set(updatedTasks);
-            this.dataSource.data = this.buildTreeStructure(updatedTasks);
-          }
+          console.log('Reparenting successful, reloading tasks...');
+          // Reload tasks from server to get accurate hasChildren values
+          this.taskService.getTasks()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: (tasks) => {
+                console.log('Tasks reloaded:', tasks.length, 'tasks');
+                this.tasks.set(tasks);
+                const treeData = this.buildTreeStructure(tasks);
+                console.log('Tree structure built:', treeData.length, 'root nodes');
+                this.dataSource.data = treeData;
+                // Restore expanded state
+                this.restoreExpandedState(treeData);
+                // Force change detection
+                this.cdr.markForCheck();
+                console.log('Tree updated after reparenting');
+              },
+              error: (error) => {
+                console.error('Error reloading tasks after reparenting:', error);
+              }
+            });
 
           // Show success notification with undo
           const snackBarRef = this.snackBar.open(
@@ -507,18 +579,20 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          // Update local state
-          const currentTasks = this.tasks();
-          const taskIndex = currentTasks.findIndex(t => t.id === taskId);
-          if (taskIndex !== -1) {
-            const updatedTasks = [...currentTasks];
-            updatedTasks[taskIndex] = {
-              ...updatedTasks[taskIndex],
-              parentTaskId: previousParentId
-            };
-            this.tasks.set(updatedTasks);
-            this.dataSource.data = this.buildTreeStructure(updatedTasks);
-          }
+          // Reload tasks from server
+          this.taskService.getTasks()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: (tasks) => {
+                this.tasks.set(tasks);
+                const treeData = this.buildTreeStructure(tasks);
+                this.dataSource.data = treeData;
+                this.restoreExpandedState(treeData);
+              },
+              error: (error) => {
+                console.error('Error reloading tasks after undo:', error);
+              }
+            });
 
           this.snackBar.open('Move undone', 'Close', { duration: 2000 });
         },
@@ -537,6 +611,8 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
     this.dropTargetNode = null;
     this.draggedTaskId = null;
     this.previousParentId = null;
+    // Mark for check to avoid ExpressionChangedAfterItHasBeenCheckedError
+    this.cdr.markForCheck();
   }
 
   /**
