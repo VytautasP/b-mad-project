@@ -5,6 +5,8 @@ import { NestedTreeControl } from '@angular/cdk/tree';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { DragDropModule, CdkDragDrop, CdkDragEnter, CdkDragStart } from '@angular/cdk/drag-drop';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject, takeUntil } from 'rxjs';
 import { TaskService } from '../services/task.service';
 import { Task, TaskStatus, TaskPriority, TaskType } from '../../../shared/models/task.model';
@@ -23,19 +25,27 @@ interface TreeNode {
     MatTreeModule,
     MatIconModule,
     MatButtonModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    DragDropModule
   ],
   templateUrl: './task-tree.component.html',
   styleUrls: ['./task-tree.component.scss']
 })
 export class TaskTreeComponent implements OnInit, OnDestroy {
   private readonly taskService = inject(TaskService);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly destroy$ = new Subject<void>();
   private readonly EXPAND_STATE_KEY = 'taskflow_tree_expanded_nodes';
 
   // Signals for reactive state
   isLoading = signal(true);
   tasks = signal<Task[]>([]);
+  
+  // Drag-drop state
+  draggedNode: TreeNode | null = null;
+  dropTargetNode: TreeNode | null = null;
+  previousParentId: string | null = null;
+  draggedTaskId: string | null = null;
   
   // Output event for task selection
   taskSelected = output<Task>();
@@ -277,4 +287,193 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
   refresh(): void {
     this.loadTasks();
   }
+
+  /**
+   * Handle drag start event
+   */
+  onDragStart(event: CdkDragStart, node: TreeNode): void {
+    this.draggedNode = node;
+    this.draggedTaskId = node.task.id;
+    this.previousParentId = node.task.parentTaskId;
+  }
+
+  /**
+   * Handle drag enter event (hovering over a drop target)
+   */
+  onDragEnter(event: CdkDragEnter, targetNode: TreeNode | null): void {
+    this.dropTargetNode = targetNode;
+  }
+
+  /**
+   * Handle drop event
+   */
+  onDrop(event: CdkDragDrop<TreeNode>, targetNode: TreeNode | null): void {
+    if (!this.draggedNode) return;
+
+    const draggedTaskId = this.draggedNode.task.id;
+    const targetParentId = targetNode?.task.id ?? null;
+
+    // Validate drop
+    if (!this.isValidDrop(draggedTaskId, targetParentId)) {
+      this.snackBar.open('Cannot move task: Invalid drop location', 'Close', { duration: 3000 });
+      this.resetDragState();
+      return;
+    }
+
+    // Perform reparenting
+    this.performReparenting(draggedTaskId, targetParentId);
+  }
+
+  /**
+   * Handle drag end event
+   */
+  onDragEnd(): void {
+    this.resetDragState();
+  }
+
+  /**
+   * Validate if drop is allowed
+   */
+  private isValidDrop(draggedTaskId: string, targetParentId: string | null): boolean {
+    // Cannot drop task on itself
+    if (draggedTaskId === targetParentId) {
+      return false;
+    }
+
+    // Cannot drop task on its descendants
+    if (targetParentId && this.isDescendant(draggedTaskId, targetParentId)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Check if potentialDescendantId is a descendant of taskId
+   */
+  private isDescendant(taskId: string, potentialDescendantId: string): boolean {
+    const task = this.tasks().find(t => t.id === potentialDescendantId);
+    if (!task) return false;
+
+    // If no parent, it's not a descendant
+    if (!task.parentTaskId) return false;
+
+    // If parent is the taskId, it's a direct descendant
+    if (task.parentTaskId === taskId) return true;
+
+    // Recursively check parent
+    return this.isDescendant(taskId, task.parentTaskId);
+  }
+
+  /**
+   * Perform the actual reparenting operation
+   */
+  private performReparenting(taskId: string, newParentId: string | null): void {
+    const observable = newParentId
+      ? this.taskService.setParentTask(taskId, newParentId)
+      : this.taskService.removeParent(taskId);
+
+    observable
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          // Update local state optimistically
+          const currentTasks = this.tasks();
+          const taskIndex = currentTasks.findIndex(t => t.id === taskId);
+          if (taskIndex !== -1) {
+            const updatedTasks = [...currentTasks];
+            updatedTasks[taskIndex] = {
+              ...updatedTasks[taskIndex],
+              parentTaskId: newParentId
+            };
+            this.tasks.set(updatedTasks);
+            this.dataSource.data = this.buildTreeStructure(updatedTasks);
+          }
+
+          // Show success notification with undo
+          const snackBarRef = this.snackBar.open(
+            'Task moved successfully',
+            'Undo',
+            { duration: 5000 }
+          );
+
+          snackBarRef.onAction()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => {
+              this.undoReparenting(taskId, this.previousParentId);
+            });
+
+          this.resetDragState();
+        },
+        error: (error) => {
+          console.error('Error reparenting task:', error);
+          const errorMessage = error.error?.message || 'Failed to move task';
+          this.snackBar.open(errorMessage, 'Close', { duration: 3000 });
+          this.resetDragState();
+        }
+      });
+  }
+
+  /**
+   * Undo reparenting operation
+   */
+  private undoReparenting(taskId: string, previousParentId: string | null): void {
+    const observable = previousParentId
+      ? this.taskService.setParentTask(taskId, previousParentId)
+      : this.taskService.removeParent(taskId);
+
+    observable
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          // Update local state
+          const currentTasks = this.tasks();
+          const taskIndex = currentTasks.findIndex(t => t.id === taskId);
+          if (taskIndex !== -1) {
+            const updatedTasks = [...currentTasks];
+            updatedTasks[taskIndex] = {
+              ...updatedTasks[taskIndex],
+              parentTaskId: previousParentId
+            };
+            this.tasks.set(updatedTasks);
+            this.dataSource.data = this.buildTreeStructure(updatedTasks);
+          }
+
+          this.snackBar.open('Move undone', 'Close', { duration: 2000 });
+        },
+        error: (error) => {
+          console.error('Error undoing reparenting:', error);
+          this.snackBar.open('Failed to undo move', 'Close', { duration: 3000 });
+        }
+      });
+  }
+
+  /**
+   * Reset drag state
+   */
+  private resetDragState(): void {
+    this.draggedNode = null;
+    this.dropTargetNode = null;
+    this.draggedTaskId = null;
+    this.previousParentId = null;
+  }
+
+  /**
+   * Check if node is a valid drop target
+   */
+  isValidDropTarget(targetNode: TreeNode | null): boolean {
+    if (!this.draggedNode) return false;
+    
+    const draggedTaskId = this.draggedNode.task.id;
+    const targetParentId = targetNode?.task.id ?? null;
+    
+    return this.isValidDrop(draggedTaskId, targetParentId);
+  }
+
+  /**
+   * Predicate to determine if a node can be dragged
+   */
+  canDrag = (item: TreeNode): boolean => {
+    return true; // All nodes can be dragged
+  };
 }

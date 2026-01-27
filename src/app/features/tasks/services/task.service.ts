@@ -90,6 +90,24 @@ export class TaskService {
   }
 
   /**
+   * Set parent task for reparenting
+   */
+  setParentTask(taskId: string, parentTaskId: string): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${taskId}/parent`, { parentTaskId }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Remove parent task (make task root-level)
+   */
+  removeParent(taskId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${taskId}/parent`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Handle HTTP errors
    */
   private handleError(error: any): Observable<never> {

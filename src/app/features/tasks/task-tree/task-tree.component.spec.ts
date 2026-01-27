@@ -4,6 +4,8 @@ import { TaskTreeComponent } from './task-tree.component';
 import { TaskService } from '../services/task.service';
 import { of, throwError } from 'rxjs';
 import { Task, TaskStatus, TaskPriority, TaskType } from '../../../shared/models/task.model';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { CdkDragStart } from '@angular/cdk/drag-drop';
 
 describe('TaskTreeComponent', () => {
   let component: TaskTreeComponent;
@@ -66,13 +68,16 @@ describe('TaskTreeComponent', () => {
 
   beforeEach(async () => {
     mockTaskService = {
-      getTasks: vi.fn().mockReturnValue(of(mockTasks))
+      getTasks: vi.fn().mockReturnValue(of(mockTasks)),
+      setParentTask: vi.fn().mockReturnValue(of(undefined)),
+      removeParent: vi.fn().mockReturnValue(of(undefined))
     };
 
     await TestBed.configureTestingModule({
       imports: [TaskTreeComponent],
       providers: [
-        { provide: TaskService, useValue: mockTaskService }
+        { provide: TaskService, useValue: mockTaskService },
+        { provide: MatSnackBar, useValue: { open: vi.fn().mockReturnValue({ onAction: () => of() }) } }
       ]
     }).compileComponents();
 
@@ -169,5 +174,154 @@ describe('TaskTreeComponent', () => {
     
     const expandedIds = JSON.parse(savedState!);
     expect(expandedIds).toContain('1');
+    });
+
+  // Drag-drop tests
+  describe('Drag-Drop Functionality', () => {
+    beforeEach(() => {
+      fixture.detectChanges();
+    });
+
+    it('should set dragged node on drag start', () => {
+      const node = component.dataSource.data[0];
+      const event = {} as CdkDragStart;
+      
+      component.onDragStart(event, node);
+      
+      expect(component.draggedNode).toBe(node);
+      expect(component.draggedTaskId).toBe('1');
+      expect(component.previousParentId).toBeNull();
+    });
+
+    it('should set drop target node on drag enter', () => {
+      const node = component.dataSource.data[1];
+      const event = {} as any;
+      
+      component.onDragEnter(event, node);
+      
+      expect(component.dropTargetNode).toBe(node);
+    });
+
+    it('should reset drag state on drag end', () => {
+      const node = component.dataSource.data[0];
+      component.draggedNode = node;
+      component.draggedTaskId = '1';
+      component.dropTargetNode = component.dataSource.data[1];
+      
+      component.onDragEnd();
+      
+      expect(component.draggedNode).toBeNull();
+      expect(component.draggedTaskId).toBeNull();
+      expect(component.dropTargetNode).toBeNull();
+    });
+
+    it('should validate drop - cannot drop on itself', () => {
+      const node = component.dataSource.data[0];
+      component.draggedNode = node;
+      
+      const isValid = component.isValidDropTarget(node);
+      
+      expect(isValid).toBe(false);
+    });
+
+    it('should validate drop - cannot drop on descendant', () => {
+      const parentNode = component.dataSource.data[0];
+      const childNode = parentNode.children[0];
+      component.draggedNode = parentNode;
+      
+      const isValid = component.isValidDropTarget(childNode);
+      
+      expect(isValid).toBe(false);
+    });
+
+    it('should validate drop - can drop on unrelated task', () => {
+      const node1 = component.dataSource.data[0];
+      const node2 = component.dataSource.data[1];
+      component.draggedNode = node1;
+      
+      const isValid = component.isValidDropTarget(node2);
+      
+      expect(isValid).toBe(true);
+    });
+
+    it('should call setParentTask API when dropping on a task', () => {
+      const draggedNode = component.dataSource.data[1];
+      const targetNode = component.dataSource.data[0];
+      component.draggedNode = draggedNode;
+      
+      const event = {} as any;
+      component.onDrop(event, targetNode);
+      
+      expect(mockTaskService.setParentTask).toHaveBeenCalledWith('3', '1');
+    });
+
+    it('should call removeParent API when dropping on root', () => {
+      const childNode = component.dataSource.data[0].children[0];
+      component.draggedNode = childNode;
+      
+      const event = {} as any;
+      component.onDrop(event, null);
+      
+      expect(mockTaskService.removeParent).toHaveBeenCalledWith('2');
+    });
+
+    it('should show error notification for invalid drop', () => {
+      const node = component.dataSource.data[0];
+      component.draggedNode = node;
+      const snackBar = TestBed.inject(MatSnackBar);
+      
+      const event = {} as any;
+      component.onDrop(event, node);
+      
+      expect(snackBar.open).toHaveBeenCalledWith('Cannot move task: Invalid drop location', 'Close', { duration: 3000 });
+    });
+
+    it('should update local state after successful reparenting', async () => {
+      const draggedNode = component.dataSource.data[1];
+      const targetNode = component.dataSource.data[0];
+      component.draggedNode = draggedNode;
+      
+      const event = {} as any;
+      component.onDrop(event, targetNode);
+      
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const updatedTask = component.tasks().find(t => t.id === '3');
+      expect(updatedTask?.parentTaskId).toBe('1');
+    });
+
+    it('should show undo notification after successful reparenting', () => {
+      const draggedNode = component.dataSource.data[1];
+      const targetNode = component.dataSource.data[0];
+      component.draggedNode = draggedNode;
+      const snackBar = TestBed.inject(MatSnackBar);
+      
+      const event = {} as any;
+      component.onDrop(event, targetNode);
+      
+      expect(snackBar.open).toHaveBeenCalledWith('Task moved successfully', 'Undo', { duration: 5000 });
+    });
+
+    it('should handle API error during reparenting', () => {
+      mockTaskService.setParentTask = vi.fn().mockReturnValue(throwError(() => ({ error: { message: 'Circular reference detected' } })));
+      
+      const draggedNode = component.dataSource.data[1];
+      const targetNode = component.dataSource.data[0];
+      component.draggedNode = draggedNode;
+      const snackBar = TestBed.inject(MatSnackBar);
+      
+      const event = {} as any;
+      component.onDrop(event, targetNode);
+      
+      expect(snackBar.open).toHaveBeenCalledWith('Circular reference detected', 'Close', { duration: 3000 });
+    });
+
+    it('should detect descendant relationship correctly', () => {
+      const isDesc = component['isDescendant']('1', '2');
+      expect(isDesc).toBe(true);
+      
+      const isNotDesc = component['isDescendant']('1', '3');
+      expect(isNotDesc).toBe(false);
+    });
   });
 });
