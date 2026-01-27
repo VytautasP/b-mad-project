@@ -1,0 +1,165 @@
+﻿.task-tree-container {
+  padding: 16px;
+  height: 100%;
+  overflow: auto;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  
+  p {
+    margin-top: 16px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+  
+  .empty-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: rgba(0, 0, 0, 0.26);
+    margin-bottom: 16px;
+  }
+  
+  h3 {
+    margin: 0 0 8px 0;
+    color: rgba(0, 0, 0, 0.87);
+  }
+  
+  p {
+    margin: 0;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.task-tree {
+  .mat-tree-node,
+  .mat-nested-tree-node {
+    min-height: 48px;
+  }
+  
+  .mat-tree-node {
+    display: flex;
+    align-items: center;
+  }
+  
+  .tree-node-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    padding: 8px 0;
+    
+    .type-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      color: rgba(0, 0, 0, 0.54);
+    }
+    
+    .status-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      
+      &.status-done {
+        color: #4caf50;
+      }
+      
+      &.status-in-progress {
+        color: #2196f3;
+      }
+      
+      &.status-blocked {
+        color: #f44336;
+      }
+      
+      &.status-waiting {
+        color: #ff9800;
+      }
+      
+      &.status-todo {
+        color: rgba(0, 0, 0, 0.38);
+      }
+    }
+    
+    .task-name {
+      flex: 1;
+      cursor: pointer;
+      font-size: 14px;
+      
+      &:hover {
+        color: #1976d2;
+        text-decoration: underline;
+      }
+    }
+    
+    .priority-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      
+      &.priority-critical {
+        color: #d32f2f;
+      }
+      
+      &.priority-high {
+        color: #f57c00;
+      }
+      
+      &.priority-medium {
+        color: #fbc02d;
+      }
+      
+      &.priority-low {
+        color: rgba(0, 0, 0, 0.38);
+      }
+    }
+  }
+  
+  .tree-invisible {
+    display: none;
+  }
+}
+
+// Mobile responsive styles
+@media (max-width: 768px) {
+  .task-tree-container {
+    padding: 8px;
+  }
+  
+  .task-tree {
+    .mat-tree-node,
+    .mat-nested-tree-node {
+      min-height: 44px;
+    }
+    
+    .tree-node-content {
+      gap: 4px;
+      
+      .task-name {
+        font-size: 13px;
+      }
+      
+      .type-icon,
+      .status-icon,
+      .priority-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+}

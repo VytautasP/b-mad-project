@@ -26,7 +26,9 @@ export interface Task {
   name: string;
   description: string | null;
   parentTaskId: string | null;
+  hasChildren: boolean;
   createdByUserId: string;
+  createdByUserName: string;
   createdDate: Date;
   modifiedDate: Date;
   dueDate: Date | null;

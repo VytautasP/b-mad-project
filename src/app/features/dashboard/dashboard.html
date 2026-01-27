@@ -13,16 +13,35 @@
 
   <!-- Main Content -->
   <div class="dashboard-content">
-    <!-- Header with Create Button -->
+    <!-- Header with Create Button and View Toggle -->
     <div class="content-header">
       <h1>My Tasks</h1>
-      <button mat-raised-button color="primary" (click)="openTaskForm()">
-        <mat-icon>add</mat-icon>
-        Create Task
-      </button>
+      <div class="header-actions">
+        <mat-button-toggle-group [value]="viewMode()" (change)="viewMode.set($event.value)" aria-label="View mode">
+          <mat-button-toggle value="list">
+            <mat-icon>list</mat-icon>
+            List
+          </mat-button-toggle>
+          <mat-button-toggle value="tree">
+            <mat-icon>account_tree</mat-icon>
+            Tree
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+        <button mat-raised-button color="primary" (click)="openTaskForm()">
+          <mat-icon>add</mat-icon>
+          Create Task
+        </button>
+      </div>
     </div>
 
-    <!-- Task List -->
-    <app-task-list></app-task-list>
+    <!-- Task List View -->
+    @if (viewMode() === 'list') {
+      <app-task-list></app-task-list>
+    }
+
+    <!-- Task Tree View -->
+    @if (viewMode() === 'tree') {
+      <app-task-tree (taskSelected)="onTaskSelected($event)"></app-task-tree>
+    }
   </div>
 </div>
