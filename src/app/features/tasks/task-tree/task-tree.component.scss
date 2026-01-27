@@ -174,19 +174,54 @@
     }
   }
   
-  // Nested tree indentation styling
-  .mat-nested-tree-node div[role='group'] {
-    padding-left: 32px;
+  // Nested tree indentation styling with traditional connector lines
+  .mat-nested-tree-node {
     position: relative;
     
-    &::before {
-      content: '';
-      position: absolute;
-      left: 22px;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: linear-gradient(to bottom, #e8eaed 0%, #e8eaed 100%);
+    div[role='group'] {
+      padding-left: 40px;
+      position: relative;
+      
+      // Main vertical line running down the left side
+      &::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #dadce0;
+      }
+      
+      > .mat-nested-tree-node,
+      > .mat-tree-node {
+        position: relative;
+        
+        // Horizontal line connecting to the vertical line
+        &::before {
+          content: '';
+          position: absolute;
+          left: -20px;
+          top: 26px;
+          width: 20px;
+          height: 2px;
+          background: #dadce0;
+        }
+      }
+      
+      // Last child: stop the vertical line at this element
+      > .mat-nested-tree-node:last-child,
+      > .mat-tree-node:last-child {
+        &::after {
+          content: '';
+          position: absolute;
+          left: -20px;
+          top: 26px;
+          bottom: 0;
+          width: 2px;
+          background: #fafafa;
+        }
+      }
     }
   }
   
