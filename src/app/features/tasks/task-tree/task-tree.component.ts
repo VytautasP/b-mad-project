@@ -378,11 +378,16 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
    * Handle drop event
    */
   onDrop(event: CdkDragDrop<TreeNode>, targetNode: TreeNode | null): void {
-    if (!this.draggedNode) return;
+    if (!this.draggedNode) {
+      this.resetDragState();
+      return;
+    }
 
     const draggedTaskId = this.draggedNode.task.id;
     // Use the current drop target if available, otherwise use the targetNode parameter
     const targetParentId = this.dropTargetNode?.task.id ?? targetNode?.task.id ?? null;
+
+    console.log('Drop event:', { draggedTaskId, targetParentId, dropTargetNode: this.dropTargetNode });
 
     // Validate drop
     if (!this.isValidDrop(draggedTaskId, targetParentId)) {
@@ -391,15 +396,20 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Perform reparenting
+    // Perform reparenting (resetDragState is called inside performReparenting after API call)
     this.performReparenting(draggedTaskId, targetParentId);
   }
 
   /**
-   * Handle drag end event
+   * Handle drag end event (only called if drag is cancelled without drop)
    */
   onDragEnd(): void {
-    this.resetDragState();
+    // Delay clearing state slightly to allow drop event to fire first
+    setTimeout(() => {
+      if (this.draggedNode) {
+        this.resetDragState();
+      }
+    }, 50);
   }
 
   /**

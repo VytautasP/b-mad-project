@@ -248,11 +248,11 @@ public class TaskRepository : ITaskRepository
         // Check if we're using a relational database
         if (_context.Database.IsRelational())
         {
-            var sql = @"
+            var sql = $@"
                 WITH RECURSIVE task_ancestors AS (
                     SELECT id, parent_task_id, 0 as depth
                     FROM tasks
-                    WHERE id = {0} AND is_deleted = false
+                    WHERE id = '{taskId}' AND is_deleted = false
                     
                     UNION ALL
                     
@@ -261,10 +261,10 @@ public class TaskRepository : ITaskRepository
                     INNER JOIN task_ancestors ta ON t.id = ta.parent_task_id
                     WHERE t.is_deleted = false
                 )
-                SELECT COALESCE(MAX(depth), 0) as Value FROM task_ancestors";
+                SELECT COALESCE(MAX(depth), 0) as ""Value"" FROM task_ancestors";
 
             var result = await _context.Database
-                .SqlQueryRaw<int>(sql, taskId)
+                .SqlQueryRaw<int>(sql)
                 .FirstOrDefaultAsync(ct);
 
             return result;
@@ -300,11 +300,11 @@ public class TaskRepository : ITaskRepository
         // Check if we're using a relational database
         if (_context.Database.IsRelational())
         {
-            var sql = @"
+            var sql = $@"
                 WITH RECURSIVE task_tree AS (
                     SELECT id, parent_task_id
                     FROM tasks
-                    WHERE id = {0} AND is_deleted = false
+                    WHERE id = '{potentialAncestorId}' AND is_deleted = false
                     
                     UNION ALL
                     
@@ -313,10 +313,10 @@ public class TaskRepository : ITaskRepository
                     INNER JOIN task_tree tt ON t.parent_task_id = tt.id
                     WHERE t.is_deleted = false
                 )
-                SELECT COUNT(*) as Value FROM task_tree WHERE id = {1}";
+                SELECT COUNT(*) as ""Value"" FROM task_tree WHERE id = '{taskId}'";
 
             var count = await _context.Database
-                .SqlQueryRaw<int>(sql, potentialAncestorId, taskId)
+                .SqlQueryRaw<int>(sql)
                 .FirstOrDefaultAsync(ct);
 
             return count > 0;
