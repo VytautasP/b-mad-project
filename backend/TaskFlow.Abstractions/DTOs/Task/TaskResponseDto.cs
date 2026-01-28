@@ -18,4 +18,5 @@ public class TaskResponseDto
     public Constants.TaskStatus Status { get; set; }
     public int Progress { get; set; }
     public Constants.TaskType Type { get; set; }
+    public List<TaskAssignmentDto> Assignees { get; set; } = new List<TaskAssignmentDto>();
 }

@@ -165,14 +165,14 @@ public class TaskServiceHierarchyTests
     }
 
     [Fact]
-    public async System.Threading.Tasks.Task GetChildrenAsync_ThrowsUnauthorizedForWrongUser()
+    public async System.Threading.Tasks.Task GetChildrenAsync_ThrowsForbiddenForWrongUser()
     {
         // Arrange
         _mockTaskRepository.Setup(r => r.UserOwnsTaskAsync(_taskId, _testUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act & Assert
-        await Assert.ThrowsAsync<UnauthorizedException>(
+        await Assert.ThrowsAsync<ForbiddenException>(
             () => _taskService.GetChildrenAsync(_taskId, _testUserId));
     }
 

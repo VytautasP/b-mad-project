@@ -60,11 +60,11 @@ public class TasksControllerTests
             }
         };
 
-        _mockTaskService.Setup(s => s.GetUserTasksAsync(_testUserId, null, null, It.IsAny<CancellationToken>()))
+        _mockTaskService.Setup(s => s.GetUserTasksAsync(_testUserId, null, null, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(tasks);
 
         // Act
-        var result = await _controller.GetUserTasks(null, null, CancellationToken.None);
+        var result = await _controller.GetUserTasks(null, null, false, CancellationToken.None);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -77,14 +77,14 @@ public class TasksControllerTests
     {
         // Arrange
         var tasks = new List<TaskResponseDto>();
-        _mockTaskService.Setup(s => s.GetUserTasksAsync(_testUserId, TaskStatus.Done, null, It.IsAny<CancellationToken>()))
+        _mockTaskService.Setup(s => s.GetUserTasksAsync(_testUserId, TaskStatus.Done, null, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(tasks);
 
         // Act
-        await _controller.GetUserTasks(TaskStatus.Done, null, CancellationToken.None);
+        await _controller.GetUserTasks(TaskStatus.Done, null, false, CancellationToken.None);
 
         // Assert
-        _mockTaskService.Verify(s => s.GetUserTasksAsync(_testUserId, TaskStatus.Done, null, It.IsAny<CancellationToken>()), Times.Once);
+        _mockTaskService.Verify(s => s.GetUserTasksAsync(_testUserId, TaskStatus.Done, null, It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -93,14 +93,14 @@ public class TasksControllerTests
         // Arrange
         var searchTerm = "important task";
         var tasks = new List<TaskResponseDto>();
-        _mockTaskService.Setup(s => s.GetUserTasksAsync(_testUserId, null, searchTerm, It.IsAny<CancellationToken>()))
+        _mockTaskService.Setup(s => s.GetUserTasksAsync(_testUserId, null, searchTerm, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(tasks);
 
         // Act
-        await _controller.GetUserTasks(null, searchTerm, CancellationToken.None);
+        await _controller.GetUserTasks(null, searchTerm, false, CancellationToken.None);
 
         // Assert
-        _mockTaskService.Verify(s => s.GetUserTasksAsync(_testUserId, null, searchTerm, It.IsAny<CancellationToken>()), Times.Once);
+        _mockTaskService.Verify(s => s.GetUserTasksAsync(_testUserId, null, searchTerm, It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -109,25 +109,25 @@ public class TasksControllerTests
         // Arrange
         var searchTerm = "bug fix";
         var tasks = new List<TaskResponseDto>();
-        _mockTaskService.Setup(s => s.GetUserTasksAsync(_testUserId, TaskStatus.Blocked, searchTerm, It.IsAny<CancellationToken>()))
+        _mockTaskService.Setup(s => s.GetUserTasksAsync(_testUserId, TaskStatus.Blocked, searchTerm, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(tasks);
 
         // Act
-        await _controller.GetUserTasks(TaskStatus.Blocked, searchTerm, CancellationToken.None);
+        await _controller.GetUserTasks(TaskStatus.Blocked, searchTerm, false, CancellationToken.None);
 
         // Assert
-        _mockTaskService.Verify(s => s.GetUserTasksAsync(_testUserId, TaskStatus.Blocked, searchTerm, It.IsAny<CancellationToken>()), Times.Once);
+        _mockTaskService.Verify(s => s.GetUserTasksAsync(_testUserId, TaskStatus.Blocked, searchTerm, It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async System.Threading.Tasks.Task GetUserTasks_ReturnsEmptyList_WhenNoTasksFound()
     {
         // Arrange
-        _mockTaskService.Setup(s => s.GetUserTasksAsync(_testUserId, null, null, It.IsAny<CancellationToken>()))
+        _mockTaskService.Setup(s => s.GetUserTasksAsync(_testUserId, null, null, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<TaskResponseDto>());
 
         // Act
-        var result = await _controller.GetUserTasks(null, null, CancellationToken.None);
+        var result = await _controller.GetUserTasks(null, null, false, CancellationToken.None);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -140,13 +140,13 @@ public class TasksControllerTests
     {
         // Arrange
         var tasks = new List<TaskResponseDto>();
-        _mockTaskService.Setup(s => s.GetUserTasksAsync(It.IsAny<Guid>(), null, null, It.IsAny<CancellationToken>()))
+        _mockTaskService.Setup(s => s.GetUserTasksAsync(It.IsAny<Guid>(), null, null, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(tasks);
 
         // Act
-        await _controller.GetUserTasks(null, null, CancellationToken.None);
+        await _controller.GetUserTasks(null, null, false, CancellationToken.None);
 
         // Assert
-        _mockTaskService.Verify(s => s.GetUserTasksAsync(_testUserId, null, null, It.IsAny<CancellationToken>()), Times.Once);
+        _mockTaskService.Verify(s => s.GetUserTasksAsync(_testUserId, null, null, It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

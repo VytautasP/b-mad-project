@@ -40,10 +40,10 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet]
-    public async System.Threading.Tasks.Task<IActionResult> GetUserTasks([FromQuery] TaskFlow.Abstractions.Constants.TaskStatus? status, [FromQuery] string? search, CancellationToken ct)
+    public async System.Threading.Tasks.Task<IActionResult> GetUserTasks([FromQuery] TaskFlow.Abstractions.Constants.TaskStatus? status, [FromQuery] string? search, [FromQuery] bool myTasks, CancellationToken ct = default)
     {
         var userId = GetCurrentUserId();
-        var tasks = await _taskService.GetUserTasksAsync(userId, status, search, ct);
+        var tasks = await _taskService.GetUserTasksAsync(userId, status, search, myTasks, ct);
         return Ok(tasks);
     }
 
@@ -109,5 +109,29 @@ public class TasksController : ControllerBase
         var userId = GetCurrentUserId();
         await _taskService.RemoveParentAsync(id, userId, ct);
         return NoContent();
+    }
+
+    [HttpPost("{id}/assignments")]
+    public async System.Threading.Tasks.Task<IActionResult> AssignUser(Guid id, [FromBody] AssignUserDto dto, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        await _taskService.AssignUserAsync(id, dto.UserId, userId, ct);
+        return NoContent();
+    }
+
+    [HttpDelete("{id}/assignments/{userId}")]
+    public async System.Threading.Tasks.Task<IActionResult> UnassignUser(Guid id, Guid userId, CancellationToken ct)
+    {
+        var currentUserId = GetCurrentUserId();
+        await _taskService.UnassignUserAsync(id, userId, currentUserId, ct);
+        return NoContent();
+    }
+
+    [HttpGet("{id}/assignments")]
+    public async System.Threading.Tasks.Task<IActionResult> GetTaskAssignees(Guid id, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        var assignees = await _taskService.GetTaskAssigneesAsync(id, userId, ct);
+        return Ok(assignees);
     }
 }

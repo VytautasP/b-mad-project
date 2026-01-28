@@ -71,6 +71,33 @@ public class TaskRepository : ITaskRepository
             .ToListAsync(ct);
     }
 
+    public async System.Threading.Tasks.Task<List<TaskEntity>> GetAssignedTasksAsync(Guid userId, TaskFlow.Abstractions.Constants.TaskStatus? status, string? searchTerm = null, CancellationToken ct = default)
+    {
+        var query = _context.Tasks
+            .AsNoTracking()
+            .Include(t => t.TaskAssignments)
+                .ThenInclude(ta => ta.User)
+            .Include(t => t.CreatedByUser)
+            .Where(t => !t.IsDeleted && 
+                       (t.CreatedByUserId == userId || t.TaskAssignments.Any(ta => ta.UserId == userId)));
+
+        if (status.HasValue)
+        {
+            query = query.Where(t => t.Status == status.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var trimmedSearch = searchTerm.Trim();
+            query = query.Where(t => t.Name.ToLower().Contains(trimmedSearch.ToLower()) || 
+                                    (t.Description != null && t.Description.ToLower().Contains(trimmedSearch.ToLower())));
+        }
+
+        return await query
+            .OrderByDescending(t => t.CreatedDate)
+            .ToListAsync(ct);
+    }
+
     public async System.Threading.Tasks.Task<bool> UpdateAsync(TaskEntity task, CancellationToken ct = default)
     {
         task.ModifiedDate = DateTime.UtcNow;

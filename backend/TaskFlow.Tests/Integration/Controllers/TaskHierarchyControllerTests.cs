@@ -225,6 +225,6 @@ public class TaskHierarchyControllerTests : IClassFixture<CustomWebApplicationFa
         var response = await _client.GetAsync($"/api/tasks/{task.Id}/children");
 
         // Assert
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 }

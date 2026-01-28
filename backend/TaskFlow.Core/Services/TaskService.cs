@@ -66,9 +66,19 @@ public class TaskService : ITaskService
         return MapToResponseDto(task);
     }
 
-    public async System.Threading.Tasks.Task<List<TaskResponseDto>> GetUserTasksAsync(Guid userId, TaskFlow.Abstractions.Constants.TaskStatus? status, string? searchTerm = null, CancellationToken ct = default)
+    public async System.Threading.Tasks.Task<List<TaskResponseDto>> GetUserTasksAsync(Guid userId, TaskFlow.Abstractions.Constants.TaskStatus? status, string? searchTerm, bool myTasksOnly, CancellationToken ct = default)
     {
-        var tasks = await _unitOfWork.Tasks.GetUserTasksAsync(userId, status, searchTerm, ct);
+        List<TaskEntity> tasks;
+        
+        if (myTasksOnly)
+        {
+            tasks = await _unitOfWork.Tasks.GetAssignedTasksAsync(userId, status, searchTerm, ct);
+        }
+        else
+        {
+            tasks = await _unitOfWork.Tasks.GetUserTasksAsync(userId, status, searchTerm, ct);
+        }
+        
         return tasks.Select(MapToResponseDto).ToList();
     }
 
@@ -137,7 +147,16 @@ public class TaskService : ITaskService
             Priority = task.Priority,
             Status = task.Status,
             Progress = task.Progress,
-            Type = task.Type
+            Type = task.Type,
+            Assignees = task.TaskAssignments?.Select(ta => new TaskAssignmentDto
+            {
+                UserId = ta.UserId,
+                UserName = ta.User?.Name ?? string.Empty,
+                UserEmail = ta.User?.Email ?? string.Empty,
+                AssignedDate = ta.AssignedDate,
+                AssignedByUserId = ta.AssignedByUserId,
+                AssignedByUserName = ta.AssignedByUser?.Name ?? string.Empty
+            }).ToList() ?? new List<TaskAssignmentDto>()
         };
     }
 
@@ -222,7 +241,7 @@ public class TaskService : ITaskService
         var ownsTask = await _unitOfWork.Tasks.UserOwnsTaskAsync(taskId, userId, ct);
         if (!ownsTask)
         {
-            throw new UnauthorizedException("You do not have permission to access this task");
+            throw new ForbiddenException("You do not have permission to access this task");
         }
 
         var children = await _unitOfWork.Tasks.GetChildrenAsync(taskId, ct);
@@ -285,5 +304,115 @@ public class TaskService : ITaskService
         }
 
         return descendants;
+    }
+
+    public async System.Threading.Tasks.Task AssignUserAsync(Guid taskId, Guid userId, Guid assignedByUserId, CancellationToken ct = default)
+    {
+        // Validate task exists
+        var task = await _unitOfWork.Tasks.GetByIdAsync(taskId, ct);
+        if (task == null)
+        {
+            throw new NotFoundException($"Task with ID {taskId} not found");
+        }
+
+        // Check if current user has permission (is owner or assignee)
+        var isOwner = task.CreatedByUserId == assignedByUserId;
+        var isAssignee = await _unitOfWork.TaskAssignments.IsUserAssignedToTaskAsync(taskId, assignedByUserId, ct);
+        
+        if (!isOwner && !isAssignee)
+        {
+            throw new ForbiddenException("You do not have permission to assign users to this task");
+        }
+
+        // Validate target user exists
+        var targetUser = await _unitOfWork.Users.GetByIdAsync(userId, ct);
+        if (targetUser == null)
+        {
+            throw new NotFoundException($"User with ID {userId} not found");
+        }
+
+        // Check if user is already assigned (idempotent operation)
+        var existingAssignment = await _unitOfWork.TaskAssignments.GetAssignmentAsync(taskId, userId, ct);
+        if (existingAssignment != null)
+        {
+            // Already assigned, return success (idempotent)
+            _logger.LogInformation("User {UserId} is already assigned to task {TaskId}", userId, taskId);
+            return;
+        }
+
+        // Create new assignment
+        var assignment = new Abstractions.Entities.TaskAssignment
+        {
+            TaskId = taskId,
+            UserId = userId,
+            AssignedDate = DateTime.UtcNow,
+            AssignedByUserId = assignedByUserId
+        };
+
+        await _unitOfWork.TaskAssignments.AddAssignmentAsync(assignment, ct);
+        
+        _logger.LogInformation("User {AssignedByUserId} assigned user {UserId} to task {TaskId}", assignedByUserId, userId, taskId);
+    }
+
+    public async System.Threading.Tasks.Task UnassignUserAsync(Guid taskId, Guid userId, Guid currentUserId, CancellationToken ct = default)
+    {
+        // Validate task exists
+        var task = await _unitOfWork.Tasks.GetByIdAsync(taskId, ct);
+        if (task == null)
+        {
+            throw new NotFoundException($"Task with ID {taskId} not found");
+        }
+
+        // Check if current user has permission (is owner or assignee)
+        var isOwner = task.CreatedByUserId == currentUserId;
+        var isAssignee = await _unitOfWork.TaskAssignments.IsUserAssignedToTaskAsync(taskId, currentUserId, ct);
+        
+        if (!isOwner && !isAssignee)
+        {
+            throw new ForbiddenException("You do not have permission to unassign users from this task");
+        }
+
+        // Validate assignment exists
+        var assignment = await _unitOfWork.TaskAssignments.GetAssignmentAsync(taskId, userId, ct);
+        if (assignment == null)
+        {
+            throw new NotFoundException($"User {userId} is not assigned to task {taskId}");
+        }
+
+        await _unitOfWork.TaskAssignments.RemoveAssignmentAsync(assignment, ct);
+        
+        _logger.LogInformation("User {CurrentUserId} unassigned user {UserId} from task {TaskId}", currentUserId, userId, taskId);
+    }
+
+    public async System.Threading.Tasks.Task<List<TaskAssignmentDto>> GetTaskAssigneesAsync(Guid taskId, Guid currentUserId, CancellationToken ct = default)
+    {
+        // Validate task exists
+        var task = await _unitOfWork.Tasks.GetByIdAsync(taskId, ct);
+        if (task == null)
+        {
+            throw new NotFoundException($"Task with ID {taskId} not found");
+        }
+
+        // Check if current user has permission to view (is owner or assignee)
+        var isOwner = task.CreatedByUserId == currentUserId;
+        var isAssignee = await _unitOfWork.TaskAssignments.IsUserAssignedToTaskAsync(taskId, currentUserId, ct);
+        
+        if (!isOwner && !isAssignee)
+        {
+            throw new ForbiddenException("You do not have permission to view assignees for this task");
+        }
+
+        // Get all assignments with user details
+        var assignments = await _unitOfWork.TaskAssignments.GetTaskAssignmentsAsync(taskId, ct);
+        
+        return assignments.Select(a => new TaskAssignmentDto
+        {
+            UserId = a.UserId,
+            UserName = a.User?.Name ?? string.Empty,
+            UserEmail = a.User?.Email ?? string.Empty,
+            AssignedDate = a.AssignedDate,
+            AssignedByUserId = a.AssignedByUserId,
+            AssignedByUserName = a.AssignedByUser?.Name ?? string.Empty
+        }).ToList();
     }
 }

@@ -22,4 +22,5 @@ public class Task
     public User CreatedByUser { get; set; } = null!;
     public Task? ParentTask { get; set; }
     public ICollection<Task> Children { get; set; } = new List<Task>();
+    public ICollection<TaskAssignment> TaskAssignments { get; set; } = new List<TaskAssignment>();
 }

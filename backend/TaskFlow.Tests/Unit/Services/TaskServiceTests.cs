@@ -57,7 +57,7 @@ public class TaskServiceTests
             .ReturnsAsync(tasks);
 
         // Act
-        var result = await _taskService.GetUserTasksAsync(_testUserId, null, null);
+        var result = await _taskService.GetUserTasksAsync(_testUserId, null, null, false);
 
         // Assert
         Assert.Single(result);
@@ -73,7 +73,7 @@ public class TaskServiceTests
             .ReturnsAsync(tasks);
 
         // Act
-        await _taskService.GetUserTasksAsync(_testUserId, TaskStatus.Done);
+        await _taskService.GetUserTasksAsync(_testUserId, TaskStatus.Done, null, false);
 
         // Assert
         _mockTaskRepository.Verify(r => r.GetUserTasksAsync(_testUserId, TaskStatus.Done, null, It.IsAny<CancellationToken>()), Times.Once);
@@ -89,7 +89,7 @@ public class TaskServiceTests
             .ReturnsAsync(tasks);
 
         // Act
-        await _taskService.GetUserTasksAsync(_testUserId, null, searchTerm);
+        await _taskService.GetUserTasksAsync(_testUserId, null, searchTerm, false);
 
         // Assert
         _mockTaskRepository.Verify(r => r.GetUserTasksAsync(_testUserId, null, searchTerm, It.IsAny<CancellationToken>()), Times.Once);
@@ -105,7 +105,7 @@ public class TaskServiceTests
             .ReturnsAsync(tasks);
 
         // Act
-        await _taskService.GetUserTasksAsync(_testUserId, TaskStatus.InProgress, searchTerm);
+        await _taskService.GetUserTasksAsync(_testUserId, TaskStatus.InProgress, searchTerm, false);
 
         // Assert
         _mockTaskRepository.Verify(r => r.GetUserTasksAsync(_testUserId, TaskStatus.InProgress, searchTerm, It.IsAny<CancellationToken>()), Times.Once);
@@ -119,7 +119,7 @@ public class TaskServiceTests
             .ReturnsAsync(new List<TaskEntity>());
 
         // Act
-        var result = await _taskService.GetUserTasksAsync(_testUserId, null, null);
+        var result = await _taskService.GetUserTasksAsync(_testUserId, null, null, false);
 
         // Assert
         Assert.Empty(result);
@@ -153,7 +153,7 @@ public class TaskServiceTests
             .ReturnsAsync(tasks);
 
         // Act
-        var result = await _taskService.GetUserTasksAsync(_testUserId, null, null);
+        var result = await _taskService.GetUserTasksAsync(_testUserId, null, null, false);
 
         // Assert
         Assert.Single(result);
