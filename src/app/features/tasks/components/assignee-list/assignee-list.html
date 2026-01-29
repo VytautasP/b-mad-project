@@ -1,0 +1,32 @@
+<div class="assignee-list">
+  @if (isEmpty()) {
+    <span class="no-assignees">No assignees</span>
+  } @else {
+    <div class="assignee-avatars">
+      @for (assignee of visibleAssignees(); track assignee.userId) {
+        <div class="assignee-chip" [matTooltip]="assignee.userName + ' (' + assignee.userEmail + ')'">
+          <div class="avatar">
+            {{ getUserInitials(assignee.userName) }}
+          </div>
+          @if (showActions) {
+            <button mat-icon-button 
+                    class="remove-btn"
+                    (click)="onRemoveClick(assignee.userId)"
+                    matTooltip="Remove assignee"
+                    aria-label="Remove assignee">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </div>
+      }
+      @if (hiddenCount() > 0) {
+        <div class="assignee-chip more-badge" 
+             [matTooltip]="'And ' + hiddenCount() + ' more'">
+          <div class="avatar">
+            +{{ hiddenCount() }}
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

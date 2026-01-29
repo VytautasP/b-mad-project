@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, tap, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { Task, TaskCreateDto, TaskUpdateDto, TaskStatus } from '../../../shared/models/task.model';
+import { Task, TaskCreateDto, TaskUpdateDto, TaskStatus, TaskAssignmentDto } from '../../../shared/models/task.model';
 
 @Injectable({
   providedIn: 'root'
@@ -17,9 +17,9 @@ export class TaskService {
   public tasks$ = this.tasksSubject.asObservable();
 
   /**
-   * Fetch all tasks for the current user with optional search and status filters
+   * Fetch all tasks for the current user with optional search, status filters, and myTasks flag
    */
-  getTasks(search?: string, status?: TaskStatus): Observable<Task[]> {
+  getTasks(search?: string, status?: TaskStatus, myTasksOnly: boolean = false): Observable<Task[]> {
     let params = new HttpParams();
     
     if (search && search.trim()) {
@@ -30,8 +30,24 @@ export class TaskService {
       params = params.set('status', status.toString());
     }
     
+    if (myTasksOnly) {
+      params = params.set('myTasks', 'true');
+    }
+    
     return this.http.get<Task[]>(this.apiUrl, { params }).pipe(
       tap(tasks => this.tasksSubject.next(tasks)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Get count of tasks assigned to current user
+   */
+  getMyTasksCount(): Observable<number> {
+    const params = new HttpParams().set('myTasks', 'true');
+    
+    return this.http.get<Task[]>(this.apiUrl, { params }).pipe(
+      map(tasks => tasks.length),
       catchError(this.handleError)
     );
   }
@@ -108,6 +124,33 @@ export class TaskService {
   }
 
   /**
+   * Assign a user to a task
+   */
+  assignUser(taskId: string, userId: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${taskId}/assignments`, { userId }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Unassign a user from a task
+   */
+  unassignUser(taskId: string, userId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${taskId}/assignments/${userId}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Get task assignees
+   */
+  getTaskAssignees(taskId: string): Observable<TaskAssignmentDto[]> {
+    return this.http.get<TaskAssignmentDto[]>(`${this.apiUrl}/${taskId}/assignments`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Handle HTTP errors
    */
   private handleError(error: any): Observable<never> {
@@ -115,3 +158,4 @@ export class TaskService {
     return throwError(() => error);
   }
 }
+

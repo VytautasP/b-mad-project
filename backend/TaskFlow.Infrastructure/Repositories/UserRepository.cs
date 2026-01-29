@@ -46,4 +46,25 @@ public class UserRepository : IUserRepository
         await _context.Users.AddAsync(user, ct);
         return user;
     }
+
+    public async Task<List<User>> SearchUsersAsync(string query, int limit, CancellationToken ct = default)
+    {
+        var normalizedQuery = query.ToLower();
+        
+        return await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Name.ToLower().Contains(normalizedQuery) || 
+                       u.Email.ToLower().Contains(normalizedQuery))
+            .OrderBy(u => u.Name)
+            .Take(limit)
+            .ToListAsync(ct);
+    }
+
+    public async Task<List<User>> GetAllUsersAsync(CancellationToken ct = default)
+    {
+        return await _context.Users
+            .AsNoTracking()
+            .OrderBy(u => u.Name)
+            .ToListAsync(ct);
+    }
 }

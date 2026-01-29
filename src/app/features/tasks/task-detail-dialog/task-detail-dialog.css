@@ -1,0 +1,158 @@
+.task-detail-dialog {
+  min-width: 500px;
+  max-width: 700px;
+  
+  .dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    margin: 0;
+    
+    h2 {
+      margin: 0;
+      flex: 1;
+    }
+    
+    .close-button {
+      margin-left: 16px;
+    }
+  }
+  
+  .dialog-content {
+    padding: 24px 0;
+    
+    section {
+      padding: 16px 0;
+      
+      &:first-child {
+        padding-top: 0;
+      }
+    }
+    
+    mat-divider {
+      margin: 16px 0;
+    }
+  }
+  
+  .task-info,
+  .meta-info {
+    .info-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 12px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      .label {
+        font-weight: 500;
+        min-width: 120px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+      
+      &.description {
+        flex-direction: column;
+        
+        p {
+          margin: 4px 0 0 0;
+          line-height: 1.6;
+          color: rgba(0, 0, 0, 0.87);
+        }
+      }
+    }
+  }
+  
+  .assignees-section {
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      
+      h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 500;
+      }
+      
+      .add-assignee-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+    }
+    
+    .loading-assignees {
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+    
+    .assignees-content {
+      min-height: 40px;
+      padding: 8px 0;
+    }
+    
+    .user-picker-container {
+      margin-top: 16px;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.02);
+      border-radius: 8px;
+    }
+  }
+}
+
+/* Dark mode adjustments */
+:host-context(.dark-theme) {
+  .task-info,
+  .meta-info {
+    .info-row {
+      .label {
+        color: rgba(255, 255, 255, 0.7);
+      }
+      
+      &.description p {
+        color: rgba(255, 255, 255, 0.87);
+      }
+    }
+  }
+  
+  .user-picker-container {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .task-detail-dialog {
+    min-width: unset;
+    width: 100%;
+    
+    .task-info,
+    .meta-info {
+      .info-row {
+        flex-direction: column;
+        gap: 4px;
+        
+        .label {
+          min-width: unset;
+        }
+      }
+    }
+    
+    .assignees-section {
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        
+        .add-assignee-button {
+          width: 100%;
+        }
+      }
+    }
+  }
+}

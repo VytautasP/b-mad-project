@@ -1,0 +1,28 @@
+<mat-form-field class="user-picker-field" appearance="outline">
+  <mat-label>Search users</mat-label>
+  <input type="text"
+         matInput
+         [formControl]="searchControl"
+         [matAutocomplete]="auto"
+         placeholder="Type to search...">
+  <mat-icon matPrefix>person_search</mat-icon>
+  <mat-autocomplete #auto="matAutocomplete" 
+                    [displayWith]="displayUserName.bind(this)"
+                    (optionSelected)="onUserSelect($event.option.value)">
+    @for (user of filteredUsers$ | async; track user.id) {
+      <mat-option [value]="user">
+        <div class="user-option">
+          <div class="user-avatar">
+            {{ user.name.charAt(0).toUpperCase() }}
+          </div>
+          <div class="user-info">
+            <div class="user-name">{{ user.name }}</div>
+            <div class="user-email">{{ user.email }}</div>
+          </div>
+        </div>
+      </mat-option>
+    } @empty {
+      <mat-option disabled>No users found</mat-option>
+    }
+  </mat-autocomplete>
+</mat-form-field>

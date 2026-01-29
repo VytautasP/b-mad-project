@@ -1,0 +1,98 @@
+.assignee-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.no-assignees {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.assignee-avatars {
+  display: flex;
+  align-items: center;
+  gap: -8px;
+}
+
+.assignee-chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: -8px;
+  
+  &:first-child {
+    margin-left: 0;
+  }
+  
+  &:hover {
+    z-index: 10;
+    
+    .remove-btn {
+      opacity: 1;
+    }
+  }
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: default;
+}
+
+.more-badge .avatar {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  font-size: 11px;
+}
+
+.remove-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background: #f44336;
+  color: white;
+  
+  ::ng-deep .mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    line-height: 14px;
+  }
+  
+  &:hover {
+    background: #d32f2f;
+  }
+}
+
+/* Light mode adjustments */
+:host-context(.light-theme) {
+  .no-assignees {
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Dark mode adjustments */
+:host-context(.dark-theme) {
+  .no-assignees {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .avatar {
+    border-color: #424242;
+  }
+}

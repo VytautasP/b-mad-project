@@ -13,12 +13,16 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatBadgeModule } from '@angular/material/badge';
 import { Observable, Subject } from 'rxjs';
 import { map, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { TaskService } from '../services/task.service';
 import { Task, TaskPriority, TaskStatus, TaskType } from '../../../shared/models/task.model';
 import { TaskFormComponent } from '../task-form/task-form.component';
+import { TaskDetailDialog } from '../task-detail-dialog/task-detail-dialog';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
+import { AssigneeList } from '../components/assignee-list/assignee-list';
 
 @Component({
   selector: 'app-task-list',
@@ -37,7 +41,10 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../sh
     MatSnackBarModule,
     MatInputModule,
     MatFormFieldModule,
-    MatSelectModule
+    MatSelectModule,
+    MatButtonToggleModule,
+    MatBadgeModule,
+    AssigneeList
   ],
   templateUrl: './task-list.component.html',
   styleUrl: './task-list.component.scss',
@@ -51,7 +58,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   
   tasks$: Observable<Task[]>;
   isLoading = signal(true);
-  displayedColumns: string[] = ['name', 'dueDate', 'priority', 'status', 'type', 'actions'];
+  displayedColumns: string[] = ['name', 'assignees', 'dueDate', 'priority', 'status', 'type', 'actions'];
   
   // Search and filter controls
   searchControl = new FormControl('');
@@ -60,6 +67,8 @@ export class TaskListComponent implements OnInit, OnDestroy {
   // Filter state
   searchTerm = '';
   statusFilter: TaskStatus | null = null;
+  showMyTasksOnly: boolean = false;
+  myTasksCount = signal(0);
   totalTaskCount = signal(0);
   filteredTaskCount = signal(0);
   
@@ -92,6 +101,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
     this.loadTasks();
     this.setupSearchDebounce();
     this.setupStatusFilter();
+    this.loadMyTasksCount();
   }
   
   ngOnDestroy(): void {
@@ -121,7 +131,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   loadTasks(): void {
     this.isLoading.set(true);
-    this.taskService.getTasks(this.searchTerm, this.statusFilter ?? undefined).subscribe({
+    this.taskService.getTasks(this.searchTerm, this.statusFilter ?? undefined, this.showMyTasksOnly).subscribe({
       next: (tasks) => {
         console.log('Tasks loaded successfully:', tasks);
         this.isLoading.set(false);
@@ -137,6 +147,22 @@ export class TaskListComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+  
+  loadMyTasksCount(): void {
+    this.taskService.getMyTasksCount().subscribe({
+      next: (count) => {
+        this.myTasksCount.set(count);
+      },
+      error: (error) => {
+        console.error('Failed to load my tasks count:', error);
+      }
+    });
+  }
+  
+  toggleMyTasks(): void {
+    this.showMyTasksOnly = !this.showMyTasksOnly;
+    this.loadTasks();
   }
   
   clearSearch(): void {
@@ -185,6 +211,14 @@ export class TaskListComponent implements OnInit, OnDestroy {
   formatDate(date: Date | null): string {
     if (!date) return '-';
     return new Date(date).toLocaleDateString();
+  }
+
+  onViewDetails(task: Task): void {
+    this.dialog.open(TaskDetailDialog, {
+      width: '700px',
+      maxWidth: '90vw',
+      data: { task }
+    });
   }
 
   onEdit(task: Task): void {

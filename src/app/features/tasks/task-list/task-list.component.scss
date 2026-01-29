@@ -16,12 +16,37 @@
       width: 200px;
     }
     
+    .my-tasks-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      
+      mat-icon {
+        margin-right: 4px;
+      }
+      
+      .count-badge {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: 4px;
+      }
+      
+      &.active {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
+    }
+    
     @media (max-width: 768px) {
       flex-direction: column;
       gap: 12px;
       
       .search-field,
-      .status-filter {
+      .status-filter,
+      .my-tasks-button {
         width: 100%;
         max-width: none;
       }
@@ -75,6 +100,17 @@
         display: flex;
         flex-direction: column;
         gap: 4px;
+        cursor: pointer;
+        padding: 4px 0;
+        transition: color 0.2s ease;
+        
+        &:hover {
+          color: #1976d2;
+          
+          strong {
+            text-decoration: underline;
+          }
+        }
         
         strong {
           font-weight: 500;

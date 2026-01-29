@@ -1,0 +1,104 @@
+<div class="task-detail-dialog">
+  <div mat-dialog-title class="dialog-header">
+    <h2>{{ task().name }}</h2>
+    <button mat-icon-button (click)="onClose()" class="close-button">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+  
+  <mat-dialog-content class="dialog-content">
+    <!-- Task Details Section -->
+    <section class="task-info">
+      <div class="info-row">
+        <span class="label">Status:</span>
+        <mat-chip>{{ getStatusLabel(task().status) }}</mat-chip>
+      </div>
+      
+      <div class="info-row">
+        <span class="label">Priority:</span>
+        <mat-chip>{{ getPriorityLabel(task().priority) }}</mat-chip>
+      </div>
+      
+      <div class="info-row">
+        <span class="label">Type:</span>
+        <span>{{ getTypeLabel(task().type) }}</span>
+      </div>
+      
+      <div class="info-row">
+        <span class="label">Due Date:</span>
+        <span>{{ formatDate(task().dueDate) }}</span>
+      </div>
+      
+      @if (task().description) {
+        <div class="info-row description">
+          <span class="label">Description:</span>
+          <p>{{ task().description }}</p>
+        </div>
+      }
+    </section>
+    
+    <mat-divider></mat-divider>
+    
+    <!-- Assignees Section -->
+    <section class="assignees-section">
+      <div class="section-header">
+        <h3>Assignees</h3>
+        <button mat-raised-button 
+                color="primary" 
+                (click)="toggleUserPicker()"
+                class="add-assignee-button">
+          <mat-icon>person_add</mat-icon>
+          Add Assignee
+        </button>
+      </div>
+      
+      @if (isLoadingAssignees()) {
+        <div class="loading-assignees">
+          <mat-spinner diameter="32"></mat-spinner>
+        </div>
+      } @else {
+        <div class="assignees-content">
+          <app-assignee-list 
+            [assignees]="assignees()"
+            [maxVisible]="10"
+            [showActions]="true"
+            (removeAssignee)="onRemoveAssignee($event)">
+          </app-assignee-list>
+        </div>
+        
+        @if (showUserPicker()) {
+          <div class="user-picker-container">
+            <app-user-picker 
+              [excludedUserIds]="getExcludedUserIds()"
+              (userSelected)="onAddAssignee($event)">
+            </app-user-picker>
+          </div>
+        }
+      }
+    </section>
+    
+    <mat-divider></mat-divider>
+    
+    <!-- Meta Information -->
+    <section class="meta-info">
+      <div class="info-row">
+        <span class="label">Created By:</span>
+        <span>{{ task().createdByUserName }}</span>
+      </div>
+      
+      <div class="info-row">
+        <span class="label">Created Date:</span>
+        <span>{{ task().createdDate | date:'medium' }}</span>
+      </div>
+      
+      <div class="info-row">
+        <span class="label">Modified Date:</span>
+        <span>{{ task().modifiedDate | date:'medium' }}</span>
+      </div>
+    </section>
+  </mat-dialog-content>
+  
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onClose()">Close</button>
+  </mat-dialog-actions>
+</div>

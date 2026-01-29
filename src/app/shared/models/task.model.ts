@@ -20,6 +20,16 @@ export enum TaskType {
   Task = 2
 }
 
+// Task Assignment DTO
+export interface TaskAssignmentDto {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  assignedDate: string;
+  assignedByUserId: string;
+  assignedByUserName: string;
+}
+
 // Full Task interface
 export interface Task {
   id: string;
@@ -37,6 +47,7 @@ export interface Task {
   progress: number;
   type: TaskType;
   isDeleted: boolean;
+  assignees: TaskAssignmentDto[];
 }
 
 // Create DTO

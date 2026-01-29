@@ -28,6 +28,18 @@
             }
           </mat-select>
         </mat-form-field>
+        
+        <button mat-raised-button 
+                [class.active]="showMyTasksOnly"
+                (click)="toggleMyTasks()"
+                class="my-tasks-button"
+                [color]="showMyTasksOnly ? 'accent' : ''">
+          <mat-icon>person</mat-icon>
+          My Tasks
+          @if (myTasksCount() > 0) {
+            <span class="count-badge">{{ myTasksCount() }}</span>
+          }
+        </button>
       </div>
       
       <!-- Task Count -->
@@ -55,12 +67,24 @@
             <ng-container matColumnDef="name">
               <mat-header-cell *matHeaderCellDef>Task Name</mat-header-cell>
               <mat-cell *matCellDef="let task">
-                <div class="task-name">
+                <div class="task-name" (click)="onViewDetails(task)" role="button" tabindex="0">
                   <strong>{{ task.name }}</strong>
                   @if (task.description) {
                     <small>{{ task.description }}</small>
                   }
                 </div>
+              </mat-cell>
+            </ng-container>
+
+            <!-- Assignees Column -->
+            <ng-container matColumnDef="assignees">
+              <mat-header-cell *matHeaderCellDef>Assignees</mat-header-cell>
+              <mat-cell *matCellDef="let task">
+                <app-assignee-list 
+                  [assignees]="task.assignees || []"
+                  [maxVisible]="3"
+                  [showActions]="false">
+                </app-assignee-list>
               </mat-cell>
             </ng-container>
 
