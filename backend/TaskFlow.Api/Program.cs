@@ -27,6 +27,7 @@ builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<ITimeEntryService, TimeEntryService>();
 
 // Configure JWT Authentication
 var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET") 

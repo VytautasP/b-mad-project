@@ -156,7 +156,8 @@ public class TaskService : ITaskService
                 AssignedDate = ta.AssignedDate,
                 AssignedByUserId = ta.AssignedByUserId,
                 AssignedByUserName = ta.AssignedByUser?.Name ?? string.Empty
-            }).ToList() ?? new List<TaskAssignmentDto>()
+            }).ToList() ?? new List<TaskAssignmentDto>(),
+            TotalLoggedMinutes = task.TimeEntries?.Sum(te => te.Minutes) ?? 0
         };
     }
 

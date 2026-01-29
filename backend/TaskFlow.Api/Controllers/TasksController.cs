@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Abstractions.Constants;
 using TaskFlow.Abstractions.DTOs.Task;
+using TaskFlow.Abstractions.DTOs.TimeEntries;
 using TaskFlow.Abstractions.Interfaces.Services;
 
 namespace TaskFlow.Api.Controllers;
@@ -13,11 +14,13 @@ namespace TaskFlow.Api.Controllers;
 public class TasksController : ControllerBase
 {
     private readonly ITaskService _taskService;
+    private readonly ITimeEntryService _timeEntryService;
     private readonly ILogger<TasksController> _logger;
 
-    public TasksController(ITaskService taskService, ILogger<TasksController> logger)
+    public TasksController(ITaskService taskService, ITimeEntryService timeEntryService, ILogger<TasksController> logger)
     {
         _taskService = taskService;
+        _timeEntryService = timeEntryService;
         _logger = logger;
     }
 
@@ -133,5 +136,34 @@ public class TasksController : ControllerBase
         var userId = GetCurrentUserId();
         var assignees = await _taskService.GetTaskAssigneesAsync(id, userId, ct);
         return Ok(assignees);
+    }
+
+    /// <summary>
+    /// Logs time for a specific task.
+    /// </summary>
+    [HttpPost("{taskId:guid}/timeentries")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async System.Threading.Tasks.Task<IActionResult> LogTime(Guid taskId, [FromBody] TimeEntryCreateDto dto, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        var result = await _timeEntryService.LogTimeAsync(taskId, userId, dto, ct);
+        return CreatedAtAction(nameof(GetTimeEntries), new { taskId }, result);
+    }
+
+    /// <summary>
+    /// Retrieves all time entries for a specific task.
+    /// </summary>
+    [HttpGet("{taskId:guid}/timeentries")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async System.Threading.Tasks.Task<IActionResult> GetTimeEntries(Guid taskId, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        var result = await _timeEntryService.GetTaskTimeEntriesAsync(taskId, userId, ct);
+        return Ok(result);
     }
 }

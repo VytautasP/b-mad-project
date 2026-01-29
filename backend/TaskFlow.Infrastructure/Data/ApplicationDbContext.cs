@@ -14,6 +14,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<TaskEntity> Tasks { get; set; } = null!;
     public DbSet<TaskAssignment> TaskAssignments { get; set; } = null!;
+    public DbSet<TimeEntry> TimeEntries { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

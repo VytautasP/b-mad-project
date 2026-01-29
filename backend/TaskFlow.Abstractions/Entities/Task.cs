@@ -23,4 +23,11 @@ public class Task
     public Task? ParentTask { get; set; }
     public ICollection<Task> Children { get; set; } = new List<Task>();
     public ICollection<TaskAssignment> TaskAssignments { get; set; } = new List<TaskAssignment>();
+    public ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();
+
+    // Computed properties
+    /// <summary>
+    /// Total minutes logged across all time entries for this task.
+    /// </summary>
+    public int TotalLoggedMinutes => TimeEntries?.Sum(te => te.Minutes) ?? 0;
 }

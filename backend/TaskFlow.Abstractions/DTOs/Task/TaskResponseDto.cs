@@ -19,4 +19,5 @@ public class TaskResponseDto
     public int Progress { get; set; }
     public Constants.TaskType Type { get; set; }
     public List<TaskAssignmentDto> Assignees { get; set; } = new List<TaskAssignmentDto>();
+    public int TotalLoggedMinutes { get; set; }
 }

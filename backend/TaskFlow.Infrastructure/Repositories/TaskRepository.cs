@@ -44,6 +44,7 @@ public class TaskRepository : ITaskRepository
         return await _context.Tasks
             .AsNoTracking()
             .Include(t => t.CreatedByUser)
+            .Include(t => t.TimeEntries)
             .Where(t => t.Id == id && !t.IsDeleted)
             .FirstOrDefaultAsync(ct);
     }
@@ -52,6 +53,7 @@ public class TaskRepository : ITaskRepository
     {
         var query = _context.Tasks
             .AsNoTracking()
+            .Include(t => t.TimeEntries)
             .Where(t => t.CreatedByUserId == userId && !t.IsDeleted);
 
         if (status.HasValue)
@@ -78,6 +80,7 @@ public class TaskRepository : ITaskRepository
             .Include(t => t.TaskAssignments)
                 .ThenInclude(ta => ta.User)
             .Include(t => t.CreatedByUser)
+            .Include(t => t.TimeEntries)
             .Where(t => !t.IsDeleted && 
                        (t.CreatedByUserId == userId || t.TaskAssignments.Any(ta => ta.UserId == userId)));
 

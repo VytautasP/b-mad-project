@@ -16,6 +16,7 @@ namespace TaskFlow.Tests.Unit.Controllers;
 public class TasksControllerTests
 {
     private readonly Mock<ITaskService> _mockTaskService;
+    private readonly Mock<ITimeEntryService> _mockTimeEntryService;
     private readonly Mock<ILogger<TasksController>> _mockLogger;
     private readonly TasksController _controller;
     private readonly Guid _testUserId = Guid.NewGuid();
@@ -23,8 +24,9 @@ public class TasksControllerTests
     public TasksControllerTests()
     {
         _mockTaskService = new Mock<ITaskService>();
+        _mockTimeEntryService = new Mock<ITimeEntryService>();
         _mockLogger = new Mock<ILogger<TasksController>>();
-        _controller = new TasksController(_mockTaskService.Object, _mockLogger.Object);
+        _controller = new TasksController(_mockTaskService.Object, _mockTimeEntryService.Object, _mockLogger.Object);
 
         // Setup user claims
         var claims = new List<Claim>
