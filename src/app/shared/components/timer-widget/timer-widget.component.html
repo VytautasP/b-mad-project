@@ -1,0 +1,32 @@
+@if (currentState && (currentState.isRunning || currentState.isPaused)) {
+  <div class="timer-widget">
+    <mat-card class="timer-card">
+      <mat-card-content>
+        <div class="timer-header">
+          <div class="timer-indicator" [class.active]="currentState.isRunning && !currentState.isPaused">
+            <span class="pulse-dot"></span>
+          </div>
+          <div class="timer-info">
+            <div class="task-name">{{ currentState.taskName }}</div>
+            <div class="timer-display">{{ formatTime(currentState.elapsedSeconds) }}</div>
+          </div>
+        </div>
+        <div class="timer-actions">
+          @if (!currentState.isPaused) {
+            <button mat-icon-button (click)="onPause()" matTooltip="Pause Timer">
+              <mat-icon>pause</mat-icon>
+            </button>
+          }
+          @if (currentState.isPaused) {
+            <button mat-icon-button (click)="onResume()" matTooltip="Resume Timer">
+              <mat-icon>play_arrow</mat-icon>
+            </button>
+          }
+          <button mat-icon-button (click)="onStop()" matTooltip="Stop Timer" color="warn">
+            <mat-icon>stop</mat-icon>
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+}

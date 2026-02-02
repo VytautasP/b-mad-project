@@ -23,6 +23,7 @@ import { TaskFormComponent } from '../task-form/task-form.component';
 import { TaskDetailDialog } from '../task-detail-dialog/task-detail-dialog';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { AssigneeList } from '../components/assignee-list/assignee-list';
+import { TimerStateService, TimerState } from '../../../core/services/state/timer-state.service';
 
 @Component({
   selector: 'app-task-list',
@@ -52,6 +53,7 @@ import { AssigneeList } from '../components/assignee-list/assignee-list';
 })
 export class TaskListComponent implements OnInit, OnDestroy {
   private readonly taskService = inject(TaskService);
+  private readonly timerService = inject(TimerStateService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroy$ = new Subject<void>();
@@ -59,6 +61,9 @@ export class TaskListComponent implements OnInit, OnDestroy {
   tasks$: Observable<Task[]>;
   isLoading = signal(true);
   displayedColumns: string[] = ['name', 'assignees', 'dueDate', 'priority', 'status', 'type', 'actions'];
+  
+  // Timer state
+  currentTimerState: TimerState | null = null;
   
   // Search and filter controls
   searchControl = new FormControl('');
@@ -102,6 +107,13 @@ export class TaskListComponent implements OnInit, OnDestroy {
     this.setupSearchDebounce();
     this.setupStatusFilter();
     this.loadMyTasksCount();
+    
+    // Subscribe to timer state
+    this.timerService.timer$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(state => {
+      this.currentTimerState = state;
+    });
   }
   
   ngOnDestroy(): void {
@@ -277,5 +289,51 @@ export class TaskListComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  onStartTimer(task: Task): void {
+    // Check if another timer is running
+    if (this.currentTimerState?.isRunning && this.currentTimerState.taskId !== task.id) {
+      const dialogData: ConfirmationDialogData = {
+        title: 'Switch Timer',
+        message: `A timer is already running for "${this.currentTimerState.taskName}". Stop current timer and start new one?`,
+        confirmText: 'Switch Timer',
+        cancelText: 'Cancel'
+      };
+
+      const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+        width: '400px',
+        data: dialogData
+      });
+
+      dialogRef.afterClosed().subscribe(confirmed => {
+        if (confirmed === true) {
+          // Stop current timer and start new one
+          this.timerService.stopTimer();
+          this.timerService.startTimer(task.id, task.name);
+          this.snackBar.open(`Timer started for "${task.name}"`, 'Close', {
+            duration: 3000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+        }
+      });
+    } else {
+      // No timer running, start new one
+      this.timerService.startTimer(task.id, task.name);
+      this.snackBar.open(`Timer started for "${task.name}"`, 'Close', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+    }
+  }
+
+  isTimerRunning(taskId: string): boolean {
+    return this.currentTimerState?.isRunning === true && this.currentTimerState?.taskId === taskId;
+  }
+
+  isAnotherTimerRunning(taskId: string): boolean {
+    return this.currentTimerState?.isRunning === true && this.currentTimerState?.taskId !== taskId;
   }
 }

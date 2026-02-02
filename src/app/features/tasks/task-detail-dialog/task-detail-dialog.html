@@ -99,6 +99,17 @@
   </mat-dialog-content>
   
   <mat-dialog-actions align="end">
+    @if (isTimerRunning()) {
+      <mat-icon class="timer-running-icon" matTooltip="Timer Running" color="accent">timer</mat-icon>
+    } @else {
+      <button mat-raised-button 
+              color="accent"
+              (click)="onStartTimer()" 
+              [disabled]="isAnotherTimerRunning()">
+        <mat-icon>play_circle</mat-icon>
+        Start Timer
+      </button>
+    }
     <button mat-button (click)="onClose()">Close</button>
   </mat-dialog-actions>
 </div>

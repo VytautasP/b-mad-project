@@ -1,17 +1,21 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { Subject, takeUntil } from 'rxjs';
 import { Task, TaskPriority, TaskStatus, TaskType, TaskAssignmentDto } from '../../../shared/models/task.model';
 import { User } from '../../../shared/models/user.model';
 import { TaskService } from '../services/task.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { AssigneeList } from '../components/assignee-list/assignee-list';
 import { UserPicker } from '../components/user-picker/user-picker';
+import { TimerStateService, TimerState } from '../../../core/services/state/timer-state.service';
+import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 
 export interface TaskDetailDialogData {
   task: Task;
@@ -28,22 +32,27 @@ export interface TaskDetailDialogData {
     MatProgressSpinnerModule,
     MatDividerModule,
     MatChipsModule,
+    MatTooltipModule,
     AssigneeList,
     UserPicker
   ],
   templateUrl: './task-detail-dialog.html',
   styleUrl: './task-detail-dialog.css',
 })
-export class TaskDetailDialog implements OnInit {
+export class TaskDetailDialog implements OnInit, OnDestroy {
   private readonly dialogRef = inject(MatDialogRef<TaskDetailDialog>);
   private readonly data: TaskDetailDialogData = inject(MAT_DIALOG_DATA);
   private readonly taskService = inject(TaskService);
+  private readonly timerService = inject(TimerStateService);
+  private readonly dialog = inject(MatDialog);
   private readonly notificationService = inject(NotificationService);
+  private readonly destroy$ = new Subject<void>();
   
   task = signal<Task>(this.data.task);
   assignees = signal<TaskAssignmentDto[]>(this.data.task.assignees || []);
   showUserPicker = signal(false);
   isLoadingAssignees = signal(false);
+  currentTimerState: TimerState | null = null;
   
   TaskPriority = TaskPriority;
   TaskStatus = TaskStatus;
@@ -51,6 +60,18 @@ export class TaskDetailDialog implements OnInit {
   
   ngOnInit(): void {
     this.loadAssignees();
+    
+    // Subscribe to timer state
+    this.timerService.timer$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(state => {
+      this.currentTimerState = state;
+    });
+  }
+  
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
   
   loadAssignees(): void {
@@ -126,6 +147,46 @@ export class TaskDetailDialog implements OnInit {
   
   onClose(): void {
     this.dialogRef.close();
+  }
+  
+  onStartTimer(): void {
+    const task = this.task();
+    
+    // Check if another timer is running
+    if (this.currentTimerState?.isRunning && this.currentTimerState.taskId !== task.id) {
+      const dialogData: ConfirmationDialogData = {
+        title: 'Switch Timer',
+        message: `A timer is already running for "${this.currentTimerState.taskName}". Stop current timer and start new one?`,
+        confirmText: 'Switch Timer',
+        cancelText: 'Cancel'
+      };
+
+      const confirmDialogRef = this.dialog.open(ConfirmationDialogComponent, {
+        width: '400px',
+        data: dialogData
+      });
+
+      confirmDialogRef.afterClosed().subscribe(confirmed => {
+        if (confirmed === true) {
+          // Stop current timer and start new one
+          this.timerService.stopTimer();
+          this.timerService.startTimer(task.id, task.name);
+          this.notificationService.showSuccess(`Timer started for "${task.name}"`);
+        }
+      });
+    } else {
+      // No timer running, start new one
+      this.timerService.startTimer(task.id, task.name);
+      this.notificationService.showSuccess(`Timer started for "${task.name}"`);
+    }
+  }
+
+  isTimerRunning(): boolean {
+    return this.currentTimerState?.isRunning === true && this.currentTimerState?.taskId === this.task().id;
+  }
+
+  isAnotherTimerRunning(): boolean {
+    return this.currentTimerState?.isRunning === true && this.currentTimerState?.taskId !== this.task().id;
   }
   
   private getErrorMessage(error: any): string {
