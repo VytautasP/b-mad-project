@@ -24,6 +24,7 @@ import { TaskDetailDialog } from '../task-detail-dialog/task-detail-dialog';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { AssigneeList } from '../components/assignee-list/assignee-list';
 import { TimerStateService, TimerState } from '../../../core/services/state/timer-state.service';
+import { formatDuration, formatDurationWithTotal } from '../../../shared/utils/time.utils';
 
 @Component({
   selector: 'app-task-list',
@@ -60,7 +61,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   
   tasks$: Observable<Task[]>;
   isLoading = signal(true);
-  displayedColumns: string[] = ['name', 'assignees', 'dueDate', 'priority', 'status', 'type', 'actions'];
+  displayedColumns: string[] = ['name', 'assignees', 'timeLogged', 'dueDate', 'priority', 'status', 'type', 'actions'];
   
   // Timer state
   currentTimerState: TimerState | null = null;
@@ -335,5 +336,32 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   isAnotherTimerRunning(taskId: string): boolean {
     return this.currentTimerState?.isRunning === true && this.currentTimerState?.taskId !== taskId;
+  }
+
+  /**
+   * Format duration using utility function
+   */
+  formatDuration(minutes: number): string {
+    return formatDuration(minutes);
+  }
+
+  /**
+   * Get formatted time display with visual indicator for parent tasks
+   */
+  getTimeDisplay(task: Task): string {
+    if (!task.totalLoggedMinutes && task.totalLoggedMinutes !== 0) {
+      return '0m';
+    }
+    return formatDurationWithTotal(task.totalLoggedMinutes, task.childrenLoggedMinutes > 0);
+  }
+
+  /**
+   * Get tooltip text explaining time breakdown for parent tasks
+   */
+  getTimeTooltip(task: Task): string {
+    if (task.childrenLoggedMinutes > 0) {
+      return `Direct: ${formatDuration(task.directLoggedMinutes)} | Children: ${formatDuration(task.childrenLoggedMinutes)} | Total: ${formatDuration(task.totalLoggedMinutes)}`;
+    }
+    return `Total time logged: ${formatDuration(task.totalLoggedMinutes)}`;
   }
 }

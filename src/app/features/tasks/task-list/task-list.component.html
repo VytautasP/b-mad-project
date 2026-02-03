@@ -88,6 +88,19 @@
               </mat-cell>
             </ng-container>
 
+            <!-- Time Logged Column -->
+            <ng-container matColumnDef="timeLogged">
+              <mat-header-cell *matHeaderCellDef>Time Logged</mat-header-cell>
+              <mat-cell *matCellDef="let task">
+                <div class="time-logged-cell" [matTooltip]="getTimeTooltip(task)">
+                  @if (task.childrenLoggedMinutes > 0) {
+                    <mat-icon class="rollup-indicator" inline>schedule</mat-icon>
+                  }
+                  <span>{{ getTimeDisplay(task) }}</span>
+                </div>
+              </mat-cell>
+            </ng-container>
+
             <!-- Due Date Column -->
             <ng-container matColumnDef="dueDate">
               <mat-header-cell *matHeaderCellDef>Due Date</mat-header-cell>
@@ -163,6 +176,15 @@
                   <div class="detail-row">
                     <span class="label">Due Date:</span>
                     <span>{{ formatDate(task.dueDate) }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="label">Time Logged:</span>
+                    <span [matTooltip]="getTimeTooltip(task)">
+                      @if (task.childrenLoggedMinutes > 0) {
+                        <mat-icon inline class="rollup-indicator">schedule</mat-icon>
+                      }
+                      {{ getTimeDisplay(task) }}
+                    </span>
                   </div>
                   <div class="detail-row">
                     <span class="label">Priority:</span>

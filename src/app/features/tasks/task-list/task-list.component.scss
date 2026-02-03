@@ -209,3 +209,18 @@
     }
   }
 }
+
+// Time logged cell styling
+.time-logged-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  
+  .rollup-indicator {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #666;
+    vertical-align: middle;
+  }
+}

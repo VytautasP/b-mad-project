@@ -22,4 +22,8 @@ public interface ITaskRepository
     System.Threading.Tasks.Task<List<TaskHierarchyDto>> GetDescendantsAsync(Guid taskId, CancellationToken ct = default);
     System.Threading.Tasks.Task<int> GetTaskDepthAsync(Guid taskId, CancellationToken ct = default);
     System.Threading.Tasks.Task<bool> IsDescendantOfAsync(Guid taskId, Guid potentialAncestorId, CancellationToken ct = default);
+    
+    // Time rollup methods
+    System.Threading.Tasks.Task<Dictionary<Guid, TaskTimeRollup>> GetTimeRollupsAsync(IEnumerable<Guid> taskIds, CancellationToken ct = default);
+    System.Threading.Tasks.Task<List<Guid>> GetAncestorIdsAsync(Guid taskId, CancellationToken ct = default);
 }

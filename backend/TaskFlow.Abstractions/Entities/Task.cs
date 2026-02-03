@@ -1,4 +1,5 @@
-﻿using TaskFlow.Abstractions.Constants;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using TaskFlow.Abstractions.Constants;
 
 namespace TaskFlow.Abstractions.Entities;
 
@@ -25,9 +26,24 @@ public class Task
     public ICollection<TaskAssignment> TaskAssignments { get; set; } = new List<TaskAssignment>();
     public ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();
 
-    // Computed properties
+    // Computed properties for time rollup
     /// <summary>
-    /// Total minutes logged across all time entries for this task.
+    /// Minutes logged directly on this task (from own time entries).
+    /// Not mapped to database - calculated from TimeEntries collection or populated from query.
     /// </summary>
-    public int TotalLoggedMinutes => TimeEntries?.Sum(te => te.Minutes) ?? 0;
+    [NotMapped]
+    public int DirectLoggedMinutes { get; set; }
+
+    /// <summary>
+    /// Minutes logged on all descendant tasks (children and their children recursively).
+    /// Not mapped to database - populated from recursive query.
+    /// </summary>
+    [NotMapped]
+    public int ChildrenLoggedMinutes { get; set; }
+
+    /// <summary>
+    /// Total minutes logged including direct time and all descendant time.
+    /// </summary>
+    [NotMapped]
+    public int TotalLoggedMinutes => DirectLoggedMinutes + ChildrenLoggedMinutes;
 }

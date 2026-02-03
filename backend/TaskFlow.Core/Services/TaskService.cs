@@ -63,7 +63,11 @@ public class TaskService : ITaskService
             throw new UnauthorizedException("You do not have permission to access this task");
         }
 
-        return MapToResponseDto(task);
+        // Get time rollup for this task
+        var timeRollups = await _unitOfWork.Tasks.GetTimeRollupsAsync(new[] { id }, ct);
+        var timeRollup = timeRollups.GetValueOrDefault(id);
+
+        return MapToResponseDto(task, timeRollup);
     }
 
     public async System.Threading.Tasks.Task<List<TaskResponseDto>> GetUserTasksAsync(Guid userId, TaskFlow.Abstractions.Constants.TaskStatus? status, string? searchTerm, bool myTasksOnly, CancellationToken ct = default)
@@ -79,7 +83,11 @@ public class TaskService : ITaskService
             tasks = await _unitOfWork.Tasks.GetUserTasksAsync(userId, status, searchTerm, ct);
         }
         
-        return tasks.Select(MapToResponseDto).ToList();
+        // Get time rollups for all tasks in batch
+        var taskIds = tasks.Select(t => t.Id).ToList();
+        var timeRollups = await _unitOfWork.Tasks.GetTimeRollupsAsync(taskIds, ct);
+        
+        return tasks.Select(t => MapToResponseDto(t, timeRollups.GetValueOrDefault(t.Id))).ToList();
     }
 
     public async System.Threading.Tasks.Task<TaskResponseDto> UpdateTaskAsync(Guid id, TaskUpdateDto dto, Guid currentUserId, CancellationToken ct = default)
@@ -130,8 +138,13 @@ public class TaskService : ITaskService
         _logger.LogInformation("User {UserId} deleted task {TaskId}", currentUserId, id);
     }
 
-    private TaskResponseDto MapToResponseDto(TaskEntity task)
+    private TaskResponseDto MapToResponseDto(TaskEntity task, TaskTimeRollup? timeRollup = null)
     {
+        // Use time rollup if provided, otherwise calculate direct time only
+        var directMinutes = timeRollup?.DirectLoggedMinutes ?? (task.TimeEntries?.Sum(te => te.Minutes) ?? 0);
+        var childrenMinutes = timeRollup?.ChildrenLoggedMinutes ?? 0;
+        var totalMinutes = directMinutes + childrenMinutes;
+
         return new TaskResponseDto
         {
             Id = task.Id,
@@ -157,7 +170,9 @@ public class TaskService : ITaskService
                 AssignedByUserId = ta.AssignedByUserId,
                 AssignedByUserName = ta.AssignedByUser?.Name ?? string.Empty
             }).ToList() ?? new List<TaskAssignmentDto>(),
-            TotalLoggedMinutes = task.TimeEntries?.Sum(te => te.Minutes) ?? 0
+            DirectLoggedMinutes = directMinutes,
+            ChildrenLoggedMinutes = childrenMinutes,
+            TotalLoggedMinutes = totalMinutes
         };
     }
 

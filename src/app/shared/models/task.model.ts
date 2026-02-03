@@ -48,6 +48,14 @@ export interface Task {
   type: TaskType;
   isDeleted: boolean;
   assignees: TaskAssignmentDto[];
+  
+  // Time tracking with rollup support
+  directLoggedMinutes: number;
+  childrenLoggedMinutes: number;
+  totalLoggedMinutes: number;
+  directLoggedTimeFormatted?: string;
+  childrenLoggedTimeFormatted?: string;
+  totalLoggedTimeFormatted?: string;
 }
 
 // Create DTO

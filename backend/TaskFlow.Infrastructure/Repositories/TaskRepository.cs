@@ -381,4 +381,174 @@ public class TaskRepository : ITaskRepository
             return false;
         }
     }
+
+    public async System.Threading.Tasks.Task<Dictionary<Guid, TaskTimeRollup>> GetTimeRollupsAsync(IEnumerable<Guid> taskIds, CancellationToken ct = default)
+    {
+        var taskIdList = taskIds.ToList();
+        if (!taskIdList.Any())
+        {
+            return new Dictionary<Guid, TaskTimeRollup>();
+        }
+
+        // Check if we're using a relational database
+        if (_context.Database.IsRelational())
+        {
+            // Use recursive CTE to calculate time rollup for all tasks efficiently
+            var taskIdsParam = string.Join(",", taskIdList.Select(id => $"'{id}'"));
+            
+            var sql = $@"
+                WITH RECURSIVE task_hierarchy AS (
+                    -- Base case: start with requested tasks
+                    SELECT id, parent_task_id, id as root_task_id
+                    FROM tasks
+                    WHERE id = ANY(ARRAY[{taskIdsParam}]::uuid[]) AND is_deleted = false
+                    
+                    UNION ALL
+                    
+                    -- Recursive case: find all descendants
+                    SELECT t.id, t.parent_task_id, th.root_task_id
+                    FROM tasks t
+                    INNER JOIN task_hierarchy th ON t.parent_task_id = th.id
+                    WHERE t.is_deleted = false
+                ),
+                direct_time AS (
+                    SELECT task_id, SUM(minutes) as direct_minutes
+                    FROM time_entries
+                    WHERE task_id = ANY(ARRAY[{taskIdsParam}]::uuid[])
+                    GROUP BY task_id
+                ),
+                descendant_time AS (
+                    SELECT 
+                        th.root_task_id,
+                        SUM(te.minutes) as children_minutes
+                    FROM task_hierarchy th
+                    INNER JOIN time_entries te ON te.task_id = th.id
+                    WHERE th.id != th.root_task_id
+                    GROUP BY th.root_task_id
+                )
+                SELECT 
+                    t.id as TaskId,
+                    COALESCE(dt.direct_minutes, 0)::integer as DirectLoggedMinutes,
+                    COALESCE(dest.children_minutes, 0)::integer as ChildrenLoggedMinutes
+                FROM tasks t
+                LEFT JOIN direct_time dt ON dt.task_id = t.id
+                LEFT JOIN descendant_time dest ON dest.root_task_id = t.id
+                WHERE t.id = ANY(ARRAY[{taskIdsParam}]::uuid[]) AND t.is_deleted = false";
+
+            var results = await _context.Database
+                .SqlQueryRaw<TaskTimeRollup>(sql)
+                .ToListAsync(ct);
+
+            return results.ToDictionary(r => r.TaskId, r => r);
+        }
+        else
+        {
+            // Fallback for in-memory database: calculate manually
+            var results = new Dictionary<Guid, TaskTimeRollup>();
+            
+            foreach (var taskId in taskIdList)
+            {
+                var task = await _context.Tasks
+                    .AsNoTracking()
+                    .Include(t => t.TimeEntries)
+                    .FirstOrDefaultAsync(t => t.Id == taskId && !t.IsDeleted, ct);
+                
+                if (task == null) continue;
+                
+                var directMinutes = task.TimeEntries?.Sum(te => te.Minutes) ?? 0;
+                var childrenMinutes = await CalculateDescendantTimeAsync(taskId, ct);
+                
+                results[taskId] = new TaskTimeRollup
+                {
+                    TaskId = taskId,
+                    DirectLoggedMinutes = directMinutes,
+                    ChildrenLoggedMinutes = childrenMinutes
+                };
+            }
+            
+            return results;
+        }
+    }
+
+    public async System.Threading.Tasks.Task<List<Guid>> GetAncestorIdsAsync(Guid taskId, CancellationToken ct = default)
+    {
+        // Check if we're using a relational database
+        if (_context.Database.IsRelational())
+        {
+            var sql = @"
+                WITH RECURSIVE task_ancestors AS (
+                    SELECT id, parent_task_id, 0 as depth
+                    FROM tasks
+                    WHERE id = {0} AND is_deleted = false
+                    
+                    UNION ALL
+                    
+                    SELECT t.id, t.parent_task_id, ta.depth + 1
+                    FROM tasks t
+                    INNER JOIN task_ancestors ta ON t.id = ta.parent_task_id
+                    WHERE t.is_deleted = false AND ta.depth < 15
+                )
+                SELECT id
+                FROM task_ancestors 
+                WHERE depth > 0 
+                ORDER BY depth DESC";
+
+            var results = await _context.Database
+                .SqlQueryRaw<Guid>(sql, taskId)
+                .ToListAsync(ct);
+
+            return results;
+        }
+        else
+        {
+            // Fallback for in-memory database: manually traverse up
+            var ancestors = new List<Guid>();
+            var currentTaskId = taskId;
+            var maxDepth = 15;
+            var depth = 0;
+            
+            while (depth < maxDepth)
+            {
+                var task = await _context.Tasks
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.Id == currentTaskId && !t.IsDeleted, ct);
+                
+                if (task?.ParentTaskId == null) break;
+                
+                ancestors.Add(task.ParentTaskId.Value);
+                currentTaskId = task.ParentTaskId.Value;
+                depth++;
+            }
+            
+            return ancestors;
+        }
+    }
+
+    private async System.Threading.Tasks.Task<int> CalculateDescendantTimeAsync(Guid taskId, CancellationToken ct)
+    {
+        var children = await _context.Tasks
+            .AsNoTracking()
+            .Where(t => t.ParentTaskId == taskId && !t.IsDeleted)
+            .ToListAsync(ct);
+        
+        if (!children.Any()) return 0;
+        
+        var totalMinutes = 0;
+        
+        foreach (var child in children)
+        {
+            // Get direct time for this child
+            var childTimeEntries = await _context.TimeEntries
+                .AsNoTracking()
+                .Where(te => te.TaskId == child.Id)
+                .ToListAsync(ct);
+            
+            totalMinutes += childTimeEntries.Sum(te => te.Minutes);
+            
+            // Recursively calculate descendant time
+            totalMinutes += await CalculateDescendantTimeAsync(child.Id, ct);
+        }
+        
+        return totalMinutes;
+    }
 }

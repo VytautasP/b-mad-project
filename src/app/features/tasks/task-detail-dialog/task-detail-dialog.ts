@@ -18,6 +18,7 @@ import { TimerStateService, TimerState } from '../../../core/services/state/time
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { ManualTimeEntryForm, ManualTimeEntryFormData } from '../components/manual-time-entry-form/manual-time-entry-form';
 import { TimeEntryList } from '../components/time-entry-list/time-entry-list';
+import { formatDuration } from '../../../shared/utils/time.utils';
 
 export interface TaskDetailDialogData {
   task: Task;
@@ -239,6 +240,20 @@ export class TaskDetailDialog implements OnInit, OnDestroy {
     } else {
       return 'Assignment failed. Please try again.';
     }
+  }
+
+  /**
+   * Format duration using utility function
+   */
+  formatDuration(minutes: number): string {
+    return formatDuration(minutes);
+  }
+
+  /**
+   * Check if task has children with logged time
+   */
+  hasChildrenTime(): boolean {
+    return this.task().childrenLoggedMinutes > 0;
   }
 }
 

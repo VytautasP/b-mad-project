@@ -79,6 +79,32 @@
     
     <mat-divider></mat-divider>
     
+    <!-- Time Breakdown Section -->
+    <section class="time-breakdown-section">
+      <h3>Time Summary</h3>
+      <div class="time-summary">
+        <div class="time-row">
+          <span class="time-label">Direct Time:</span>
+          <span class="time-value">{{ formatDuration(task().directLoggedMinutes) }}</span>
+        </div>
+        @if (hasChildrenTime()) {
+          <div class="time-row">
+            <span class="time-label">Children Time:</span>
+            <span class="time-value">{{ formatDuration(task().childrenLoggedMinutes) }}</span>
+          </div>
+        }
+        <div class="time-row total">
+          <span class="time-label">Total Time:</span>
+          <span class="time-value">{{ formatDuration(task().totalLoggedMinutes) }}</span>
+        </div>
+      </div>
+      @if (!hasChildrenTime() && task().totalLoggedMinutes === 0) {
+        <p class="no-time-message">No time logged yet</p>
+      }
+    </section>
+    
+    <mat-divider></mat-divider>
+    
     <!-- Time Tracking Section -->
     <section class="time-tracking-section">
       <div class="section-header">
