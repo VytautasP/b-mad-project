@@ -1,0 +1,71 @@
+<div class="manual-time-entry-form">
+  <h2 mat-dialog-title>Log Time</h2>
+
+  <mat-dialog-content>
+    <form [formGroup]="timeEntryForm">
+      <!-- Quick Log Buttons -->
+      <div class="quick-log-buttons">
+        <button type="button" mat-stroked-button (click)="setQuickLog(15)">15m</button>
+        <button type="button" mat-stroked-button (click)="setQuickLog(30)">30m</button>
+        <button type="button" mat-stroked-button (click)="setQuickLog(60)">1h</button>
+        <button type="button" mat-stroked-button (click)="setQuickLog(120)">2h</button>
+      </div>
+
+      <!-- Time Input Fields -->
+      <div class="time-inputs">
+        <mat-form-field class="time-field">
+          <mat-label>Hours</mat-label>
+          <input matInput type="number" formControlName="hours" min="0" max="23" />
+          @if (timeEntryForm.get('hours')?.hasError('min')) {
+            <mat-error>Hours must be at least 0</mat-error>
+          }
+          @if (timeEntryForm.get('hours')?.hasError('max')) {
+            <mat-error>Hours must be less than 24</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field class="time-field">
+          <mat-label>Minutes</mat-label>
+          <input matInput type="number" formControlName="minutes" min="0" max="59" />
+          @if (timeEntryForm.get('minutes')?.hasError('min')) {
+            <mat-error>Minutes must be at least 0</mat-error>
+          }
+          @if (timeEntryForm.get('minutes')?.hasError('max')) {
+            <mat-error>Minutes must be less than 60</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      @if (getTotalTimeError()) {
+        <div class="total-time-error">
+          {{ getTotalTimeError() }}
+        </div>
+      }
+
+      <!-- Date Picker -->
+      <mat-form-field class="full-width">
+        <mat-label>Date</mat-label>
+        <input matInput [matDatepicker]="picker" formControlName="date" />
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+
+      <!-- Note Textarea -->
+      <mat-form-field class="full-width">
+        <mat-label>Note (optional)</mat-label>
+        <textarea matInput formControlName="note" rows="3" maxlength="500"></textarea>
+        <mat-hint align="end">{{ timeEntryForm.get('note')?.value?.length || 0 }}/500</mat-hint>
+      </mat-form-field>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="isSubmitting">Cancel</button>
+    <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting || timeEntryForm.invalid">
+      @if (isSubmitting) {
+        <mat-icon>hourglass_empty</mat-icon>
+      }
+      Log Time
+    </button>
+  </mat-dialog-actions>
+</div>

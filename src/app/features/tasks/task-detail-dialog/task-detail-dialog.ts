@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, signal, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,6 +16,8 @@ import { AssigneeList } from '../components/assignee-list/assignee-list';
 import { UserPicker } from '../components/user-picker/user-picker';
 import { TimerStateService, TimerState } from '../../../core/services/state/timer-state.service';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
+import { ManualTimeEntryForm, ManualTimeEntryFormData } from '../components/manual-time-entry-form/manual-time-entry-form';
+import { TimeEntryList } from '../components/time-entry-list/time-entry-list';
 
 export interface TaskDetailDialogData {
   task: Task;
@@ -34,12 +36,15 @@ export interface TaskDetailDialogData {
     MatChipsModule,
     MatTooltipModule,
     AssigneeList,
-    UserPicker
+    UserPicker,
+    TimeEntryList
   ],
   templateUrl: './task-detail-dialog.html',
   styleUrl: './task-detail-dialog.css',
 })
 export class TaskDetailDialog implements OnInit, OnDestroy {
+  @ViewChild('timeEntryList') timeEntryList?: TimeEntryList;
+
   private readonly dialogRef = inject(MatDialogRef<TaskDetailDialog>);
   private readonly data: TaskDetailDialogData = inject(MAT_DIALOG_DATA);
   private readonly taskService = inject(TaskService);
@@ -187,6 +192,43 @@ export class TaskDetailDialog implements OnInit, OnDestroy {
 
   isAnotherTimerRunning(): boolean {
     return this.currentTimerState?.isRunning === true && this.currentTimerState?.taskId !== this.task().id;
+  }
+
+  onLogTime(): void {
+    const dialogData: ManualTimeEntryFormData = {
+      taskId: this.task().id
+    };
+
+    const logTimeDialogRef = this.dialog.open(ManualTimeEntryForm, {
+      width: '500px',
+      maxWidth: '90vw',
+      data: dialogData
+    });
+
+    logTimeDialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Refresh time entry list
+        this.timeEntryList?.loadTimeEntries();
+        // Reload task to update total logged time
+        this.refreshTask();
+      }
+    });
+  }
+
+  onTimeEntryDeleted(): void {
+    // Reload task to update total logged time
+    this.refreshTask();
+  }
+
+  private refreshTask(): void {
+    this.taskService.getTaskById(this.task().id).subscribe({
+      next: (updatedTask) => {
+        this.task.set(updatedTask);
+      },
+      error: (error) => {
+        console.error('Failed to refresh task:', error);
+      }
+    });
   }
   
   private getErrorMessage(error: any): string {

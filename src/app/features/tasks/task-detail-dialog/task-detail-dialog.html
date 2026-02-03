@@ -79,6 +79,28 @@
     
     <mat-divider></mat-divider>
     
+    <!-- Time Tracking Section -->
+    <section class="time-tracking-section">
+      <div class="section-header">
+        <h3>Time Tracking</h3>
+        <button mat-raised-button 
+                color="primary" 
+                (click)="onLogTime()"
+                class="log-time-button">
+          <mat-icon>schedule</mat-icon>
+          Log Time
+        </button>
+      </div>
+      
+      <app-time-entry-list 
+        #timeEntryList
+        [taskId]="task().id"
+        (timeEntryDeleted)="onTimeEntryDeleted()">
+      </app-time-entry-list>
+    </section>
+    
+    <mat-divider></mat-divider>
+    
     <!-- Meta Information -->
     <section class="meta-info">
       <div class="info-row">

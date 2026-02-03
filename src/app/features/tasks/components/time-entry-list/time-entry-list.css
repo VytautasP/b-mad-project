@@ -1,0 +1,130 @@
+.time-entry-list {
+  margin-top: 16px;
+}
+
+.time-entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.time-entry-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.total-time {
+  font-size: 16px;
+  color: #666;
+}
+
+.total-time strong {
+  color: #1976d2;
+  font-size: 18px;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 24px;
+  color: #666;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px;
+  color: #999;
+}
+
+.empty-state mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 16px;
+}
+
+.time-entry-item {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 12px 0;
+}
+
+.entry-content {
+  width: 100%;
+}
+
+.entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.entry-user-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.entry-type-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #666;
+}
+
+.entry-user {
+  font-weight: 500;
+}
+
+.entry-date {
+  color: #666;
+  font-size: 14px;
+}
+
+.entry-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.entry-duration {
+  font-weight: 600;
+  color: #1976d2;
+  font-size: 16px;
+}
+
+.delete-button {
+  color: #f44336;
+}
+
+.entry-note {
+  margin-top: 8px;
+  color: #666;
+  font-size: 14px;
+  padding-left: 26px;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 600px) {
+  .entry-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .entry-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .entry-note {
+    padding-left: 0;
+  }
+}

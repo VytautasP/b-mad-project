@@ -1,0 +1,54 @@
+.manual-time-entry-form {
+  min-width: 400px;
+}
+
+.quick-log-buttons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.quick-log-buttons button {
+  flex: 1;
+  min-width: 60px;
+}
+
+.time-inputs {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.time-field {
+  flex: 1;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.total-time-error {
+  color: #f44336;
+  font-size: 12px;
+  margin-top: -12px;
+  margin-bottom: 16px;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 600px) {
+  .manual-time-entry-form {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .time-inputs {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .quick-log-buttons button {
+    flex: 1 1 calc(50% - 4px);
+  }
+}

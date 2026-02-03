@@ -1,0 +1,51 @@
+<div class="time-entry-list">
+  <div class="time-entry-header">
+    <h3>Time Log</h3>
+    @if (!isLoading() && timeEntries().length > 0) {
+      <div class="total-time">
+        Total: <strong>{{ getTotalLoggedTime() }}</strong>
+      </div>
+    }
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-state">
+      Loading time entries...
+    </div>
+  } @else if (timeEntries().length === 0) {
+    <div class="empty-state">
+      <mat-icon>schedule</mat-icon>
+      <p>No time logged yet</p>
+    </div>
+  } @else {
+    <mat-list>
+      @for (entry of timeEntries(); track entry.id) {
+        <mat-list-item class="time-entry-item">
+          <div class="entry-content">
+            <div class="entry-header">
+              <div class="entry-user-date">
+                <mat-icon class="entry-type-icon">{{ getEntryTypeIcon(entry.entryType) }}</mat-icon>
+                <span class="entry-user">{{ entry.userName }}</span>
+                <span class="entry-date">{{ formatDate(entry.entryDate) }}</span>
+              </div>
+              <div class="entry-actions">
+                <span class="entry-duration">{{ formatDuration(entry.minutes) }}</span>
+                @if (canDeleteEntry(entry)) {
+                  <button mat-icon-button 
+                          (click)="onDeleteEntry(entry)" 
+                          class="delete-button"
+                          aria-label="Delete time entry">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                }
+              </div>
+            </div>
+            @if (entry.note) {
+              <div class="entry-note">{{ entry.note }}</div>
+            }
+          </div>
+        </mat-list-item>
+      }
+    </mat-list>
+  }
+</div>
