@@ -1,5 +1,6 @@
 using TaskFlow.Abstractions.Constants;
 using TaskFlow.Abstractions.DTOs.Task;
+using TaskFlow.Abstractions.DTOs.Tasks;
 using TaskFlow.Abstractions.Entities;
 using TaskEntity = TaskFlow.Abstractions.Entities.Task;
 
@@ -11,6 +12,7 @@ public interface ITaskRepository
     System.Threading.Tasks.Task<TaskEntity?> GetByIdAsync(Guid id, CancellationToken ct = default);
     System.Threading.Tasks.Task<TaskEntity?> GetByIdWithUserAsync(Guid id, CancellationToken ct = default);
     System.Threading.Tasks.Task<List<TaskEntity>> GetUserTasksAsync(Guid userId, TaskFlow.Abstractions.Constants.TaskStatus? status, string? searchTerm = null, CancellationToken ct = default);
+    System.Threading.Tasks.Task<(List<TaskEntity> Items, int TotalCount)> GetTasksWithFiltersAsync(Guid userId, TaskQueryDto queryDto, CancellationToken ct = default);
     System.Threading.Tasks.Task<List<TaskEntity>> GetAssignedTasksAsync(Guid userId, TaskFlow.Abstractions.Constants.TaskStatus? status, string? searchTerm = null, CancellationToken ct = default);
     System.Threading.Tasks.Task<bool> UpdateAsync(TaskEntity task, CancellationToken ct = default);
     System.Threading.Tasks.Task<bool> DeleteAsync(Guid id, CancellationToken ct = default);

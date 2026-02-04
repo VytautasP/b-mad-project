@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using TaskFlow.Abstractions.Constants;
 using TaskFlow.Abstractions.DTOs.Task;
+using TaskFlow.Abstractions.DTOs.Tasks;
+using TaskFlow.Abstractions.DTOs.Shared;
 using TaskFlow.Abstractions.Exceptions;
 using TaskFlow.Abstractions.Interfaces;
 using TaskFlow.Abstractions.Interfaces.Services;
@@ -88,6 +90,40 @@ public class TaskService : ITaskService
         var timeRollups = await _unitOfWork.Tasks.GetTimeRollupsAsync(taskIds, ct);
         
         return tasks.Select(t => MapToResponseDto(t, timeRollups.GetValueOrDefault(t.Id))).ToList();
+    }
+
+    public async System.Threading.Tasks.Task<PaginatedResultDto<TaskResponseDto>> GetTasksAsync(
+        Guid userId, 
+        TaskQueryDto queryDto, 
+        CancellationToken ct = default)
+    {
+        var (tasks, totalCount) = await _unitOfWork.Tasks.GetTasksWithFiltersAsync(userId, queryDto, ct);
+        
+        // Get time rollups for all tasks in batch
+        var taskIds = tasks.Select(t => t.Id).ToList();
+        var timeRollups = await _unitOfWork.Tasks.GetTimeRollupsAsync(taskIds, ct);
+        
+        // Map tasks to DTOs
+        var taskDtos = tasks.Select(t => MapToResponseDto(t, timeRollups.GetValueOrDefault(t.Id))).ToList();
+        
+        // Calculate total pages
+        var totalPages = (int)Math.Ceiling(totalCount / (double)queryDto.PageSize);
+        
+        _logger.LogInformation(
+            "Retrieved {Count} tasks for user {UserId} with filters (Page {Page}/{TotalPages})", 
+            taskDtos.Count, 
+            userId, 
+            queryDto.Page, 
+            totalPages);
+        
+        return new PaginatedResultDto<TaskResponseDto>
+        {
+            Items = taskDtos,
+            TotalCount = totalCount,
+            Page = queryDto.Page,
+            PageSize = queryDto.PageSize,
+            TotalPages = totalPages
+        };
     }
 
     public async System.Threading.Tasks.Task<TaskResponseDto> UpdateTaskAsync(Guid id, TaskUpdateDto dto, Guid currentUserId, CancellationToken ct = default)

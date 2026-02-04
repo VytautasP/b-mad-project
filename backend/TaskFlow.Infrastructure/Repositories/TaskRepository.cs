@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TaskFlow.Abstractions.Constants;
 using TaskFlow.Abstractions.DTOs.Task;
+using TaskFlow.Abstractions.DTOs.Tasks;
 using TaskFlow.Abstractions.Entities;
 using TaskFlow.Abstractions.Interfaces.Repositories;
 using TaskFlow.Infrastructure.Data;
@@ -99,6 +100,121 @@ public class TaskRepository : ITaskRepository
         return await query
             .OrderByDescending(t => t.CreatedDate)
             .ToListAsync(ct);
+    }
+
+    public async System.Threading.Tasks.Task<(List<TaskEntity> Items, int TotalCount)> GetTasksWithFiltersAsync(
+        Guid userId, 
+        TaskQueryDto queryDto, 
+        CancellationToken ct = default)
+    {
+        // Base query: user's own tasks OR tasks where user is assigned
+        var query = _context.Tasks
+            .AsNoTracking()
+            .Include(t => t.CreatedByUser)
+            .Include(t => t.TaskAssignments)
+                .ThenInclude(ta => ta.User)
+            .Include(t => t.TimeEntries)
+            .Where(t => !t.IsDeleted);
+
+        // Apply authorization filter based on whether assigneeId filter is specified
+        if (queryDto.AssigneeId.HasValue)
+        {
+            // User wants to filter by assignee
+            // Get all task IDs where the specified user is assigned
+            var assignedTaskIds = _context.TaskAssignments
+                .Where(ta => ta.UserId == queryDto.AssigneeId.Value)
+                .Select(ta => ta.TaskId)
+                .ToList();
+
+            // Filter to tasks where: (user created it OR user is assigned to it) AND task is assigned to the specified user
+            var userAssignedTaskIds = _context.TaskAssignments
+                .Where(ta => ta.UserId == userId)
+                .Select(ta => ta.TaskId)
+                .ToList();
+
+            query = query.Where(t => (t.CreatedByUserId == userId || userAssignedTaskIds.Contains(t.Id)) &&
+                                     assignedTaskIds.Contains(t.Id));
+        }
+        else
+        {
+            // No assignee filter, just show user's accessible tasks
+            var userAssignedTaskIds = _context.TaskAssignments
+                .Where(ta => ta.UserId == userId)
+                .Select(ta => ta.TaskId)
+                .ToList();
+
+            query = query.Where(t => t.CreatedByUserId == userId || userAssignedTaskIds.Contains(t.Id));
+        }
+
+        if (queryDto.Status.HasValue)
+        {
+            query = query.Where(t => t.Status == queryDto.Status.Value);
+        }
+
+        if (queryDto.Priority.HasValue)
+        {
+            query = query.Where(t => t.Priority == queryDto.Priority.Value);
+        }
+
+        if (queryDto.Type.HasValue)
+        {
+            query = query.Where(t => t.Type == queryDto.Type.Value);
+        }
+
+        if (queryDto.DueDateFrom.HasValue)
+        {
+            query = query.Where(t => t.DueDate >= queryDto.DueDateFrom.Value);
+        }
+
+        if (queryDto.DueDateTo.HasValue)
+        {
+            query = query.Where(t => t.DueDate <= queryDto.DueDateTo.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(queryDto.SearchTerm))
+        {
+            var trimmedSearch = queryDto.SearchTerm.Trim().ToLower();
+            
+            // Use ToLower() for compatibility with both in-memory and PostgreSQL
+            // For production PostgreSQL, consider using EF.Functions.ILike for better performance
+            query = query.Where(t => 
+                t.Name.ToLower().Contains(trimmedSearch) || 
+                (t.Description != null && t.Description.ToLower().Contains(trimmedSearch)));
+        }
+
+        // Get total count before pagination
+        var totalCount = await query.CountAsync(ct);
+
+        // Apply sorting
+        query = ApplySorting(query, queryDto.SortBy, queryDto.SortOrder);
+
+        // Apply pagination
+        var items = await query
+            .Skip((queryDto.Page - 1) * queryDto.PageSize)
+            .Take(queryDto.PageSize)
+            .ToListAsync(ct);
+
+        return (items, totalCount);
+    }
+
+    private IQueryable<TaskEntity> ApplySorting(IQueryable<TaskEntity> query, string? sortBy, string sortOrder)
+    {
+        var isDescending = sortOrder.Equals("desc", StringComparison.OrdinalIgnoreCase);
+
+        return sortBy?.ToLower() switch
+        {
+            "name" => isDescending ? query.OrderByDescending(t => t.Name) : query.OrderBy(t => t.Name),
+            "createddate" => isDescending ? query.OrderByDescending(t => t.CreatedDate) : query.OrderBy(t => t.CreatedDate),
+            "duedate" => isDescending 
+                ? query.OrderByDescending(t => t.DueDate.HasValue).ThenByDescending(t => t.DueDate)
+                : query.OrderBy(t => t.DueDate.HasValue).ThenBy(t => t.DueDate),
+            "priority" => isDescending ? query.OrderByDescending(t => t.Priority) : query.OrderBy(t => t.Priority),
+            "status" => isDescending ? query.OrderByDescending(t => t.Status) : query.OrderBy(t => t.Status),
+            "loggedminutes" => isDescending 
+                ? query.OrderByDescending(t => t.TimeEntries.Sum(te => te.Minutes))
+                : query.OrderBy(t => t.TimeEntries.Sum(te => te.Minutes)),
+            _ => query.OrderByDescending(t => t.CreatedDate) // Default sort
+        };
     }
 
     public async System.Threading.Tasks.Task<bool> UpdateAsync(TaskEntity task, CancellationToken ct = default)

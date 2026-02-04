@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Abstractions.Constants;
 using TaskFlow.Abstractions.DTOs.Task;
+using TaskFlow.Abstractions.DTOs.Tasks;
+using TaskFlow.Abstractions.DTOs.Shared;
 using TaskFlow.Abstractions.DTOs.TimeEntries;
 using TaskFlow.Abstractions.Interfaces.Services;
 
@@ -42,12 +44,49 @@ public class TasksController : ControllerBase
         return CreatedAtAction(nameof(GetTaskById), new { id = result.Id }, result);
     }
 
+    /// <summary>
+    /// Retrieves tasks with advanced filtering, sorting, and pagination.
+    /// </summary>
+    /// <param name="queryDto">Query parameters for filtering, sorting, and pagination</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated list of tasks matching the specified criteria</returns>
+    /// <remarks>
+    /// Sample request:
+    /// 
+    ///     GET /api/tasks?assigneeId=3fa85f64-5717-4562-b3fc-2c963f66afa6&amp;status=1&amp;priority=2&amp;type=2&amp;dueDateFrom=2026-01-01&amp;dueDateTo=2026-12-31&amp;searchTerm=important&amp;sortBy=dueDate&amp;sortOrder=asc&amp;page=1&amp;pageSize=50
+    ///     
+    /// Query Parameters:
+    /// - assigneeId: Filter by assigned user ID
+    /// - status: Filter by task status (0=ToDo, 1=InProgress, 2=Blocked, 3=Waiting, 4=Done)
+    /// - priority: Filter by priority (0=Low, 1=Medium, 2=High, 3=Critical)
+    /// - type: Filter by task type (0=Project, 1=Milestone, 2=Task)
+    /// - dueDateFrom: Filter by due date range start (ISO 8601 date)
+    /// - dueDateTo: Filter by due date range end (ISO 8601 date)
+    /// - searchTerm: Search in task name and description (case-insensitive)
+    /// - sortBy: Sort field (name, createdDate, dueDate, priority, status, loggedMinutes)
+    /// - sortOrder: Sort order (asc or desc, default: asc)
+    /// - page: Page number (default: 1, minimum: 1)
+    /// - pageSize: Items per page (default: 50, minimum: 1, maximum: 200)
+    /// 
+    /// Response includes pagination metadata: totalCount, page, pageSize, totalPages, hasNextPage, hasPreviousPage
+    /// </remarks>
+    /// <response code="200">Returns paginated list of tasks</response>
+    /// <response code="400">Invalid query parameters</response>
+    /// <response code="401">Unauthorized - authentication required</response>
     [HttpGet]
-    public async System.Threading.Tasks.Task<IActionResult> GetUserTasks([FromQuery] TaskFlow.Abstractions.Constants.TaskStatus? status, [FromQuery] string? search, [FromQuery] bool myTasks, CancellationToken ct = default)
+    [ProducesResponseType(typeof(PaginatedResultDto<TaskResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async System.Threading.Tasks.Task<IActionResult> GetUserTasks([FromQuery] TaskQueryDto queryDto, CancellationToken ct = default)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
         var userId = GetCurrentUserId();
-        var tasks = await _taskService.GetUserTasksAsync(userId, status, search, myTasks, ct);
-        return Ok(tasks);
+        var result = await _taskService.GetTasksAsync(userId, queryDto, ct);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]

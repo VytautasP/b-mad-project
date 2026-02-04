@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using TaskFlow.Abstractions.Constants;
 using TaskFlow.Abstractions.DTOs.Task;
+using TaskFlow.Abstractions.Entities;
 using TaskFlow.Abstractions.Interfaces;
 using TaskFlow.Abstractions.Interfaces.Repositories;
 using TaskFlow.Core.Services;
@@ -49,12 +50,16 @@ public class TaskServiceTests
                 CreatedDate = DateTime.UtcNow,
                 ModifiedDate = DateTime.UtcNow,
                 IsDeleted = false,
-                Progress = 50
+                Progress = 50,
+                TimeEntries = new List<TimeEntry>()
             }
         };
 
         _mockTaskRepository.Setup(r => r.GetUserTasksAsync(_testUserId, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tasks);
+        
+        _mockTaskRepository.Setup(r => r.GetTimeRollupsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, TaskTimeRollup>());
 
         // Act
         var result = await _taskService.GetUserTasksAsync(_testUserId, null, null, false);
@@ -71,6 +76,9 @@ public class TaskServiceTests
         var tasks = new List<TaskEntity>();
         _mockTaskRepository.Setup(r => r.GetUserTasksAsync(_testUserId, TaskStatus.Done, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tasks);
+        
+        _mockTaskRepository.Setup(r => r.GetTimeRollupsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, TaskTimeRollup>());
 
         // Act
         await _taskService.GetUserTasksAsync(_testUserId, TaskStatus.Done, null, false);
@@ -87,6 +95,9 @@ public class TaskServiceTests
         var searchTerm = "test search";
         _mockTaskRepository.Setup(r => r.GetUserTasksAsync(_testUserId, null, searchTerm, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tasks);
+        
+        _mockTaskRepository.Setup(r => r.GetTimeRollupsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, TaskTimeRollup>());
 
         // Act
         await _taskService.GetUserTasksAsync(_testUserId, null, searchTerm, false);
@@ -103,6 +114,9 @@ public class TaskServiceTests
         var searchTerm = "important";
         _mockTaskRepository.Setup(r => r.GetUserTasksAsync(_testUserId, TaskStatus.InProgress, searchTerm, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tasks);
+        
+        _mockTaskRepository.Setup(r => r.GetTimeRollupsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, TaskTimeRollup>());
 
         // Act
         await _taskService.GetUserTasksAsync(_testUserId, TaskStatus.InProgress, searchTerm, false);
@@ -117,6 +131,9 @@ public class TaskServiceTests
         // Arrange
         _mockTaskRepository.Setup(r => r.GetUserTasksAsync(_testUserId, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<TaskEntity>());
+        
+        _mockTaskRepository.Setup(r => r.GetTimeRollupsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, TaskTimeRollup>());
 
         // Act
         var result = await _taskService.GetUserTasksAsync(_testUserId, null, null, false);
@@ -145,12 +162,16 @@ public class TaskServiceTests
                 ModifiedDate = DateTime.UtcNow,
                 DueDate = DateTime.UtcNow.AddDays(7),
                 IsDeleted = false,
-                Progress = 75
+                Progress = 75,
+                TimeEntries = new List<TimeEntry>()
             }
         };
 
         _mockTaskRepository.Setup(r => r.GetUserTasksAsync(_testUserId, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tasks);
+        
+        _mockTaskRepository.Setup(r => r.GetTimeRollupsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, TaskTimeRollup>());
 
         // Act
         var result = await _taskService.GetUserTasksAsync(_testUserId, null, null, false);

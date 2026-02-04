@@ -1,5 +1,7 @@
 using TaskFlow.Abstractions.Constants;
 using TaskFlow.Abstractions.DTOs.Task;
+using TaskFlow.Abstractions.DTOs.Tasks;
+using TaskFlow.Abstractions.DTOs.Shared;
 
 namespace TaskFlow.Abstractions.Interfaces.Services;
 
@@ -8,6 +10,7 @@ public interface ITaskService
     System.Threading.Tasks.Task<TaskResponseDto> CreateTaskAsync(TaskCreateDto dto, Guid currentUserId, CancellationToken ct = default);
     System.Threading.Tasks.Task<TaskResponseDto> GetTaskByIdAsync(Guid id, Guid currentUserId, CancellationToken ct = default);
     System.Threading.Tasks.Task<List<TaskResponseDto>> GetUserTasksAsync(Guid userId, TaskFlow.Abstractions.Constants.TaskStatus? status, string? searchTerm, bool myTasksOnly, CancellationToken ct = default);
+    System.Threading.Tasks.Task<PaginatedResultDto<TaskResponseDto>> GetTasksAsync(Guid userId, TaskQueryDto queryDto, CancellationToken ct = default);
     System.Threading.Tasks.Task<TaskResponseDto> UpdateTaskAsync(Guid id, TaskUpdateDto dto, Guid currentUserId, CancellationToken ct = default);
     System.Threading.Tasks.Task DeleteTaskAsync(Guid id, Guid currentUserId, CancellationToken ct = default);
     

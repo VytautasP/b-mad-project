@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using TaskFlow.Abstractions.Constants;
 using TaskFlow.Abstractions.DTOs.Task;
+using TaskFlow.Abstractions.DTOs.Tasks;
+using TaskFlow.Abstractions.DTOs.Shared;
 using TaskFlow.Abstractions.Interfaces.Services;
 using TaskFlow.Api.Controllers;
 using TaskStatus = TaskFlow.Abstractions.Constants.TaskStatus;
@@ -46,47 +48,66 @@ public class TasksControllerTests
     public async System.Threading.Tasks.Task GetUserTasks_ReturnsOkResult_WithTasks()
     {
         // Arrange
-        var tasks = new List<TaskResponseDto>
+        var task = new TaskResponseDto
         {
-            new TaskResponseDto
-            {
-                Id = Guid.NewGuid(),
-                Name = "Test Task",
-                Description = "Test Description",
-                Status = TaskStatus.InProgress,
-                Priority = TaskPriority.Medium,
-                Type = TaskType.Task,
-                Progress = 50,
-                CreatedDate = DateTime.UtcNow,
-                ModifiedDate = DateTime.UtcNow
-            }
+            Id = Guid.NewGuid(),
+            Name = "Test Task",
+            Description = "Test Description",
+            Status = TaskStatus.InProgress,
+            Priority = TaskPriority.Medium,
+            Type = TaskType.Task,
+            Progress = 50,
+            CreatedDate = DateTime.UtcNow,
+            ModifiedDate = DateTime.UtcNow
         };
 
-        _mockTaskService.Setup(s => s.GetUserTasksAsync(_testUserId, null, null, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(tasks);
+        var paginatedResult = new PaginatedResultDto<TaskResponseDto>
+        {
+            Items = new List<TaskResponseDto> { task },
+            TotalCount = 1,
+            Page = 1,
+            PageSize = 50,
+            TotalPages = 1
+        };
+
+        _mockTaskService.Setup(s => s.GetTasksAsync(_testUserId, It.IsAny<TaskQueryDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(paginatedResult);
 
         // Act
-        var result = await _controller.GetUserTasks(null, null, false, CancellationToken.None);
+        var result = await _controller.GetUserTasks(new TaskQueryDto(), CancellationToken.None);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedTasks = Assert.IsAssignableFrom<List<TaskResponseDto>>(okResult.Value);
-        Assert.Single(returnedTasks);
+        var returnedResult = Assert.IsAssignableFrom<PaginatedResultDto<TaskResponseDto>>(okResult.Value);
+        Assert.Single(returnedResult.Items);
     }
 
     [Fact]
     public async System.Threading.Tasks.Task GetUserTasks_PassesStatusParameter_ToService()
     {
         // Arrange
-        var tasks = new List<TaskResponseDto>();
-        _mockTaskService.Setup(s => s.GetUserTasksAsync(_testUserId, TaskStatus.Done, null, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(tasks);
+        var paginatedResult = new PaginatedResultDto<TaskResponseDto>
+        {
+            Items = new List<TaskResponseDto>(),
+            TotalCount = 0,
+            Page = 1,
+            PageSize = 50,
+            TotalPages = 0
+        };
+
+        _mockTaskService.Setup(s => s.GetTasksAsync(_testUserId, It.IsAny<TaskQueryDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(paginatedResult);
+
+        var queryDto = new TaskQueryDto { Status = TaskStatus.Done };
 
         // Act
-        await _controller.GetUserTasks(TaskStatus.Done, null, false, CancellationToken.None);
+        await _controller.GetUserTasks(queryDto, CancellationToken.None);
 
         // Assert
-        _mockTaskService.Verify(s => s.GetUserTasksAsync(_testUserId, TaskStatus.Done, null, It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockTaskService.Verify(s => s.GetTasksAsync(
+            _testUserId, 
+            It.Is<TaskQueryDto>(q => q.Status == TaskStatus.Done), 
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -94,15 +115,28 @@ public class TasksControllerTests
     {
         // Arrange
         var searchTerm = "important task";
-        var tasks = new List<TaskResponseDto>();
-        _mockTaskService.Setup(s => s.GetUserTasksAsync(_testUserId, null, searchTerm, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(tasks);
+        var paginatedResult = new PaginatedResultDto<TaskResponseDto>
+        {
+            Items = new List<TaskResponseDto>(),
+            TotalCount = 0,
+            Page = 1,
+            PageSize = 50,
+            TotalPages = 0
+        };
+
+        _mockTaskService.Setup(s => s.GetTasksAsync(_testUserId, It.IsAny<TaskQueryDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(paginatedResult);
+
+        var queryDto = new TaskQueryDto { SearchTerm = searchTerm };
 
         // Act
-        await _controller.GetUserTasks(null, searchTerm, false, CancellationToken.None);
+        await _controller.GetUserTasks(queryDto, CancellationToken.None);
 
         // Assert
-        _mockTaskService.Verify(s => s.GetUserTasksAsync(_testUserId, null, searchTerm, It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockTaskService.Verify(s => s.GetTasksAsync(
+            _testUserId, 
+            It.Is<TaskQueryDto>(q => q.SearchTerm == searchTerm), 
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -110,45 +144,75 @@ public class TasksControllerTests
     {
         // Arrange
         var searchTerm = "bug fix";
-        var tasks = new List<TaskResponseDto>();
-        _mockTaskService.Setup(s => s.GetUserTasksAsync(_testUserId, TaskStatus.Blocked, searchTerm, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(tasks);
+        var paginatedResult = new PaginatedResultDto<TaskResponseDto>
+        {
+            Items = new List<TaskResponseDto>(),
+            TotalCount = 0,
+            Page = 1,
+            PageSize = 50,
+            TotalPages = 0
+        };
+
+        _mockTaskService.Setup(s => s.GetTasksAsync(_testUserId, It.IsAny<TaskQueryDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(paginatedResult);
+
+        var queryDto = new TaskQueryDto { Status = TaskStatus.Blocked, SearchTerm = searchTerm };
 
         // Act
-        await _controller.GetUserTasks(TaskStatus.Blocked, searchTerm, false, CancellationToken.None);
+        await _controller.GetUserTasks(queryDto, CancellationToken.None);
 
         // Assert
-        _mockTaskService.Verify(s => s.GetUserTasksAsync(_testUserId, TaskStatus.Blocked, searchTerm, It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockTaskService.Verify(s => s.GetTasksAsync(
+            _testUserId, 
+            It.Is<TaskQueryDto>(q => q.Status == TaskStatus.Blocked && q.SearchTerm == searchTerm), 
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async System.Threading.Tasks.Task GetUserTasks_ReturnsEmptyList_WhenNoTasksFound()
     {
         // Arrange
-        _mockTaskService.Setup(s => s.GetUserTasksAsync(_testUserId, null, null, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<TaskResponseDto>());
+        var paginatedResult = new PaginatedResultDto<TaskResponseDto>
+        {
+            Items = new List<TaskResponseDto>(),
+            TotalCount = 0,
+            Page = 1,
+            PageSize = 50,
+            TotalPages = 0
+        };
+
+        _mockTaskService.Setup(s => s.GetTasksAsync(_testUserId, It.IsAny<TaskQueryDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(paginatedResult);
 
         // Act
-        var result = await _controller.GetUserTasks(null, null, false, CancellationToken.None);
+        var result = await _controller.GetUserTasks(new TaskQueryDto(), CancellationToken.None);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
-        var returnedTasks = Assert.IsAssignableFrom<List<TaskResponseDto>>(okResult.Value);
-        Assert.Empty(returnedTasks);
+        var returnedResult = Assert.IsAssignableFrom<PaginatedResultDto<TaskResponseDto>>(okResult.Value);
+        Assert.Empty(returnedResult.Items);
     }
 
     [Fact]
     public async System.Threading.Tasks.Task GetUserTasks_ExtractsUserId_FromClaims()
     {
         // Arrange
-        var tasks = new List<TaskResponseDto>();
-        _mockTaskService.Setup(s => s.GetUserTasksAsync(It.IsAny<Guid>(), null, null, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(tasks);
+        var paginatedResult = new PaginatedResultDto<TaskResponseDto>
+        {
+            Items = new List<TaskResponseDto>(),
+            TotalCount = 0,
+            Page = 1,
+            PageSize = 50,
+            TotalPages = 0
+        };
+
+        _mockTaskService.Setup(s => s.GetTasksAsync(It.IsAny<Guid>(), It.IsAny<TaskQueryDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(paginatedResult);
 
         // Act
-        await _controller.GetUserTasks(null, null, false, CancellationToken.None);
+        await _controller.GetUserTasks(new TaskQueryDto(), CancellationToken.None);
 
         // Assert
-        _mockTaskService.Verify(s => s.GetUserTasksAsync(_testUserId, null, null, It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockTaskService.Verify(s => s.GetTasksAsync(_testUserId, It.IsAny<TaskQueryDto>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

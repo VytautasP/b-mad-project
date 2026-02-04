@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using TaskFlow.Abstractions.Constants;
 using TaskFlow.Abstractions.DTOs.Auth;
 using TaskFlow.Abstractions.DTOs.Task;
+using TaskFlow.Abstractions.DTOs.Shared;
 
 namespace TaskFlow.Tests.Integration.Controllers;
 
@@ -234,14 +235,14 @@ public class TaskAssignmentControllerTests : IClassFixture<CustomWebApplicationF
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _secondAuthToken);
 
         // Act
-        var response = await _client.GetAsync("/api/tasks?myTasks=true");
+        var response = await _client.GetAsync($"/api/tasks?assigneeId={_secondUserId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var tasks = await response.Content.ReadFromJsonAsync<List<TaskResponseDto>>();
-        Assert.NotNull(tasks);
-        Assert.Single(tasks);
-        Assert.Equal(task.Id, tasks[0].Id);
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResultDto<TaskResponseDto>>();
+        Assert.NotNull(result);
+        Assert.Single(result.Items);
+        Assert.Equal(task.Id, result.Items[0].Id);
     }
 
     [Fact]
@@ -298,14 +299,14 @@ public class TaskAssignmentControllerTests : IClassFixture<CustomWebApplicationF
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _secondAuthToken);
 
         // Act
-        var response = await _client.GetAsync("/api/tasks?myTasks=true");
+        var response = await _client.GetAsync($"/api/tasks?assigneeId={_secondUserId}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var tasks = await response.Content.ReadFromJsonAsync<List<TaskResponseDto>>();
-        Assert.NotNull(tasks);
-        Assert.Equal(2, tasks.Count);
-        Assert.Contains(tasks, t => t.Id == task1.Id);
-        Assert.Contains(tasks, t => t.Id == task2.Id);
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResultDto<TaskResponseDto>>();
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Items.Count);
+        Assert.Contains(result.Items, t => t.Id == task1.Id);
+        Assert.Contains(result.Items, t => t.Id == task2.Id);
     }
 }

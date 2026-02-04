@@ -78,6 +78,12 @@ public class TaskConfiguration : IEntityTypeConfiguration<TaskEntity>
 
         builder.HasIndex(t => t.ParentTaskId)
             .HasDatabaseName("idx_tasks_parent_task_id");
+        
+        builder.HasIndex(t => t.Priority)
+            .HasDatabaseName("idx_tasks_priority");
+        
+        builder.HasIndex(t => new { t.Status, t.CreatedDate })
+            .HasDatabaseName("idx_tasks_status_created_date");
 
         // Self-referencing relationship
         builder.HasOne(t => t.ParentTask)

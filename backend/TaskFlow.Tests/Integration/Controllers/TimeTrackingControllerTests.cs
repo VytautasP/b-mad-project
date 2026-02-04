@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using TaskFlow.Abstractions.Constants;
 using TaskFlow.Abstractions.DTOs.Auth;
 using TaskFlow.Abstractions.DTOs.Task;
+using TaskFlow.Abstractions.DTOs.Shared;
 using TaskFlow.Abstractions.DTOs.TimeEntries;
 
 namespace TaskFlow.Tests.Integration.Controllers;
@@ -231,10 +232,10 @@ public class TimeTrackingControllerTests : IClassFixture<CustomWebApplicationFac
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var tasks = await response.Content.ReadFromJsonAsync<List<TaskResponseDto>>();
-        Assert.NotNull(tasks);
+        var result = await response.Content.ReadFromJsonAsync<PaginatedResultDto<TaskResponseDto>>();
+        Assert.NotNull(result);
         
-        var taskWithTime = tasks.FirstOrDefault(t => t.Id == taskId);
+        var taskWithTime = result.Items.FirstOrDefault(t => t.Id == taskId);
         Assert.NotNull(taskWithTime);
         Assert.Equal(180, taskWithTime.TotalLoggedMinutes);
     }
