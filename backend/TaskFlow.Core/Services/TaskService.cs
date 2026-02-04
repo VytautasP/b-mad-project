@@ -467,4 +467,100 @@ public class TaskService : ITaskService
             AssignedByUserName = a.AssignedByUser?.Name ?? string.Empty
         }).ToList();
     }
+
+    public async System.Threading.Tasks.Task<List<TimelineTaskDto>> GetTimelineTasksAsync(
+        Guid userId, 
+        TimelineQueryDto queryDto, 
+        CancellationToken ct = default)
+    {
+        // Validate date range (business rule validation)
+        if (queryDto.EndDate <= queryDto.StartDate)
+        {
+            throw new ValidationException("EndDate must be after StartDate");
+        }
+
+        var daysDifference = (queryDto.EndDate - queryDto.StartDate).TotalDays;
+        if (daysDifference > 730) // 2 years
+        {
+            throw new ValidationException("Date range cannot exceed 2 years (730 days)");
+        }
+
+        _logger.LogInformation(
+            "User {UserId} requested timeline tasks for date range {StartDate} to {EndDate}", 
+            userId, 
+            queryDto.StartDate, 
+            queryDto.EndDate);
+
+        // Call repository to get tasks
+        var tasks = await _unitOfWork.Tasks.GetTasksForTimelineAsync(userId, queryDto, ct);
+
+        // Map to TimelineTaskDto
+        var timelineTasks = new List<TimelineTaskDto>();
+        
+        // Group tasks by parent/child relationship for parent duration calculation
+        var taskDict = tasks.ToDictionary(t => t.Id);
+        var childTasksByParent = tasks
+            .Where(t => t.ParentTaskId.HasValue)
+            .GroupBy(t => t.ParentTaskId!.Value)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        foreach (var task in tasks)
+        {
+            DateTime startDate;
+            DateTime endDate;
+            int duration;
+
+            // Check if this is a parent task with children in the result set
+            if (childTasksByParent.ContainsKey(task.Id))
+            {
+                var children = childTasksByParent[task.Id];
+                
+                // Calculate parent span from earliest child start to latest child end
+                startDate = children.Min(c => c.CreatedDate);
+                endDate = children.Max(c => c.DueDate ?? c.CreatedDate);
+                
+                // If parent has its own due date and it's later, use it
+                if (task.DueDate.HasValue && task.DueDate.Value > endDate)
+                {
+                    endDate = task.DueDate.Value;
+                }
+            }
+            else
+            {
+                // Regular task or parent without children in result set
+                startDate = task.CreatedDate;
+                endDate = task.DueDate ?? task.CreatedDate; // Should always have DueDate due to query filter
+            }
+
+            duration = (int)(endDate - startDate).TotalDays;
+
+            var timelineTask = new TimelineTaskDto
+            {
+                Id = task.Id,
+                Name = task.Name,
+                StartDate = startDate,
+                EndDate = endDate,
+                Duration = duration,
+                Status = task.Status,
+                Priority = task.Priority,
+                Type = task.Type,
+                Progress = task.Progress,
+                ParentTaskId = task.ParentTaskId,
+                Assignees = task.TaskAssignments?.Select(ta => new TimelineTaskDto.TaskAssigneeDto
+                {
+                    UserId = ta.UserId,
+                    UserName = ta.User?.Name ?? string.Empty
+                }).ToList() ?? new List<TimelineTaskDto.TaskAssigneeDto>()
+            };
+
+            timelineTasks.Add(timelineTask);
+        }
+
+        _logger.LogInformation(
+            "Returning {Count} timeline tasks for user {UserId}", 
+            timelineTasks.Count, 
+            userId);
+
+        return timelineTasks;
+    }
 }

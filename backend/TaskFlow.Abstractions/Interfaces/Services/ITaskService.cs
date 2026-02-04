@@ -25,4 +25,7 @@ public interface ITaskService
     System.Threading.Tasks.Task AssignUserAsync(Guid taskId, Guid userId, Guid assignedByUserId, CancellationToken ct = default);
     System.Threading.Tasks.Task UnassignUserAsync(Guid taskId, Guid userId, Guid currentUserId, CancellationToken ct = default);
     System.Threading.Tasks.Task<List<TaskAssignmentDto>> GetTaskAssigneesAsync(Guid taskId, Guid currentUserId, CancellationToken ct = default);
+    
+    // Timeline query method
+    System.Threading.Tasks.Task<List<TimelineTaskDto>> GetTimelineTasksAsync(Guid userId, TimelineQueryDto queryDto, CancellationToken ct = default);
 }

@@ -89,6 +89,52 @@ public class TasksController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Retrieves tasks optimized for timeline/Gantt view rendering.
+    /// </summary>
+    /// <param name="queryDto">Timeline query parameters including date range and optional filters</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>List of tasks with start/end dates and duration for Gantt visualization</returns>
+    /// <remarks>
+    /// Sample request:
+    /// 
+    ///     GET /api/tasks/timeline?startDate=2026-01-01&amp;endDate=2026-03-31&amp;status=1&amp;priority=2&amp;assigneeId=3fa85f64-5717-4562-b3fc-2c963f66afa6
+    ///     
+    /// Query Parameters (Required):
+    /// - startDate: Start of date range (ISO 8601 date, required)
+    /// - endDate: End of date range (ISO 8601 date, required, must be after startDate)
+    /// - view: Must be "timeline" (default value)
+    /// 
+    /// Query Parameters (Optional Filters):
+    /// - assigneeId: Filter by assigned user ID
+    /// - status: Filter by task status (0=ToDo, 1=InProgress, 2=Blocked, 3=Waiting, 4=Done)
+    /// - priority: Filter by priority (0=Low, 1=Medium, 2=High, 3=Critical)
+    /// 
+    /// Constraints:
+    /// - Date range cannot exceed 2 years (730 days)
+    /// - Only returns tasks with due dates within the specified range
+    /// - Parent tasks included if children match date range
+    /// - Response optimized for rendering (minimal fields)
+    /// </remarks>
+    /// <response code="200">Returns list of timeline tasks</response>
+    /// <response code="400">Invalid query parameters or date range validation failed</response>
+    /// <response code="401">Unauthorized - authentication required</response>
+    [HttpGet("timeline")]
+    [ProducesResponseType(typeof(List<TimelineTaskDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async System.Threading.Tasks.Task<IActionResult> GetTimelineTasks([FromQuery] TimelineQueryDto queryDto, CancellationToken ct = default)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var userId = GetCurrentUserId();
+        var result = await _taskService.GetTimelineTasksAsync(userId, queryDto, ct);
+        return Ok(result);
+    }
+
     [HttpGet("{id}")]
     public async System.Threading.Tasks.Task<IActionResult> GetTaskById(Guid id, CancellationToken ct)
     {

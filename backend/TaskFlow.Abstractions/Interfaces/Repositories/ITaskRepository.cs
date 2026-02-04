@@ -28,4 +28,7 @@ public interface ITaskRepository
     // Time rollup methods
     System.Threading.Tasks.Task<Dictionary<Guid, TaskTimeRollup>> GetTimeRollupsAsync(IEnumerable<Guid> taskIds, CancellationToken ct = default);
     System.Threading.Tasks.Task<List<Guid>> GetAncestorIdsAsync(Guid taskId, CancellationToken ct = default);
+    
+    // Timeline query method
+    System.Threading.Tasks.Task<List<TaskEntity>> GetTasksForTimelineAsync(Guid userId, TimelineQueryDto queryDto, CancellationToken ct = default);
 }

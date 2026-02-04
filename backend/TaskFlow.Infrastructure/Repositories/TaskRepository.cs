@@ -667,4 +667,84 @@ public class TaskRepository : ITaskRepository
         
         return totalMinutes;
     }
+
+    public async System.Threading.Tasks.Task<List<TaskEntity>> GetTasksForTimelineAsync(
+        Guid userId, 
+        TimelineQueryDto queryDto, 
+        CancellationToken ct = default)
+    {
+        // Base query: tasks owned by or assigned to user, with due dates in range
+        var query = _context.Tasks
+            .AsNoTracking()
+            .Include(t => t.TaskAssignments)
+                .ThenInclude(ta => ta.User)
+            .Include(t => t.ParentTask)
+            .Where(t => !t.IsDeleted && t.DueDate != null);
+
+        // Date range filter (only tasks with due dates within range)
+        query = query.Where(t => t.DueDate >= queryDto.StartDate && t.DueDate <= queryDto.EndDate);
+
+        // Authorization: user's own tasks OR tasks where user is assigned
+        var userAssignedTaskIds = await _context.TaskAssignments
+            .Where(ta => ta.UserId == userId)
+            .Select(ta => ta.TaskId)
+            .ToListAsync(ct);
+
+        query = query.Where(t => t.CreatedByUserId == userId || userAssignedTaskIds.Contains(t.Id));
+
+        // Optional filters
+        if (queryDto.AssigneeId.HasValue)
+        {
+            var assigneeTaskIds = await _context.TaskAssignments
+                .Where(ta => ta.UserId == queryDto.AssigneeId.Value)
+                .Select(ta => ta.TaskId)
+                .ToListAsync(ct);
+            
+            query = query.Where(t => assigneeTaskIds.Contains(t.Id));
+        }
+
+        if (queryDto.Status.HasValue)
+        {
+            query = query.Where(t => t.Status == queryDto.Status.Value);
+        }
+
+        if (queryDto.Priority.HasValue)
+        {
+            query = query.Where(t => t.Priority == queryDto.Priority.Value);
+        }
+
+        // Get matching tasks
+        var matchingTasks = await query
+            .OrderBy(t => t.DueDate)
+            .ToListAsync(ct);
+
+        // Get unique parent task IDs from matching tasks
+        var parentTaskIds = matchingTasks
+            .Where(t => t.ParentTaskId.HasValue)
+            .Select(t => t.ParentTaskId!.Value)
+            .Distinct()
+            .ToList();
+
+        // Fetch parent tasks (even if their due dates are outside the range)
+        var parentTasks = new List<TaskEntity>();
+        if (parentTaskIds.Any())
+        {
+            parentTasks = await _context.Tasks
+                .AsNoTracking()
+                .Include(t => t.TaskAssignments)
+                    .ThenInclude(ta => ta.User)
+                .Where(t => parentTaskIds.Contains(t.Id) && !t.IsDeleted)
+                .ToListAsync(ct);
+        }
+
+        // Combine matching tasks and their parents, removing duplicates
+        var allTasks = matchingTasks
+            .Concat(parentTasks)
+            .GroupBy(t => t.Id)
+            .Select(g => g.First())
+            .OrderBy(t => t.DueDate ?? DateTime.MaxValue)
+            .ToList();
+
+        return allTasks;
+    }
 }
