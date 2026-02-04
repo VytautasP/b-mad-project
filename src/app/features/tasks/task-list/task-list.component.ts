@@ -1,9 +1,12 @@
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
+import { MatSortModule, MatSort, Sort } from '@angular/material/sort';
+import { MatPaginatorModule, MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,14 +18,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatBadgeModule } from '@angular/material/badge';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
-import { map, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { map, debounceTime, distinctUntilChanged, takeUntil, take } from 'rxjs/operators';
 import { TaskService } from '../services/task.service';
-import { Task, TaskPriority, TaskStatus, TaskType } from '../../../shared/models/task.model';
+import { Task, TaskPriority, TaskStatus, TaskType, TaskFilters, PaginatedResult } from '../../../shared/models/task.model';
 import { TaskFormComponent } from '../task-form/task-form.component';
 import { TaskDetailDialog } from '../task-detail-dialog/task-detail-dialog';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { AssigneeList } from '../components/assignee-list/assignee-list';
+import { TaskFiltersComponent, User } from './components/task-filters/task-filters.component';
 import { TimerStateService, TimerState } from '../../../core/services/state/timer-state.service';
 import { formatDuration, formatDurationWithTotal } from '../../../shared/utils/time.utils';
 
@@ -33,8 +38,11 @@ import { formatDuration, formatDurationWithTotal } from '../../../shared/utils/t
     CommonModule,
     ReactiveFormsModule,
     MatTableModule,
+    MatSortModule,
+    MatPaginatorModule,
     MatCardModule,
     MatProgressSpinnerModule,
+    MatProgressBarModule,
     MatChipsModule,
     MatIconModule,
     MatButtonModule,
@@ -46,7 +54,8 @@ import { formatDuration, formatDurationWithTotal } from '../../../shared/utils/t
     MatSelectModule,
     MatButtonToggleModule,
     MatBadgeModule,
-    AssigneeList
+    AssigneeList,
+    TaskFiltersComponent
   ],
   templateUrl: './task-list.component.html',
   styleUrl: './task-list.component.scss',
@@ -57,98 +66,145 @@ export class TaskListComponent implements OnInit, OnDestroy {
   private readonly timerService = inject(TimerStateService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly destroy$ = new Subject<void>();
   
-  tasks$: Observable<Task[]>;
-  isLoading = signal(true);
-  displayedColumns: string[] = ['name', 'assignees', 'timeLogged', 'dueDate', 'priority', 'status', 'type', 'actions'];
+  @ViewChild(MatSort) sort?: MatSort;
+  @ViewChild(MatPaginator) paginator?: MatPaginator;
+
+  // Task data
+  tasks = signal<Task[]>([]);
+  totalCount = signal(0);
+  isLoading = signal(false);
+  
+  // Table columns
+  displayedColumns: string[] = ['name', 'assignees', 'status', 'priority', 'dueDate', 'timeLogged', 'actions'];
   
   // Timer state
   currentTimerState: TimerState | null = null;
   
-  // Search and filter controls
-  searchControl = new FormControl('');
-  statusFilterControl = new FormControl<TaskStatus | null>(null);
+  // Filter, sort, and pagination state
+  filters: TaskFilters = {};
+  sortBy: string = 'createdDate';
+  sortOrder: 'asc' | 'desc' = 'desc';
+  page: number = 1;
+  pageSize: number = 50;
   
-  // Filter state
-  searchTerm = '';
-  statusFilter: TaskStatus | null = null;
-  showMyTasksOnly: boolean = false;
-  myTasksCount = signal(0);
-  totalTaskCount = signal(0);
-  filteredTaskCount = signal(0);
+  // Users for filter dropdown
+  users = signal<User[]>([]);
   
   TaskPriority = TaskPriority;
   TaskStatus = TaskStatus;
   TaskType = TaskType;
-  
-  // Status filter options
-  statusOptions = [
-    { value: null, label: 'All' },
-    { value: TaskStatus.ToDo, label: 'To Do' },
-    { value: TaskStatus.InProgress, label: 'In Progress' },
-    { value: TaskStatus.Blocked, label: 'Blocked' },
-    { value: TaskStatus.Waiting, label: 'Waiting' },
-    { value: TaskStatus.Done, label: 'Done' }
-  ];
-
-  constructor() {
-    // Subscribe to tasks with sorting
-    this.tasks$ = this.taskService.tasks$.pipe(
-      map(tasks => this.sortTasksByDate(tasks)),
-      map(tasks => {
-        this.filteredTaskCount.set(tasks.length);
-        return tasks;
-      })
-    );
-  }
 
   ngOnInit(): void {
-    this.loadTasks();
-    this.setupSearchDebounce();
-    this.setupStatusFilter();
-    this.loadMyTasksCount();
-    
     // Subscribe to timer state
     this.timerService.timer$.pipe(
       takeUntil(this.destroy$)
     ).subscribe(state => {
       this.currentTimerState = state;
     });
+
+    // Parse query parameters to restore state
+    this.route.queryParams.pipe(take(1)).subscribe(params => {
+      this.parseQueryParams(params);
+      this.loadTasks();
+    });
+
+    // Load users for filter dropdown (mock for now - would come from UserService)
+    this.loadUsers();
   }
   
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
-  
-  private setupSearchDebounce(): void {
-    this.searchControl.valueChanges.pipe(
-      debounceTime(300),
-      distinctUntilChanged(),
-      takeUntil(this.destroy$)
-    ).subscribe(searchTerm => {
-      this.searchTerm = searchTerm || '';
-      this.loadTasks();
+
+  private parseQueryParams(params: any): void {
+    // Parse filters
+    this.filters = {
+      assigneeId: params['assigneeId'] ? (Array.isArray(params['assigneeId']) ? params['assigneeId'] : [params['assigneeId']]) : undefined,
+      status: params['status'] ? this.parseEnumArray(params['status'], TaskStatus) : undefined,
+      priority: params['priority'] ? this.parseEnumArray(params['priority'], TaskPriority) : undefined,
+      type: params['type'] ? this.parseEnumArray(params['type'], TaskType) : undefined,
+      dueDateFrom: params['dueDateFrom'] ? new Date(params['dueDateFrom']) : undefined,
+      dueDateTo: params['dueDateTo'] ? new Date(params['dueDateTo']) : undefined,
+      searchTerm: params['searchTerm'] || undefined
+    };
+
+    // Parse sorting
+    this.sortBy = params['sortBy'] || 'createdDate';
+    this.sortOrder = params['sortOrder'] === 'asc' ? 'asc' : 'desc';
+
+    // Parse pagination
+    this.page = params['page'] ? parseInt(params['page'], 10) : 1;
+    this.pageSize = params['pageSize'] ? parseInt(params['pageSize'], 10) : 50;
+  }
+
+  private parseEnumArray(value: any, enumType: any): number[] {
+    const values = Array.isArray(value) ? value : [value];
+    return values.map(v => parseInt(v, 10)).filter(v => !isNaN(v));
+  }
+
+  private updateQueryParams(): void {
+    const queryParams: any = {
+      page: this.page,
+      pageSize: this.pageSize,
+      sortBy: this.sortBy,
+      sortOrder: this.sortOrder
+    };
+
+    // Add filters to query params
+    if (this.filters.assigneeId && this.filters.assigneeId.length > 0) {
+      queryParams['assigneeId'] = this.filters.assigneeId;
+    }
+    if (this.filters.status && this.filters.status.length > 0) {
+      queryParams['status'] = this.filters.status;
+    }
+    if (this.filters.priority && this.filters.priority.length > 0) {
+      queryParams['priority'] = this.filters.priority;
+    }
+    if (this.filters.type && this.filters.type.length > 0) {
+      queryParams['type'] = this.filters.type;
+    }
+    if (this.filters.dueDateFrom) {
+      queryParams['dueDateFrom'] = this.filters.dueDateFrom.toISOString();
+    }
+    if (this.filters.dueDateTo) {
+      queryParams['dueDateTo'] = this.filters.dueDateTo.toISOString();
+    }
+    if (this.filters.searchTerm) {
+      queryParams['searchTerm'] = this.filters.searchTerm;
+    }
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams,
+      queryParamsHandling: 'merge'
     });
   }
-  
-  private setupStatusFilter(): void {
-    this.statusFilterControl.valueChanges.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(status => {
-      this.statusFilter = status;
-      this.loadTasks();
-    });
+
+  private loadUsers(): void {
+    // TODO: Load from UserService when available
+    // For now, mock data
+    this.users.set([]);
   }
 
   loadTasks(): void {
     this.isLoading.set(true);
-    this.taskService.getTasks(this.searchTerm, this.statusFilter ?? undefined, this.showMyTasksOnly).subscribe({
-      next: (tasks) => {
-        console.log('Tasks loaded successfully:', tasks);
+    
+    this.taskService.getTasksPaginated(
+      this.filters,
+      this.sortBy,
+      this.sortOrder,
+      this.page,
+      this.pageSize
+    ).subscribe({
+      next: (result: PaginatedResult<Task>) => {
+        this.tasks.set(result.items);
+        this.totalCount.set(result.totalCount);
         this.isLoading.set(false);
-        console.log('Loading state set to false, tasks count:', tasks.length);
       },
       error: (error) => {
         console.error('Failed to load tasks:', error);
@@ -161,32 +217,40 @@ export class TaskListComponent implements OnInit, OnDestroy {
       }
     });
   }
-  
-  loadMyTasksCount(): void {
-    this.taskService.getMyTasksCount().subscribe({
-      next: (count) => {
-        this.myTasksCount.set(count);
-      },
-      error: (error) => {
-        console.error('Failed to load my tasks count:', error);
-      }
-    });
-  }
-  
-  toggleMyTasks(): void {
-    this.showMyTasksOnly = !this.showMyTasksOnly;
+
+  onFiltersChanged(filters: TaskFilters): void {
+    this.filters = filters;
+    this.page = 1; // Reset to first page when filters change
+    this.updateQueryParams();
     this.loadTasks();
   }
-  
-  clearSearch(): void {
-    this.searchControl.setValue('');
+
+  onFiltersCleared(): void {
+    this.filters = {};
+    this.page = 1;
+    this.updateQueryParams();
+    this.loadTasks();
   }
 
-  private sortTasksByDate(tasks: Task[]): Task[] {
-    return [...tasks].sort((a, b) => {
-      const dateA = new Date(a.createdDate).getTime();
-      const dateB = new Date(b.createdDate).getTime();
-      return dateB - dateA; // Newest first
+  onSortChange(sort: Sort): void {
+    this.sortBy = sort.active;
+    this.sortOrder = sort.direction === 'asc' ? 'asc' : 'desc';
+    this.updateQueryParams();
+    this.loadTasks();
+  }
+
+  onPageChange(event: PageEvent): void {
+    this.page = event.pageIndex + 1; // MatPaginator uses 0-based indexing
+    this.pageSize = event.pageSize;
+    this.updateQueryParams();
+    this.loadTasks();
+  }
+
+  hasActiveFilters(): boolean {
+    return Object.keys(this.filters).some(key => {
+      const value = this.filters[key as keyof TaskFilters];
+      return value !== undefined && value !== null && 
+             (Array.isArray(value) ? value.length > 0 : true);
     });
   }
 

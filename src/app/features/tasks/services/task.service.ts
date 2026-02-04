@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, throwError } from 'rxjs';
 import { catchError, tap, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { Task, TaskCreateDto, TaskUpdateDto, TaskStatus, TaskAssignmentDto } from '../../../shared/models/task.model';
+import { Task, TaskCreateDto, TaskUpdateDto, TaskStatus, TaskAssignmentDto, TaskFilters, PaginatedResult } from '../../../shared/models/task.model';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +18,7 @@ export class TaskService {
 
   /**
    * Fetch all tasks for the current user with optional search, status filters, and myTasks flag
+   * @deprecated Use getTasksPaginated for new features
    */
   getTasks(search?: string, status?: TaskStatus, myTasksOnly: boolean = false): Observable<Task[]> {
     let params = new HttpParams();
@@ -36,6 +37,71 @@ export class TaskService {
     
     return this.http.get<Task[]>(this.apiUrl, { params }).pipe(
       tap(tasks => this.tasksSubject.next(tasks)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Fetch tasks with advanced filtering, sorting, and pagination
+   */
+  getTasksPaginated(
+    filters?: TaskFilters,
+    sortBy?: string,
+    sortOrder: 'asc' | 'desc' = 'asc',
+    page: number = 1,
+    pageSize: number = 50
+  ): Observable<PaginatedResult<Task>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('pageSize', pageSize.toString());
+
+    // Add sorting parameters
+    if (sortBy) {
+      params = params.set('sortBy', sortBy);
+      params = params.set('sortOrder', sortOrder);
+    }
+
+    // Add filter parameters
+    if (filters) {
+      if (filters.searchTerm && filters.searchTerm.trim()) {
+        params = params.set('search', filters.searchTerm.trim());
+      }
+
+      if (filters.assigneeId && filters.assigneeId.length > 0) {
+        filters.assigneeId.forEach(id => {
+          params = params.append('assigneeId', id);
+        });
+      }
+
+      if (filters.status && filters.status.length > 0) {
+        filters.status.forEach(status => {
+          params = params.append('status', status.toString());
+        });
+      }
+
+      if (filters.priority && filters.priority.length > 0) {
+        filters.priority.forEach(priority => {
+          params = params.append('priority', priority.toString());
+        });
+      }
+
+      if (filters.type && filters.type.length > 0) {
+        filters.type.forEach(type => {
+          params = params.append('type', type.toString());
+        });
+      }
+
+      if (filters.dueDateFrom) {
+        params = params.set('dueDateFrom', filters.dueDateFrom.toISOString());
+      }
+
+      if (filters.dueDateTo) {
+        params = params.set('dueDateTo', filters.dueDateTo.toISOString());
+      }
+    }
+
+    return this.http.get<PaginatedResult<Task>>(this.apiUrl, { params }).pipe(
+      tap(result => this.tasksSubject.next(result.items)),
       catchError(this.handleError)
     );
   }

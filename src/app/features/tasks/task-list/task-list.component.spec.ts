@@ -2,21 +2,26 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router, ActivatedRoute } from '@angular/router';
 import { BehaviorSubject, of, throwError } from 'rxjs';
 import { TaskListComponent } from './task-list.component';
 import { TaskService } from '../services/task.service';
-import { Task, TaskPriority, TaskStatus, TaskType } from '../../../shared/models/task.model';
+import { Task, TaskPriority, TaskStatus, TaskType, TaskFilters, PaginatedResult } from '../../../shared/models/task.model';
 import { ConfirmationDialogComponent } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
+import { Sort } from '@angular/material/sort';
+import { PageEvent } from '@angular/material/paginator';
 
 describe('TaskListComponent', () => {
   let component: TaskListComponent;
   let fixture: ComponentFixture<TaskListComponent>;
   let taskService: Partial<TaskService>;
   let tasksSubject: BehaviorSubject<Task[]>;
-  let getTasksSpy: any;
+  let getTasksPaginatedSpy: any;
   let deleteTaskSpy: any;
   let mockDialog: { open: any };
   let mockSnackBar: { open: any };
+  let mockRouter: { navigate: any };
+  let mockActivatedRoute: { queryParams: BehaviorSubject<any> };
 
   const mockTask: Task = {
     id: '123',
@@ -33,12 +38,26 @@ describe('TaskListComponent', () => {
     status: TaskStatus.ToDo,
     progress: 0,
     type: TaskType.Task,
-    isDeleted: false
+    isDeleted: false,
+    assignees: [],
+    directLoggedMinutes: 0,
+    childrenLoggedMinutes: 0,
+    totalLoggedMinutes: 0
+  };
+
+  const mockPaginatedResult: PaginatedResult<Task> = {
+    items: [mockTask],
+    totalCount: 1,
+    page: 1,
+    pageSize: 50,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false
   };
 
   beforeEach(async () => {
     tasksSubject = new BehaviorSubject<Task[]>([]);
-    getTasksSpy = vi.fn();
+    getTasksPaginatedSpy = vi.fn();
     deleteTaskSpy = vi.fn();
     mockDialog = {
       open: vi.fn(),
@@ -47,10 +66,16 @@ describe('TaskListComponent', () => {
     mockSnackBar = {
       open: vi.fn()
     };
+    mockRouter = {
+      navigate: vi.fn().mockReturnValue(Promise.resolve(true))
+    };
+    mockActivatedRoute = {
+      queryParams: new BehaviorSubject<any>({})
+    };
     
     taskService = {
       tasks$: tasksSubject.asObservable(),
-      getTasks: getTasksSpy,
+      getTasksPaginated: getTasksPaginatedSpy,
       deleteTask: deleteTaskSpy
     };
 
@@ -62,7 +87,9 @@ describe('TaskListComponent', () => {
       providers: [
         { provide: TaskService, useValue: taskService },
         { provide: MatDialog, useValue: mockDialog },
-        { provide: MatSnackBar, useValue: mockSnackBar }
+        { provide: MatSnackBar, useValue: mockSnackBar },
+        { provide: Router, useValue: mockRouter },
+        { provide: ActivatedRoute, useValue: mockActivatedRoute }
       ]
     }).compileComponents();
 
@@ -74,74 +101,75 @@ describe('TaskListComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should display loading spinner initially', () => {
-    getTasksSpy.mockReturnValue(of([]));
-    expect(component.isLoading).toBeTruthy();
-  });
-
   it('should load tasks on init', () => {
-    getTasksSpy.mockReturnValue(of([mockTask]));
+    getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
     
     component.ngOnInit();
     
-    expect(getTasksSpy).toHaveBeenCalled();
+    expect(getTasksPaginatedSpy).toHaveBeenCalled();
   });
 
-  it('should display tasks when loaded', async () => {
-    const mockTasks = [mockTask];
-    getTasksSpy.mockReturnValue(of(mockTasks));
-    tasksSubject.next(mockTasks);
-
-    component.ngOnInit();
-
-    const tasks = await new Promise<Task[]>(resolve => {
-      component.tasks$.subscribe(tasks => resolve(tasks));
-    });
-
-    expect(tasks.length).toBe(1);
-    expect(tasks[0].name).toBe('Test Task');
-  });
-
-  it('should show empty state when no tasks', async () => {
-    getTasksSpy.mockReturnValue(of([]));
-    tasksSubject.next([]);
-
-    component.ngOnInit();
-
-    const tasks = await new Promise<Task[]>(resolve => {
-      component.tasks$.subscribe(tasks => resolve(tasks));
-    });
-
-    expect(tasks.length).toBe(0);
-  });
-
-  it('should sort tasks by created date descending', async () => {
-    const task1 = { ...mockTask, id: '1', createdDate: new Date('2024-01-01') };
-    const task2 = { ...mockTask, id: '2', createdDate: new Date('2024-01-03') };
-    const task3 = { ...mockTask, id: '3', createdDate: new Date('2024-01-02') };
+  it('should parse query parameters on init', () => {
+    const queryParams = {
+      page: '2',
+      pageSize: '100',
+      sortBy: 'name',
+      sortOrder: 'asc',
+      status: [TaskStatus.InProgress.toString()],
+      priority: [TaskPriority.High.toString()]
+    };
     
-    getTasksSpy.mockReturnValue(of([task1, task2, task3]));
-    tasksSubject.next([task1, task2, task3]);
-
+    mockActivatedRoute.queryParams.next(queryParams);
+    getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+    
     component.ngOnInit();
+    
+    expect(component.page).toBe(2);
+    expect(component.pageSize).toBe(100);
+    expect(component.sortBy).toBe('name');
+    expect(component.sortOrder).toBe('asc');
+    expect(component.filters.status).toEqual([TaskStatus.InProgress]);
+    expect(component.filters.priority).toEqual([TaskPriority.High]);
+  });
 
-    const tasks = await new Promise<Task[]>(resolve => {
-      component.tasks$.subscribe(tasks => resolve(tasks));
-    });
+  it('should display loading spinner initially', () => {
+    getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+    expect(component.isLoading()).toBe(false);
+  });
 
-    expect(tasks[0].id).toBe('2'); // Newest first
-    expect(tasks[1].id).toBe('3');
-    expect(tasks[2].id).toBe('1');
+  it('should update tasks signal when loaded', () => {
+    getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+    
+    component.loadTasks();
+    
+    expect(component.tasks().length).toBe(1);
+    expect(component.tasks()[0].name).toBe('Test Task');
+    expect(component.totalCount()).toBe(1);
+  });
+
+  it('should show empty state when no tasks', () => {
+    const emptyResult: PaginatedResult<Task> = {
+      ...mockPaginatedResult,
+      items: [],
+      totalCount: 0
+    };
+    getTasksPaginatedSpy.mockReturnValue(of(emptyResult));
+
+    component.loadTasks();
+
+    expect(component.tasks().length).toBe(0);
+    expect(component.totalCount()).toBe(0);
   });
 
   it('should handle error when loading tasks', () => {
-    getTasksSpy.mockReturnValue(
+    getTasksPaginatedSpy.mockReturnValue(
       throwError(() => new Error('Failed to load tasks'))
     );
 
     component.loadTasks();
 
-    expect(component.isLoading).toBeFalsy();
+    expect(component.isLoading()).toBe(false);
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Failed to load tasks', 'Close', expect.any(Object));
   });
 
   it('should format dates correctly', () => {
@@ -204,12 +232,12 @@ describe('TaskListComponent', () => {
         afterClosed: () => of(mockTask)
       } as any;
       mockDialog.open.mockReturnValue(mockDialogRef);
-      getTasksSpy.mockReturnValue(of([mockTask]));
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
 
       component.onEdit(mockTask);
 
       expect(mockSnackBar.open).toHaveBeenCalledWith('Task updated successfully', 'Close', expect.any(Object));
-      expect(getTasksSpy).toHaveBeenCalled();
+      expect(getTasksPaginatedSpy).toHaveBeenCalled();
     });
 
     it('should not reload tasks when edit dialog is cancelled', () => {
@@ -218,11 +246,11 @@ describe('TaskListComponent', () => {
         afterClosed: () => of(null)
       } as any;
       mockDialog.open.mockReturnValue(mockDialogRef);
-      getTasksSpy.mockClear();
+      getTasksPaginatedSpy.mockClear();
 
       component.onEdit(mockTask);
 
-      expect(getTasksSpy).not.toHaveBeenCalled();
+      expect(getTasksPaginatedSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -250,13 +278,13 @@ describe('TaskListComponent', () => {
       } as any;
       mockDialog.open.mockReturnValue(mockDialogRef);
       deleteTaskSpy.mockReturnValue(of(null));
-      getTasksSpy.mockReturnValue(of([]));
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
 
       component.onDelete(mockTask);
 
       expect(deleteTaskSpy).toHaveBeenCalledWith('123');
       expect(mockSnackBar.open).toHaveBeenCalledWith('Task deleted successfully', 'Close', expect.any(Object));
-      expect(getTasksSpy).toHaveBeenCalled();
+      expect(getTasksPaginatedSpy).toHaveBeenCalled();
     });
 
     it('should not delete task when cancelled', () => {
@@ -296,6 +324,204 @@ describe('TaskListComponent', () => {
       component.onDelete(mockTask);
 
       expect(mockSnackBar.open).toHaveBeenCalledWith('Failed to delete task. Please try again.', 'Close', expect.any(Object));
+    });
+  });
+
+  // Filtering functionality tests
+  describe('Filtering functionality', () => {
+    it('should apply filters and reload tasks', () => {
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+      const filters: TaskFilters = {
+        status: [TaskStatus.InProgress],
+        priority: [TaskPriority.High]
+      };
+
+      component.onFiltersChanged(filters);
+
+      expect(component.filters).toEqual(filters);
+      expect(component.page).toBe(1); // Should reset to page 1
+      expect(getTasksPaginatedSpy).toHaveBeenCalledWith(filters, expect.any(String), expect.any(String), 1, expect.any(Number));
+    });
+
+    it('should clear filters and reload tasks', () => {
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+      component.filters = { status: [TaskStatus.InProgress] };
+
+      component.onFiltersCleared();
+
+      expect(component.filters).toEqual({});
+      expect(component.page).toBe(1);
+      expect(getTasksPaginatedSpy).toHaveBeenCalled();
+    });
+
+    it('should update URL when filters change', () => {
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+      const filters: TaskFilters = {
+        status: [TaskStatus.InProgress]
+      };
+
+      component.onFiltersChanged(filters);
+
+      expect(mockRouter.navigate).toHaveBeenCalled();
+    });
+
+    it('should detect active filters', () => {
+      component.filters = {};
+      expect(component.hasActiveFilters()).toBe(false);
+
+      component.filters = { status: [TaskStatus.InProgress] };
+      expect(component.hasActiveFilters()).toBe(true);
+
+      component.filters = { status: [] };
+      expect(component.hasActiveFilters()).toBe(false);
+    });
+  });
+
+  // Sorting functionality tests
+  describe('Sorting functionality', () => {
+    it('should update sort state and reload tasks', () => {
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+      const sort: Sort = {
+        active: 'name',
+        direction: 'asc'
+      };
+
+      component.onSortChange(sort);
+
+      expect(component.sortBy).toBe('name');
+      expect(component.sortOrder).toBe('asc');
+      expect(getTasksPaginatedSpy).toHaveBeenCalledWith(expect.any(Object), 'name', 'asc', expect.any(Number), expect.any(Number));
+    });
+
+    it('should handle descending sort', () => {
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+      const sort: Sort = {
+        active: 'dueDate',
+        direction: 'desc'
+      };
+
+      component.onSortChange(sort);
+
+      expect(component.sortBy).toBe('dueDate');
+      expect(component.sortOrder).toBe('desc');
+    });
+
+    it('should update URL when sort changes', () => {
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+      const sort: Sort = {
+        active: 'priority',
+        direction: 'asc'
+      };
+
+      component.onSortChange(sort);
+
+      expect(mockRouter.navigate).toHaveBeenCalled();
+    });
+  });
+
+  // Pagination functionality tests
+  describe('Pagination functionality', () => {
+    it('should update page state and reload tasks', () => {
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+      const pageEvent: PageEvent = {
+        pageIndex: 1,
+        pageSize: 50,
+        length: 100
+      };
+
+      component.onPageChange(pageEvent);
+
+      expect(component.page).toBe(2); // Convert from 0-based to 1-based
+      expect(component.pageSize).toBe(50);
+      expect(getTasksPaginatedSpy).toHaveBeenCalledWith(expect.any(Object), expect.any(String), expect.any(String), 2, 50);
+    });
+
+    it('should handle page size change', () => {
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+      const pageEvent: PageEvent = {
+        pageIndex: 0,
+        pageSize: 100,
+        length: 100
+      };
+
+      component.onPageChange(pageEvent);
+
+      expect(component.pageSize).toBe(100);
+    });
+
+    it('should update URL when pagination changes', () => {
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+      const pageEvent: PageEvent = {
+        pageIndex: 2,
+        pageSize: 100,
+        length: 300
+      };
+
+      component.onPageChange(pageEvent);
+
+      expect(mockRouter.navigate).toHaveBeenCalled();
+    });
+  });
+
+  // URL state persistence tests
+  describe('URL state persistence', () => {
+    it('should restore filters from URL query parameters', () => {
+      const queryParams = {
+        status: [TaskStatus.InProgress.toString(), TaskStatus.Done.toString()],
+        priority: [TaskPriority.High.toString()],
+        searchTerm: 'test query'
+      };
+
+      mockActivatedRoute.queryParams.next(queryParams);
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+
+      component.ngOnInit();
+
+      expect(component.filters.status).toEqual([TaskStatus.InProgress, TaskStatus.Done]);
+      expect(component.filters.priority).toEqual([TaskPriority.High]);
+      expect(component.filters.searchTerm).toBe('test query');
+    });
+
+    it('should restore sorting from URL query parameters', () => {
+      const queryParams = {
+        sortBy: 'dueDate',
+        sortOrder: 'asc'
+      };
+
+      mockActivatedRoute.queryParams.next(queryParams);
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+
+      component.ngOnInit();
+
+      expect(component.sortBy).toBe('dueDate');
+      expect(component.sortOrder).toBe('asc');
+    });
+
+    it('should restore pagination from URL query parameters', () => {
+      const queryParams = {
+        page: '3',
+        pageSize: '100'
+      };
+
+      mockActivatedRoute.queryParams.next(queryParams);
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+
+      component.ngOnInit();
+
+      expect(component.page).toBe(3);
+      expect(component.pageSize).toBe(100);
+    });
+
+    it('should use default values when query parameters are missing', () => {
+      mockActivatedRoute.queryParams.next({});
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+
+      component.ngOnInit();
+
+      expect(component.page).toBe(1);
+      expect(component.pageSize).toBe(50);
+      expect(component.sortBy).toBe('createdDate');
+      expect(component.sortOrder).toBe('desc');
     });
   });
 });

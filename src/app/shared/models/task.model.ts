@@ -80,3 +80,25 @@ export interface TaskUpdateDto {
   progress?: number;
   type?: TaskType;
 }
+
+// Task Filters interface for advanced filtering
+export interface TaskFilters {
+  assigneeId?: string[];
+  status?: TaskStatus[];
+  priority?: TaskPriority[];
+  type?: TaskType[];
+  dueDateFrom?: Date | null;
+  dueDateTo?: Date | null;
+  searchTerm?: string;
+}
+
+// Paginated Result interface matching backend response
+export interface PaginatedResult<T> {
+  items: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
