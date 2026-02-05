@@ -1,0 +1,53 @@
+<div class="timeline-container">
+  <!-- Header -->
+  <div class="timeline-header">
+    <h1>Task Timeline</h1>
+    
+    <!-- View Mode Controls -->
+    <div class="view-controls">
+      <mat-button-toggle-group [value]="viewMode()" (change)="changeViewMode($event.value)" aria-label="View mode">
+        <mat-button-toggle value="day">
+          <mat-icon>today</mat-icon>
+          Day
+        </mat-button-toggle>
+        <mat-button-toggle value="week">
+          <mat-icon>view_week</mat-icon>
+          Week
+        </mat-button-toggle>
+        <mat-button-toggle value="month">
+          <mat-icon>calendar_month</mat-icon>
+          Month
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+  </div>
+
+  <!-- Loading Bar -->
+  @if (isLoading()) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading() && tasks().length === 0) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Loading timeline...</p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading() && tasks().length === 0) {
+    <div class="empty-state">
+      <mat-icon>event_busy</mat-icon>
+      <h2>No tasks in timeline</h2>
+      <p>Add due dates to your tasks to see them in the timeline view</p>
+    </div>
+  }
+
+  <!-- Timeline Chart Container -->
+  @if (!isLoading() && tasks().length > 0) {
+    <div class="timeline-wrapper">
+      <div #timelineContainer class="timeline-chart"></div>
+    </div>
+  }
+</div>

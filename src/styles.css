@@ -8,3 +8,72 @@ html, body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
 }
+
+/* Frappe Gantt base styles */
+.gantt .bar-wrapper {
+  cursor: pointer;
+}
+
+.gantt .bar-wrapper .bar {
+  fill: #b8c2cc;
+  stroke: #8D99A6;
+  stroke-width: 0;
+  transition: stroke-width 0.3s ease;
+  user-select: none;
+}
+
+.gantt .bar-wrapper .bar-progress {
+  fill: #a8a8a8;
+}
+
+.gantt .bar-wrapper .bar-label {
+  fill: #fff;
+  dominant-baseline: central;
+  text-anchor: middle;
+  font-size: 12px;
+  font-weight: lighter;
+  user-select: none;
+}
+
+.gantt .bar-wrapper .bar-label.big {
+  fill: #555;
+  text-anchor: start;
+}
+
+.gantt .bar-wrapper:hover .bar {
+  stroke-width: 2;
+  opacity: 0.9;
+}
+
+.gantt .bar-wrapper .handle {
+  fill: #ddd;
+  cursor: ew-resize;
+  opacity: 0;
+  visibility: hidden;
+  user-select: none;
+}
+
+.gantt .bar-wrapper.active .bar-label {
+  fill: #000;
+}
+
+.gantt .lower-text, .gantt .upper-text {
+  font-size: 12px;
+  text-anchor: middle;
+  fill: #555;
+}
+
+.gantt .upper-text {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.gantt .hide {
+  display: none;
+}
+
+.gantt-container {
+  position: relative;
+  overflow: auto;
+  font-size: 12px;
+}

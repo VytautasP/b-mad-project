@@ -1,0 +1,156 @@
+﻿.timeline-container {
+  padding: 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.timeline-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 500;
+}
+
+.view-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  gap: 16px;
+}
+
+.loading-container p {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 16px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+}
+
+.empty-state mat-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  color: rgba(0, 0, 0, 0.3);
+  margin-bottom: 16px;
+}
+
+.empty-state h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.timeline-wrapper {
+  flex: 1;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  position: relative;
+  min-height: 600px;
+}
+
+.timeline-chart {
+  width: 100%;
+  height: 500px;
+  position: relative;
+}
+
+@import 'vis-timeline/styles/vis-timeline-graph2d.css';
+
+:host ::ng-deep .vis-item.status-todo {
+  background-color: #808080;
+  border-color: #666666;
+  color: #fff;
+}
+
+:host ::ng-deep .vis-item.status-in-progress {
+  background-color: #3b82f6;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+:host ::ng-deep .vis-item.status-blocked {
+  background-color: #ef4444;
+  border-color: #dc2626;
+  color: #fff;
+}
+
+:host ::ng-deep .vis-item.status-waiting {
+  background-color: #eab308;
+  border-color: #ca8a04;
+  color: #fff;
+}
+
+:host ::ng-deep .vis-item.status-done {
+  background-color: #22c55e;
+  border-color: #16a34a;
+  color: #fff;
+}
+
+:host ::ng-deep .vis-timeline {
+  border: 1px solid #e0e0e0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-size: 12px;
+}
+
+:host ::ng-deep .vis-time-axis .vis-text {
+  color: #333;
+  padding-top: 4px;
+}
+
+:host ::ng-deep .vis-current-time {
+  background-color: #ef4444;
+  width: 2px;
+}
+
+:host ::ng-deep .vis-item {
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+:host ::ng-deep .vis-item .vis-item-content {
+  padding: 4px 8px;
+}
+
+@media (max-width: 768px) {
+  .timeline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .timeline-container {
+    padding: 16px;
+  }
+}

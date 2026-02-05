@@ -5,6 +5,27 @@ import { catchError, tap, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { Task, TaskCreateDto, TaskUpdateDto, TaskStatus, TaskAssignmentDto, TaskFilters, PaginatedResult } from '../../../shared/models/task.model';
 
+// Timeline-specific interfaces
+export interface TimelineQueryParams {
+  startDate: string;
+  endDate: string;
+  assigneeId?: string;
+  status?: string;
+  priority?: string;
+}
+
+export interface TimelineTask {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  duration: number;
+  status: TaskStatus;
+  priority: number;
+  parentTaskId?: string | null;
+  assignees: TaskAssignmentDto[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -212,6 +233,33 @@ export class TaskService {
    */
   getTaskAssignees(taskId: string): Observable<TaskAssignmentDto[]> {
     return this.http.get<TaskAssignmentDto[]>(`${this.apiUrl}/${taskId}/assignments`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Get tasks for timeline view with date range filtering
+   */
+  getTimelineTasks(params: TimelineQueryParams): Observable<Task[]> {
+    let httpParams = new HttpParams()
+      .set('view', 'timeline')
+      .set('startDate', params.startDate)
+      .set('endDate', params.endDate);
+
+    if (params.assigneeId) {
+      httpParams = httpParams.set('assigneeId', params.assigneeId);
+    }
+
+    if (params.status) {
+      httpParams = httpParams.set('status', params.status);
+    }
+
+    if (params.priority) {
+      httpParams = httpParams.set('priority', params.priority);
+    }
+
+    return this.http.get<PaginatedResult<Task>>(this.apiUrl, { params: httpParams }).pipe(
+      map(result => result.items),
       catchError(this.handleError)
     );
   }

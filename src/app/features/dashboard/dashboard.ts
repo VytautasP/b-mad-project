@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -34,6 +35,7 @@ export class DashboardComponent {
   private readonly authService = inject(AuthService);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly router = inject(Router);
   
   currentUser$ = this.authService.currentUser$;
   viewMode = signal<'list' | 'tree'>('list');
@@ -69,6 +71,10 @@ export class DashboardComponent {
       });
       dialogRef.close();
     });
+  }
+
+  goToTimeline(): void {
+    this.router.navigate(['/timeline']);
   }
 
   logout(): void {
