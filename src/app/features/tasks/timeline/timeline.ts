@@ -1,17 +1,20 @@
-import { Component, inject, OnInit, AfterViewInit, ViewChild, ElementRef, signal, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, AfterViewInit, ViewChild, ElementRef, signal, ChangeDetectionStrategy, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Timeline } from 'vis-timeline/standalone';
 import { DataSet } from 'vis-data';
 import { TaskService } from '../services/task.service';
 import { Task, TaskStatus } from '../../../shared/models/task.model';
+import { TaskDetailDialog, TaskDetailDialogData } from '../task-detail-dialog/task-detail-dialog';
 
 @Component({
   selector: 'app-timeline',
@@ -31,19 +34,36 @@ import { Task, TaskStatus } from '../../../shared/models/task.model';
 })
 export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly taskService = inject(TaskService);
+  private readonly dialog = inject(MatDialog);
+  private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly destroy$ = new Subject<void>();
   
   @ViewChild('timelineContainer', { static: false }) timelineContainer?: ElementRef<HTMLDivElement>;
   
   tasks = signal<Task[]>([]);
   isLoading = signal(false);
+  isUpdating = signal(false);
   viewMode = signal<'day' | 'week' | 'month'>('week');
+  isMobile = signal(false);
   
   private timelineInstance?: Timeline;
   private startDate: Date = new Date();
   private endDate: Date = new Date();
 
   ngOnInit(): void {
+    // Detect mobile device
+    this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.Tablet])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(result => {
+        this.isMobile.set(result.matches);
+      });
+    
+    // Restore zoom level from session storage
+    const savedZoom = sessionStorage.getItem('timeline-zoom');
+    if (savedZoom && (savedZoom === 'day' || savedZoom === 'week' || savedZoom === 'month')) {
+      this.viewMode.set(savedZoom as 'day' | 'week' | 'month');
+    }
+    
     // Calculate default date range (current month)
     const now = new Date();
     this.startDate = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -128,10 +148,45 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
       showCurrentTime: true,
       zoomMin: 1000 * 60 * 60 * 24, // 1 day
       zoomMax: 1000 * 60 * 60 * 24 * 365, // 1 year
-      editable: false,
+      editable: {
+        updateTime: !this.isMobile(), // Disable drag on mobile
+        updateGroup: false,
+        add: false,
+        remove: false,
+        overrideItems: false
+      },
+      snap: (date: Date) => {
+        // Snap to day boundaries
+        const snapped = new Date(date);
+        snapped.setHours(0, 0, 0, 0);
+        return snapped;
+      },
       margin: {
-        item: 10,
-        axis: 5
+        item: this.isMobile() ? 5 : 10,
+        axis: this.isMobile() ? 3 : 5
+      },
+      onMoving: (item: any, callback: (item: any) => void) => {
+        // Check if task is draggable before allowing move
+        const task = this.tasks().find(t => t.id === item.id);
+        if (!task || !this.isTaskDraggable(task)) {
+          callback(null); // Cancel the move
+          return;
+        }
+        
+        // Apply visual feedback (semi-transparent)
+        item.className = item.className + ' dragging';
+        callback(item);
+      },
+      onMove: (item: any, callback: (item: any) => void) => {
+        // Validate and update task via API
+        this.onTaskDragEnd(item.id, new Date(item.start), new Date(item.end))
+          .then((success: boolean) => {
+            if (success) {
+              callback(item); // Accept the change
+            } else {
+              callback(null); // Revert the change
+            }
+          });
       }
     };
 
@@ -144,6 +199,13 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
       // Create new timeline
       this.timelineInstance = new Timeline(container, items, options);
       
+      // Register click event handler
+      this.timelineInstance.on('click', (properties) => {
+        if (properties.item) {
+          this.onTaskClick(properties.item);
+        }
+      });
+      
       console.log('Timeline initialized successfully');
       
       // Fit to view based on current view mode
@@ -151,6 +213,129 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
     } catch (error) {
       console.error('Failed to initialize Timeline:', error);
     }
+  }
+
+  /**
+   * Handle task bar click - open detail dialog
+   */
+  onTaskClick(taskId: string): void {
+    const task = this.tasks().find(t => t.id === taskId);
+    if (!task) {
+      console.error('Task not found:', taskId);
+      return;
+    }
+
+    // Open task detail dialog
+    const dialogRef = this.dialog.open(TaskDetailDialog, {
+      width: '800px',
+      maxWidth: '95vw',
+      maxHeight: '90vh',
+      data: { task } as TaskDetailDialogData,
+      panelClass: 'task-detail-dialog'
+    });
+
+    // Refresh timeline when dialog closes (in case task was updated)
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        // Reload timeline data to reflect any changes
+        this.loadTimelineData(this.startDate, this.endDate);
+      }
+    });
+  }
+
+  /**
+   * Handle task drag end - update task due date via API
+   */
+  private async onTaskDragEnd(taskId: string, newStartDate: Date, newEndDate: Date): Promise<boolean> {
+    const task = this.tasks().find(t => t.id === taskId);
+    if (!task) {
+      console.error('Task not found:', taskId);
+      return false;
+    }
+
+    // Validate: newEndDate >= CreatedDate
+    const createdDate = new Date(task.createdDate);
+    if (newEndDate < createdDate) {
+      this.showError('Due date cannot be before creation date');
+      return false;
+    }
+
+    // Check parent task constraint
+    if (task.parentTaskId) {
+      const parentTask = this.tasks().find(t => t.id === task.parentTaskId);
+      if (parentTask && parentTask.dueDate) {
+        const parentDueDate = new Date(parentTask.dueDate);
+        if (newEndDate > parentDueDate) {
+          const confirmed = await this.showParentWarning();
+          if (!confirmed) {
+            return false;
+          }
+        }
+      }
+    }
+
+    // Save scroll position
+    const container = this.timelineContainer?.nativeElement;
+    const scrollLeft = container ? container.scrollLeft : 0;
+
+    // Update task via API
+    this.isUpdating.set(true);
+    
+    return new Promise<boolean>((resolve) => {
+      this.taskService.updateTask(taskId, { dueDate: newEndDate })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (updatedTask) => {
+            // Update local tasks array
+            const currentTasks = this.tasks();
+            const index = currentTasks.findIndex(t => t.id === taskId);
+            if (index !== -1) {
+              const newTasks = [...currentTasks];
+              newTasks[index] = updatedTask;
+              this.tasks.set(newTasks);
+            }
+            
+            this.isUpdating.set(false);
+            
+            // Restore scroll position
+            setTimeout(() => {
+              if (container) {
+                container.scrollLeft = scrollLeft;
+              }
+            }, 0);
+            
+            resolve(true);
+          },
+          error: (error) => {
+            console.error('Failed to update task:', error);
+            this.showError('Failed to update task date');
+            this.isUpdating.set(false);
+            resolve(false);
+          }
+        });
+    });
+  }
+
+  /**
+   * Check if task is draggable (not completed)
+   */
+  private isTaskDraggable(task: Task): boolean {
+    return task.status !== TaskStatus.Done;
+  }
+
+  /**
+   * Show error message
+   */
+  private showError(message: string): void {
+    // TODO: Use notification service when available
+    alert(message);
+  }
+
+  /**
+   * Show warning dialog for parent task constraint
+   */
+  private async showParentWarning(): Promise<boolean> {
+    return confirm('This task exceeds parent deadline. Continue anyway?');
   }
 
   /**
@@ -167,14 +352,20 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
         end.setDate(start.getDate() + 1);
       }
       
+      // Add 'locked' class for completed tasks
+      const statusClass = this.getStatusClass(task.status);
+      const lockedClass = task.status === TaskStatus.Done ? 'locked' : '';
+      const className = `${statusClass} ${lockedClass}`.trim();
+      
       return {
         id: task.id,
-        content: task.name,
+        content: task.status === TaskStatus.Done ? `🔒 ${task.name}` : task.name,
         start: start,
         end: end,
         type: 'range',
-        className: this.getStatusClass(task.status),
-        title: `${task.name} - ${this.getStatusLabel(task.status)}`
+        className: className,
+        title: `${task.name} - ${this.getStatusLabel(task.status)}${task.status === TaskStatus.Done ? ' (Locked)' : ''}`,
+        editable: this.isTaskDraggable(task)
       };
     });
   }
@@ -226,6 +417,10 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   changeViewMode(mode: 'day' | 'week' | 'month'): void {
     this.viewMode.set(mode);
+    
+    // Persist zoom level in session storage
+    sessionStorage.setItem('timeline-zoom', mode);
+    
     this.fitTimelineToView();
   }
 
@@ -260,6 +455,81 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.timelineInstance.setWindow(start, end, { animation: true });
+  }
+
+  /**
+   * Handle keyboard shortcuts for zoom and scroll
+   */
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent): void {
+    // Only handle if timeline is visible and focused
+    if (!this.timelineInstance || this.tasks().length === 0) {
+      return;
+    }
+
+    // Zoom in: '+' or '='
+    if (event.key === '+' || event.key === '=') {
+      event.preventDefault();
+      this.zoomIn();
+    }
+    // Zoom out: '-'
+    else if (event.key === '-') {
+      event.preventDefault();
+      this.zoomOut();
+    }
+    // Scroll left: ArrowLeft
+    else if (event.key === 'ArrowLeft' && !event.ctrlKey && !event.shiftKey) {
+      event.preventDefault();
+      this.scrollTimeline('left');
+    }
+    // Scroll right: ArrowRight
+    else if (event.key === 'ArrowRight' && !event.ctrlKey && !event.shiftKey) {
+      event.preventDefault();
+      this.scrollTimeline('right');
+    }
+  }
+
+  /**
+   * Zoom in (more detail)
+   */
+  private zoomIn(): void {
+    const current = this.viewMode();
+    if (current === 'month') {
+      this.changeViewMode('week');
+    } else if (current === 'week') {
+      this.changeViewMode('day');
+    }
+    // Already at day level (most detailed)
+  }
+
+  /**
+   * Zoom out (less detail)
+   */
+  private zoomOut(): void {
+    const current = this.viewMode();
+    if (current === 'day') {
+      this.changeViewMode('week');
+    } else if (current === 'week') {
+      this.changeViewMode('month');
+    }
+    // Already at month level (least detailed)
+  }
+
+  /**
+   * Scroll timeline horizontally
+   */
+  private scrollTimeline(direction: 'left' | 'right'): void {
+    const container = this.timelineContainer?.nativeElement;
+    if (!container) {
+      return;
+    }
+
+    const scrollAmount = 100;
+    if (direction === 'left') {
+      container.scrollLeft -= scrollAmount;
+    } else {
+      container.scrollLeft += scrollAmount;
+    }
   }
 }
 
