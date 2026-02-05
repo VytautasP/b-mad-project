@@ -2,12 +2,11 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using TaskFlow.Abstractions.Interfaces;
 using TaskFlow.Abstractions.Interfaces.Services;
+using TaskFlow.Api.Extensions;
 using TaskFlow.Api.Middleware;
 using TaskFlow.Core.Services;
 using TaskFlow.Infrastructure.Data;
-using TaskFlow.Infrastructure.Repositories;
 using TaskFlow.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,7 +19,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 // Register repositories and Unit of Work
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddRepositories();
 
 // Register services
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
