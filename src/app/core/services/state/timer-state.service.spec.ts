@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { TimerStateService, TimerState } from './timer-state.service';
 

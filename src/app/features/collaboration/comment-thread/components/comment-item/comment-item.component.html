@@ -1,0 +1,71 @@
+@if (comment.isDeleted) {
+  <div class="comment-item deleted">
+    <div class="comment-avatar deleted-avatar">
+      <mat-icon>block</mat-icon>
+    </div>
+    <div class="comment-body">
+      <span class="deleted-text">[Comment deleted]</span>
+    </div>
+  </div>
+} @else {
+  <div class="comment-item">
+    <div class="comment-avatar" [matTooltip]="comment.authorName">
+      @if (comment.authorProfileImageUrl) {
+        <img [src]="comment.authorProfileImageUrl" [alt]="comment.authorName" class="avatar-img" />
+      } @else {
+        <span class="avatar-initials">{{ authorInitial }}</span>
+      }
+    </div>
+
+    <div class="comment-body">
+      <div class="comment-header">
+        <span class="author-name">{{ comment.authorName }}</span>
+        <span class="comment-time">{{ comment.createdDate | relativeTime }}</span>
+        @if (comment.isEdited) {
+          <span class="edited-indicator">(edited)</span>
+        }
+
+        @if (isOwnComment) {
+          <div class="comment-actions">
+            <button mat-icon-button
+                    class="action-btn"
+                    matTooltip="Edit comment"
+                    (click)="onStartEdit()">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button
+                    class="action-btn delete-btn"
+                    matTooltip="Delete comment"
+                    (click)="onDelete()">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        }
+      </div>
+
+      @if (isEditing) {
+        <div class="edit-mode">
+          <textarea class="edit-textarea"
+                    [(ngModel)]="editContent"
+                    rows="3"></textarea>
+          <div class="edit-actions">
+            <button mat-raised-button color="primary" (click)="onSaveEdit()" [disabled]="!editContent.trim()">
+              Save
+            </button>
+            <button mat-button (click)="onCancelEdit()">Cancel</button>
+          </div>
+        </div>
+      } @else {
+        <div class="comment-content">
+          @for (part of getFormattedContent(); track part.text) {
+            @if (part.isMention) {
+              <span class="mention" (click)="onMentionClicked(part.text)">{{ part.text }}</span>
+            } @else {
+              <span>{{ part.text }}</span>
+            }
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

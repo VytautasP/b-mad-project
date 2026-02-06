@@ -18,6 +18,7 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../sh
 import { ManualTimeEntryForm, ManualTimeEntryFormData } from '../components/manual-time-entry-form/manual-time-entry-form';
 import { TimeEntryList } from '../components/time-entry-list/time-entry-list';
 import { formatDuration } from '../../../shared/utils/time.utils';
+import { CommentThreadComponent } from '../../collaboration/comment-thread/comment-thread.component';
 
 export interface TaskDetailDialogData {
   task: Task;
@@ -36,7 +37,8 @@ export interface TaskDetailDialogData {
     MatTooltipModule,
     AssigneeList,
     UserPicker,
-    TimeEntryList
+    TimeEntryList,
+    CommentThreadComponent
   ],
   templateUrl: './task-detail-dialog.html',
   styleUrl: './task-detail-dialog.css',

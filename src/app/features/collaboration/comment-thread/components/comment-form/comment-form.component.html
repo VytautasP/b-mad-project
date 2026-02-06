@@ -1,0 +1,53 @@
+<div class="comment-form">
+  <div class="textarea-wrapper">
+    <textarea [formControl]="contentControl"
+              placeholder="Write a comment..."
+              rows="3"
+              class="comment-textarea"
+              (input)="onTextareaInput($event)"
+              (keydown)="onTextareaKeydown($event)"></textarea>
+
+    @if (showAutocomplete()) {
+      <div class="autocomplete-dropdown">
+        @for (user of autocompleteUsers(); track user.id; let i = $index) {
+          <div class="autocomplete-item"
+               [class.selected]="i === selectedAutocompleteIndex()"
+               (click)="selectMentionUser(user)">
+            <div class="autocomplete-avatar">
+              {{ getUserInitial(user.name) }}
+            </div>
+            <div class="autocomplete-info">
+              <span class="autocomplete-name">{{ user.name }}</span>
+              <span class="autocomplete-email">{{ user.email }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  @if (showCharCount) {
+    <div class="char-count" [class.warning]="charCount > 1900">
+      {{ charCount }}/2000
+    </div>
+  }
+
+  <div class="form-actions">
+    @if (isSubmitting) {
+      <button mat-raised-button
+              color="primary"
+              disabled>
+        <mat-icon class="spin-icon">sync</mat-icon>
+        Posting...
+      </button>
+    } @else {
+      <button mat-raised-button
+              color="primary"
+              (click)="onSubmit()"
+              [disabled]="contentControl.invalid || !contentControl.value?.trim()">
+        <mat-icon>send</mat-icon>
+        Post Comment
+      </button>
+    }
+  </div>
+</div>
