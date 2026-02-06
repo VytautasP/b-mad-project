@@ -1,60 +1,70 @@
 <div class="task-detail-dialog">
+  <!-- Header -->
   <div mat-dialog-title class="dialog-header">
-    <h2>{{ task().name }}</h2>
-    <button mat-icon-button (click)="onClose()" class="close-button">
+    <div class="header-left">
+      <mat-icon class="header-icon">assignment</mat-icon>
+      <h2>{{ task().name }}</h2>
+    </div>
+    <button mat-icon-button (click)="onClose()" class="close-button" matTooltip="Close">
       <mat-icon>close</mat-icon>
     </button>
   </div>
   
   <mat-dialog-content class="dialog-content">
-    <!-- Task Details Section -->
-    <section class="task-info">
-      <div class="info-row">
-        <span class="label">Status:</span>
-        <mat-chip>{{ getStatusLabel(task().status) }}</mat-chip>
-      </div>
-      
-      <div class="info-row">
-        <span class="label">Priority:</span>
-        <mat-chip>{{ getPriorityLabel(task().priority) }}</mat-chip>
-      </div>
-      
-      <div class="info-row">
-        <span class="label">Type:</span>
-        <span>{{ getTypeLabel(task().type) }}</span>
-      </div>
-      
-      <div class="info-row">
-        <span class="label">Due Date:</span>
-        <span>{{ formatDate(task().dueDate) }}</span>
+    <!-- Task Properties -->
+    <section class="task-properties">
+      <div class="property-grid">
+        <div class="property-item">
+          <span class="property-label">Status</span>
+          <mat-chip class="status-chip">{{ getStatusLabel(task().status) }}</mat-chip>
+        </div>
+        <div class="property-item">
+          <span class="property-label">Priority</span>
+          <mat-chip class="priority-chip">{{ getPriorityLabel(task().priority) }}</mat-chip>
+        </div>
+        <div class="property-item">
+          <span class="property-label">Type</span>
+          <span class="property-value">
+            <mat-icon class="inline-icon">category</mat-icon>
+            {{ getTypeLabel(task().type) }}
+          </span>
+        </div>
+        <div class="property-item">
+          <span class="property-label">Due Date</span>
+          <span class="property-value">
+            <mat-icon class="inline-icon">event</mat-icon>
+            {{ formatDate(task().dueDate) }}
+          </span>
+        </div>
       </div>
       
       @if (task().description) {
-        <div class="info-row description">
-          <span class="label">Description:</span>
-          <p>{{ task().description }}</p>
+        <div class="description-block">
+          <span class="property-label">Description</span>
+          <p class="description-text">{{ task().description }}</p>
         </div>
       }
     </section>
     
-    <mat-divider></mat-divider>
-    
     <!-- Assignees Section -->
-    <section class="assignees-section">
+    <section class="section-card">
       <div class="section-header">
-        <h3>Assignees</h3>
-        <button mat-raised-button 
+        <div class="section-title">
+          <mat-icon>group</mat-icon>
+          <h3>Assignees</h3>
+        </div>
+        <button mat-stroked-button 
                 color="primary" 
                 (click)="toggleUserPicker()"
-                class="add-assignee-button">
+                class="section-action-btn">
           <mat-icon>person_add</mat-icon>
-          Add Assignee
+          <span class="btn-label">Add</span>
         </button>
       </div>
       
       @if (isLoadingAssignees()) {
-        <div class="loading-assignees">
-          <mat-spinner diameter="32"></mat-spinner>
+        <div class="loading-state">
+          <mat-spinner diameter="28"></mat-spinner>
         </div>
       } @else {
         <div class="assignees-content">
@@ -77,44 +87,53 @@
       }
     </section>
     
-    <mat-divider></mat-divider>
-    
-    <!-- Time Breakdown Section -->
-    <section class="time-breakdown-section">
-      <h3>Time Summary</h3>
-      <div class="time-summary">
-        <div class="time-row">
-          <span class="time-label">Direct Time:</span>
-          <span class="time-value">{{ formatDuration(task().directLoggedMinutes) }}</span>
-        </div>
-        @if (hasChildrenTime()) {
-          <div class="time-row">
-            <span class="time-label">Children Time:</span>
-            <span class="time-value">{{ formatDuration(task().childrenLoggedMinutes) }}</span>
-          </div>
-        }
-        <div class="time-row total">
-          <span class="time-label">Total Time:</span>
-          <span class="time-value">{{ formatDuration(task().totalLoggedMinutes) }}</span>
+    <!-- Time Summary Section -->
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <mat-icon>pie_chart</mat-icon>
+          <h3>Time Summary</h3>
         </div>
       </div>
+      
       @if (!hasChildrenTime() && task().totalLoggedMinutes === 0) {
-        <p class="no-time-message">No time logged yet</p>
+        <div class="empty-section">
+          <mat-icon>hourglass_empty</mat-icon>
+          <span>No time logged yet</span>
+        </div>
+      } @else {
+        <div class="time-summary-grid">
+          <div class="time-stat">
+            <span class="time-stat-label">Direct</span>
+            <span class="time-stat-value">{{ formatDuration(task().directLoggedMinutes) }}</span>
+          </div>
+          @if (hasChildrenTime()) {
+            <div class="time-stat">
+              <span class="time-stat-label">Subtasks</span>
+              <span class="time-stat-value">{{ formatDuration(task().childrenLoggedMinutes) }}</span>
+            </div>
+          }
+          <div class="time-stat total">
+            <span class="time-stat-label">Total</span>
+            <span class="time-stat-value">{{ formatDuration(task().totalLoggedMinutes) }}</span>
+          </div>
+        </div>
       }
     </section>
     
-    <mat-divider></mat-divider>
-    
-    <!-- Time Tracking Section -->
-    <section class="time-tracking-section">
+    <!-- Time Log Section -->
+    <section class="section-card">
       <div class="section-header">
-        <h3>Time Tracking</h3>
-        <button mat-raised-button 
+        <div class="section-title">
+          <mat-icon>schedule</mat-icon>
+          <h3>Time Log</h3>
+        </div>
+        <button mat-stroked-button 
                 color="primary" 
                 (click)="onLogTime()"
-                class="log-time-button">
-          <mat-icon>schedule</mat-icon>
-          Log Time
+                class="section-action-btn">
+          <mat-icon>add</mat-icon>
+          <span class="btn-label">Log Time</span>
         </button>
       </div>
       
@@ -125,39 +144,39 @@
       </app-time-entry-list>
     </section>
     
-    <mat-divider></mat-divider>
-    
-    <!-- Meta Information -->
-    <section class="meta-info">
-      <div class="info-row">
-        <span class="label">Created By:</span>
-        <span>{{ task().createdByUserName }}</span>
+    <!-- Meta Info -->
+    <section class="meta-section">
+      <div class="meta-item">
+        <mat-icon class="meta-icon">person</mat-icon>
+        <span class="meta-text">Created by <strong>{{ task().createdByUserName }}</strong></span>
       </div>
-      
-      <div class="info-row">
-        <span class="label">Created Date:</span>
-        <span>{{ task().createdDate | date:'medium' }}</span>
+      <div class="meta-item">
+        <mat-icon class="meta-icon">calendar_today</mat-icon>
+        <span class="meta-text">Created {{ task().createdDate | date:'mediumDate' }}</span>
       </div>
-      
-      <div class="info-row">
-        <span class="label">Modified Date:</span>
-        <span>{{ task().modifiedDate | date:'medium' }}</span>
+      <div class="meta-item">
+        <mat-icon class="meta-icon">update</mat-icon>
+        <span class="meta-text">Updated {{ task().modifiedDate | date:'mediumDate' }}</span>
       </div>
     </section>
   </mat-dialog-content>
   
-  <mat-dialog-actions align="end">
+  <mat-dialog-actions class="dialog-actions">
+    <button mat-button (click)="onClose()" class="close-action">Close</button>
+    <div class="action-spacer"></div>
     @if (isTimerRunning()) {
-      <mat-icon class="timer-running-icon" matTooltip="Timer Running" color="accent">timer</mat-icon>
+      <div class="timer-indicator" matTooltip="Timer is running for this task">
+        <mat-icon class="timer-pulse">timer</mat-icon>
+        <span>Timer Running</span>
+      </div>
     } @else {
       <button mat-raised-button 
-              color="accent"
+              color="primary"
               (click)="onStartTimer()" 
               [disabled]="isAnotherTimerRunning()">
         <mat-icon>play_circle</mat-icon>
         Start Timer
       </button>
     }
-    <button mat-button (click)="onClose()">Close</button>
   </mat-dialog-actions>
 </div>
