@@ -11,6 +11,7 @@ public class UnitOfWork : IUnitOfWork
     private ITaskRepository? _tasks;
     private ITaskAssignmentRepository? _taskAssignments;
     private ITimeEntryRepository? _timeEntries;
+    private ICommentRepository? _comments;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -21,6 +22,7 @@ public class UnitOfWork : IUnitOfWork
     public ITaskRepository Tasks => _tasks ??= new TaskRepository(_context);
     public ITaskAssignmentRepository TaskAssignments => _taskAssignments ??= new TaskAssignmentRepository(_context);
     public ITimeEntryRepository TimeEntries => _timeEntries ??= new TimeEntryRepository(_context);
+    public ICommentRepository Comments => _comments ??= new CommentRepository(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {

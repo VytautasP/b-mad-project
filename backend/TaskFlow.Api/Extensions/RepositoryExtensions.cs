@@ -16,6 +16,7 @@ public static class RepositoryExtensions
         services.AddScoped<ITaskRepository, TaskRepository>();
         services.AddScoped<ITaskAssignmentRepository, TaskAssignmentRepository>();
         services.AddScoped<ITimeEntryRepository, TimeEntryRepository>();
+        services.AddScoped<ICommentRepository, CommentRepository>();
         
         // Register Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
