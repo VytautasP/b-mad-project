@@ -25,6 +25,7 @@ public class Task
     public ICollection<Task> Children { get; set; } = new List<Task>();
     public ICollection<TaskAssignment> TaskAssignments { get; set; } = new List<TaskAssignment>();
     public ICollection<TimeEntry> TimeEntries { get; set; } = new List<TimeEntry>();
+    public ICollection<ActivityLog> ActivityLogs { get; set; } = new List<ActivityLog>();
 
     // Computed properties for time rollup
     /// <summary>

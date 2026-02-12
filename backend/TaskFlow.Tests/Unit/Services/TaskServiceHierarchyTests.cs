@@ -4,6 +4,7 @@ using TaskFlow.Abstractions.DTOs.Task;
 using TaskFlow.Abstractions.Exceptions;
 using TaskFlow.Abstractions.Interfaces;
 using TaskFlow.Abstractions.Interfaces.Repositories;
+using TaskFlow.Abstractions.Interfaces.Services;
 using TaskFlow.Core.Services;
 using TaskEntity = TaskFlow.Abstractions.Entities.Task;
 
@@ -12,7 +13,9 @@ namespace TaskFlow.Tests.Unit.Services;
 public class TaskServiceHierarchyTests
 {
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private readonly Mock<IActivityLogService> _mockActivityLogService;
     private readonly Mock<ITaskRepository> _mockTaskRepository;
+    private readonly Mock<IUserRepository> _mockUserRepository;
     private readonly Mock<ILogger<TaskService>> _mockLogger;
     private readonly TaskService _taskService;
     private readonly Guid _testUserId = Guid.NewGuid();
@@ -22,14 +25,28 @@ public class TaskServiceHierarchyTests
     public TaskServiceHierarchyTests()
     {
         _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _mockActivityLogService = new Mock<IActivityLogService>();
         _mockTaskRepository = new Mock<ITaskRepository>();
+        _mockUserRepository = new Mock<IUserRepository>();
         _mockLogger = new Mock<ILogger<TaskService>>();
 
         _mockUnitOfWork.Setup(u => u.Tasks).Returns(_mockTaskRepository.Object);
+        _mockUnitOfWork.Setup(u => u.Users).Returns(_mockUserRepository.Object);
         _mockUnitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
+        _mockActivityLogService
+            .Setup(s => s.LogActivityAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<TaskFlow.Abstractions.Constants.ActivityType>(),
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(System.Threading.Tasks.Task.CompletedTask);
 
-        _taskService = new TaskService(_mockUnitOfWork.Object, _mockLogger.Object);
+        _taskService = new TaskService(_mockUnitOfWork.Object, _mockActivityLogService.Object, _mockLogger.Object);
     }
 
     [Fact]

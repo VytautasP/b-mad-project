@@ -4,6 +4,7 @@ using TaskFlow.Abstractions.Constants;
 using TaskFlow.Abstractions.DTOs.Tasks;
 using TaskFlow.Abstractions.Exceptions;
 using TaskFlow.Abstractions.Interfaces;
+using TaskFlow.Abstractions.Interfaces.Services;
 using TaskFlow.Abstractions.Interfaces.Repositories;
 using TaskFlow.Core.Services;
 using TaskEntity = TaskFlow.Abstractions.Entities.Task;
@@ -16,6 +17,7 @@ namespace TaskFlow.Tests.Unit.Services;
 public class TaskServiceTimelineTests
 {
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private readonly Mock<IActivityLogService> _mockActivityLogService;
     private readonly Mock<ITaskRepository> _mockTaskRepository;
     private readonly Mock<ILogger<TaskService>> _mockLogger;
     private readonly TaskService _taskService;
@@ -24,12 +26,24 @@ public class TaskServiceTimelineTests
     public TaskServiceTimelineTests()
     {
         _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _mockActivityLogService = new Mock<IActivityLogService>();
         _mockTaskRepository = new Mock<ITaskRepository>();
         _mockLogger = new Mock<ILogger<TaskService>>();
 
         _mockUnitOfWork.Setup(u => u.Tasks).Returns(_mockTaskRepository.Object);
+        _mockActivityLogService
+            .Setup(s => s.LogActivityAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<TaskFlow.Abstractions.Constants.ActivityType>(),
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(System.Threading.Tasks.Task.CompletedTask);
 
-        _taskService = new TaskService(_mockUnitOfWork.Object, _mockLogger.Object);
+        _taskService = new TaskService(_mockUnitOfWork.Object, _mockActivityLogService.Object, _mockLogger.Object);
     }
 
     [Fact]

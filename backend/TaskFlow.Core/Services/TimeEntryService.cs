@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using TaskFlow.Abstractions.Constants;
 using TaskFlow.Abstractions.DTOs.TimeEntries;
 using TaskFlow.Abstractions.Entities;
 using TaskFlow.Abstractions.Exceptions;
@@ -13,11 +14,13 @@ namespace TaskFlow.Core.Services;
 public class TimeEntryService : ITimeEntryService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IActivityLogService _activityLogService;
     private readonly ILogger<TimeEntryService> _logger;
 
-    public TimeEntryService(IUnitOfWork unitOfWork, ILogger<TimeEntryService> logger)
+    public TimeEntryService(IUnitOfWork unitOfWork, IActivityLogService activityLogService, ILogger<TimeEntryService> logger)
     {
         _unitOfWork = unitOfWork;
+        _activityLogService = activityLogService;
         _logger = logger;
     }
 
@@ -50,6 +53,19 @@ public class TimeEntryService : ITimeEntryService
         };
 
         await _unitOfWork.TimeEntries.CreateAsync(timeEntry, cancellationToken);
+
+        var user = await _unitOfWork.Users.GetByIdAsync(userId, cancellationToken);
+        var actorName = user?.Name ?? "User";
+        await _activityLogService.LogActivityAsync(
+            taskId,
+            userId,
+            ActivityType.TimeLogged,
+            $"{actorName} logged {FormatDuration(dto.Minutes)}",
+            "Minutes",
+            null,
+            dto.Minutes.ToString(),
+            cancellationToken);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Fetch the created entry with user information
@@ -110,5 +126,23 @@ public class TimeEntryService : ITimeEntryService
             EntryType = timeEntry.EntryType.ToString(),
             CreatedAt = timeEntry.CreatedAt
         };
+    }
+
+    private static string FormatDuration(int minutes)
+    {
+        var hours = minutes / 60;
+        var remainingMinutes = minutes % 60;
+
+        if (hours == 0)
+        {
+            return $"{remainingMinutes} minute{(remainingMinutes == 1 ? string.Empty : "s")}";
+        }
+
+        if (remainingMinutes == 0)
+        {
+            return $"{hours} hour{(hours == 1 ? string.Empty : "s")}";
+        }
+
+        return $"{hours} hour{(hours == 1 ? string.Empty : "s")} {remainingMinutes} minute{(remainingMinutes == 1 ? string.Empty : "s")}";
     }
 }

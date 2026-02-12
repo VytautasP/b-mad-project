@@ -28,6 +28,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ITimeEntryService, TimeEntryService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IActivityLogService, ActivityLogService>();
 
 // Configure JWT Authentication
 var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET") 

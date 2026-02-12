@@ -12,6 +12,7 @@ public class UnitOfWork : IUnitOfWork
     private ITaskAssignmentRepository? _taskAssignments;
     private ITimeEntryRepository? _timeEntries;
     private ICommentRepository? _comments;
+    private IActivityLogRepository? _activityLogs;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -23,6 +24,7 @@ public class UnitOfWork : IUnitOfWork
     public ITaskAssignmentRepository TaskAssignments => _taskAssignments ??= new TaskAssignmentRepository(_context);
     public ITimeEntryRepository TimeEntries => _timeEntries ??= new TimeEntryRepository(_context);
     public ICommentRepository Comments => _comments ??= new CommentRepository(_context);
+    public IActivityLogRepository ActivityLogs => _activityLogs ??= new ActivityLogRepository(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {

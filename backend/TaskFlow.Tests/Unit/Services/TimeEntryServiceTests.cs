@@ -6,6 +6,7 @@ using TaskFlow.Abstractions.Entities;
 using TaskFlow.Abstractions.Exceptions;
 using TaskFlow.Abstractions.Interfaces;
 using TaskFlow.Abstractions.Interfaces.Repositories;
+using TaskFlow.Abstractions.Interfaces.Services;
 using TaskFlow.Core.Services;
 using TaskEntity = TaskFlow.Abstractions.Entities.Task;
 
@@ -14,8 +15,10 @@ namespace TaskFlow.Tests.Unit.Services;
 public class TimeEntryServiceTests
 {
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private readonly Mock<IActivityLogService> _mockActivityLogService;
     private readonly Mock<ITimeEntryRepository> _mockTimeEntryRepository;
     private readonly Mock<ITaskRepository> _mockTaskRepository;
+    private readonly Mock<IUserRepository> _mockUserRepository;
     private readonly Mock<ILogger<TimeEntryService>> _mockLogger;
     private readonly TimeEntryService _service;
     private readonly Guid _testUserId = Guid.NewGuid();
@@ -24,14 +27,28 @@ public class TimeEntryServiceTests
     public TimeEntryServiceTests()
     {
         _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _mockActivityLogService = new Mock<IActivityLogService>();
         _mockTimeEntryRepository = new Mock<ITimeEntryRepository>();
         _mockTaskRepository = new Mock<ITaskRepository>();
+        _mockUserRepository = new Mock<IUserRepository>();
         _mockLogger = new Mock<ILogger<TimeEntryService>>();
 
         _mockUnitOfWork.Setup(u => u.TimeEntries).Returns(_mockTimeEntryRepository.Object);
         _mockUnitOfWork.Setup(u => u.Tasks).Returns(_mockTaskRepository.Object);
+        _mockUnitOfWork.Setup(u => u.Users).Returns(_mockUserRepository.Object);
+        _mockActivityLogService
+            .Setup(s => s.LogActivityAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<TaskFlow.Abstractions.Constants.ActivityType>(),
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(System.Threading.Tasks.Task.CompletedTask);
 
-        _service = new TimeEntryService(_mockUnitOfWork.Object, _mockLogger.Object);
+        _service = new TimeEntryService(_mockUnitOfWork.Object, _mockActivityLogService.Object, _mockLogger.Object);
     }
 
     [Fact]
@@ -48,6 +65,9 @@ public class TimeEntryServiceTests
 
         _mockTaskRepository.Setup(r => r.GetByIdAsync(_testTaskId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
+
+        _mockUserRepository.Setup(r => r.GetByIdAsync(_testUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new User { Id = _testUserId, Name = "Test User", Email = "test@example.com", PasswordHash = "hash" });
 
         _mockTimeEntryRepository.Setup(r => r.CreateAsync(It.IsAny<TimeEntry>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TimeEntry te, CancellationToken ct) => te);
@@ -79,6 +99,15 @@ public class TimeEntryServiceTests
         Assert.Equal(60, result.Minutes);
         Assert.Equal("Test note", result.Note);
         _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockActivityLogService.Verify(s => s.LogActivityAsync(
+            _testTaskId,
+            _testUserId,
+            TaskFlow.Abstractions.Constants.ActivityType.TimeLogged,
+            It.IsAny<string>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

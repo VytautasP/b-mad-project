@@ -8,4 +8,6 @@ public class User
     public string Name { get; set; } = string.Empty;
     public string? ProfileImageUrl { get; set; }
     public DateTime CreatedDate { get; set; }
+
+    public ICollection<ActivityLog> ActivityLogs { get; set; } = new List<ActivityLog>();
 }

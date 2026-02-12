@@ -5,6 +5,7 @@ using TaskFlow.Abstractions.Entities;
 using TaskFlow.Abstractions.Exceptions;
 using TaskFlow.Abstractions.Interfaces;
 using TaskFlow.Abstractions.Interfaces.Repositories;
+using TaskFlow.Abstractions.Interfaces.Services;
 using TaskFlow.Core.Services;
 using TaskEntity = TaskFlow.Abstractions.Entities.Task;
 
@@ -13,6 +14,7 @@ namespace TaskFlow.Tests.Unit.Services;
 public class TaskServiceAssignmentTests
 {
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private readonly Mock<IActivityLogService> _mockActivityLogService;
     private readonly Mock<ITaskRepository> _mockTaskRepository;
     private readonly Mock<ITaskAssignmentRepository> _mockTaskAssignmentRepository;
     private readonly Mock<IUserRepository> _mockUserRepository;
@@ -25,6 +27,7 @@ public class TaskServiceAssignmentTests
     public TaskServiceAssignmentTests()
     {
         _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _mockActivityLogService = new Mock<IActivityLogService>();
         _mockTaskRepository = new Mock<ITaskRepository>();
         _mockTaskAssignmentRepository = new Mock<ITaskAssignmentRepository>();
         _mockUserRepository = new Mock<IUserRepository>();
@@ -33,8 +36,20 @@ public class TaskServiceAssignmentTests
         _mockUnitOfWork.Setup(u => u.Tasks).Returns(_mockTaskRepository.Object);
         _mockUnitOfWork.Setup(u => u.TaskAssignments).Returns(_mockTaskAssignmentRepository.Object);
         _mockUnitOfWork.Setup(u => u.Users).Returns(_mockUserRepository.Object);
+        _mockUnitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        _mockActivityLogService
+            .Setup(s => s.LogActivityAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<TaskFlow.Abstractions.Constants.ActivityType>(),
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(System.Threading.Tasks.Task.CompletedTask);
 
-        _taskService = new TaskService(_mockUnitOfWork.Object, _mockLogger.Object);
+        _taskService = new TaskService(_mockUnitOfWork.Object, _mockActivityLogService.Object, _mockLogger.Object);
     }
 
     [Fact]
@@ -58,6 +73,15 @@ public class TaskServiceAssignmentTests
 
         // Assert
         _mockTaskAssignmentRepository.Verify(r => r.AddAssignmentAsync(It.IsAny<TaskAssignment>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockActivityLogService.Verify(s => s.LogActivityAsync(
+            _testTaskId,
+            _testUserId,
+            TaskFlow.Abstractions.Constants.ActivityType.Assigned,
+            It.IsAny<string>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -172,6 +196,15 @@ public class TaskServiceAssignmentTests
 
         // Assert
         _mockTaskAssignmentRepository.Verify(r => r.RemoveAssignmentAsync(assignment, It.IsAny<CancellationToken>()), Times.Once);
+        _mockActivityLogService.Verify(s => s.LogActivityAsync(
+            _testTaskId,
+            _testUserId,
+            TaskFlow.Abstractions.Constants.ActivityType.Unassigned,
+            It.IsAny<string>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

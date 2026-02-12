@@ -9,5 +9,6 @@ public interface IUnitOfWork : IDisposable
     ITaskAssignmentRepository TaskAssignments { get; }
     ITimeEntryRepository TimeEntries { get; }
     ICommentRepository Comments { get; }
+    IActivityLogRepository ActivityLogs { get; }
     System.Threading.Tasks.Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

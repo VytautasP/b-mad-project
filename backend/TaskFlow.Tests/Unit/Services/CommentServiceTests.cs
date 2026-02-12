@@ -5,6 +5,7 @@ using TaskFlow.Abstractions.Entities;
 using TaskFlow.Abstractions.Exceptions;
 using TaskFlow.Abstractions.Interfaces;
 using TaskFlow.Abstractions.Interfaces.Repositories;
+using TaskFlow.Abstractions.Interfaces.Services;
 using TaskFlow.Core.Services;
 using TaskEntity = TaskFlow.Abstractions.Entities.Task;
 
@@ -13,6 +14,7 @@ namespace TaskFlow.Tests.Unit.Services;
 public class CommentServiceTests
 {
     private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private readonly Mock<IActivityLogService> _mockActivityLogService;
     private readonly Mock<ICommentRepository> _mockCommentRepository;
     private readonly Mock<ITaskRepository> _mockTaskRepository;
     private readonly Mock<IUserRepository> _mockUserRepository;
@@ -24,6 +26,7 @@ public class CommentServiceTests
     public CommentServiceTests()
     {
         _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _mockActivityLogService = new Mock<IActivityLogService>();
         _mockCommentRepository = new Mock<ICommentRepository>();
         _mockTaskRepository = new Mock<ITaskRepository>();
         _mockUserRepository = new Mock<IUserRepository>();
@@ -32,8 +35,19 @@ public class CommentServiceTests
         _mockUnitOfWork.Setup(u => u.Comments).Returns(_mockCommentRepository.Object);
         _mockUnitOfWork.Setup(u => u.Tasks).Returns(_mockTaskRepository.Object);
         _mockUnitOfWork.Setup(u => u.Users).Returns(_mockUserRepository.Object);
+        _mockActivityLogService
+            .Setup(s => s.LogActivityAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<TaskFlow.Abstractions.Constants.ActivityType>(),
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(System.Threading.Tasks.Task.CompletedTask);
 
-        _service = new CommentService(_mockUnitOfWork.Object, _mockLogger.Object);
+        _service = new CommentService(_mockUnitOfWork.Object, _mockActivityLogService.Object, _mockLogger.Object);
     }
 
     #region Mention Parsing Tests (Task 9)
@@ -269,6 +283,15 @@ public class CommentServiceTests
         Assert.Equal("Test User", result.AuthorName);
         Assert.False(result.IsEdited);
         _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _mockActivityLogService.Verify(s => s.LogActivityAsync(
+            _testTaskId,
+            _testUserId,
+            TaskFlow.Abstractions.Constants.ActivityType.Commented,
+            It.IsAny<string>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

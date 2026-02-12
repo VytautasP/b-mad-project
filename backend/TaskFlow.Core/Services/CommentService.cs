@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
+using TaskFlow.Abstractions.Constants;
 using TaskFlow.Abstractions.DTOs.Comments;
 using TaskFlow.Abstractions.Entities;
 using TaskFlow.Abstractions.Exceptions;
@@ -14,15 +15,17 @@ namespace TaskFlow.Core.Services;
 public partial class CommentService : ICommentService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IActivityLogService _activityLogService;
     private readonly ILogger<CommentService> _logger;
 
     // Regex for extracting @mentions: matches @username, @user.name, @user@example.com
     [GeneratedRegex(@"(?<!\w)@([\w][\w.]*[\w]+@[\w]+\.[\w.]+|[\w][\w.]*[\w]+|[\w]+)", RegexOptions.Compiled)]
     private static partial Regex MentionRegex();
 
-    public CommentService(IUnitOfWork unitOfWork, ILogger<CommentService> logger)
+    public CommentService(IUnitOfWork unitOfWork, IActivityLogService activityLogService, ILogger<CommentService> logger)
     {
         _unitOfWork = unitOfWork;
+        _activityLogService = activityLogService;
         _logger = logger;
     }
 
@@ -68,6 +71,19 @@ public partial class CommentService : ICommentService
         };
 
         await _unitOfWork.Comments.CreateAsync(comment, cancellationToken);
+
+        var user = await _unitOfWork.Users.GetByIdAsync(userId, cancellationToken);
+        var actorName = user?.Name ?? "User";
+        await _activityLogService.LogActivityAsync(
+            taskId,
+            userId,
+            ActivityType.Commented,
+            $"{actorName} added a comment",
+            "Comment",
+            null,
+            dto.Content,
+            cancellationToken);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Fetch created comment with User included

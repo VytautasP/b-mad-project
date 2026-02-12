@@ -13,11 +13,13 @@ namespace TaskFlow.Core.Services;
 public class TaskService : ITaskService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IActivityLogService _activityLogService;
     private readonly ILogger<TaskService> _logger;
 
-    public TaskService(IUnitOfWork unitOfWork, ILogger<TaskService> logger)
+    public TaskService(IUnitOfWork unitOfWork, IActivityLogService activityLogService, ILogger<TaskService> logger)
     {
         _unitOfWork = unitOfWork;
+        _activityLogService = activityLogService;
         _logger = logger;
     }
 
@@ -42,6 +44,15 @@ public class TaskService : ITaskService
         };
 
         var createdTask = await _unitOfWork.Tasks.CreateAsync(task, ct);
+
+        var actorName = await GetUserNameAsync(currentUserId, ct);
+        await _activityLogService.LogActivityAsync(
+            createdTask.Id,
+            currentUserId,
+            ActivityType.Created,
+            $"{actorName} created task '{createdTask.Name}'",
+            cancellationToken: ct);
+
         await _unitOfWork.SaveChangesAsync(ct);
 
         var taskWithUser = await _unitOfWork.Tasks.GetByIdWithUserAsync(createdTask.Id, ct);
@@ -141,6 +152,89 @@ public class TaskService : ITaskService
             throw new UnauthorizedException("You do not have permission to update this task");
         }
 
+        var actorName = await GetUserNameAsync(currentUserId, ct);
+        var activityEntries = new List<(ActivityType Type, string Description, string Field, string? OldValue, string? NewValue)>();
+
+        if (dto.Name != null && !string.Equals(task.Name, dto.Name, StringComparison.Ordinal))
+        {
+            activityEntries.Add((
+                ActivityType.Updated,
+                $"{actorName} changed name from '{task.Name}' to '{dto.Name}'",
+                "Name",
+                task.Name,
+                dto.Name));
+        }
+
+        if (dto.Description != null && !string.Equals(task.Description, dto.Description, StringComparison.Ordinal))
+        {
+            activityEntries.Add((
+                ActivityType.Updated,
+                $"{actorName} updated description",
+                "Description",
+                task.Description,
+                dto.Description));
+        }
+
+        if (dto.ParentTaskId != null && task.ParentTaskId != dto.ParentTaskId)
+        {
+            activityEntries.Add((
+                ActivityType.Updated,
+                $"{actorName} changed parent task",
+                "ParentTaskId",
+                task.ParentTaskId?.ToString(),
+                dto.ParentTaskId?.ToString()));
+        }
+
+        if (dto.DueDate != null && task.DueDate != dto.DueDate)
+        {
+            activityEntries.Add((
+                ActivityType.Updated,
+                $"{actorName} changed due date",
+                "DueDate",
+                task.DueDate?.ToString("O"),
+                dto.DueDate?.ToString("O")));
+        }
+
+        if (dto.Priority.HasValue && task.Priority != dto.Priority.Value)
+        {
+            activityEntries.Add((
+                ActivityType.Updated,
+                $"{actorName} changed priority from {task.Priority} to {dto.Priority.Value}",
+                "Priority",
+                task.Priority.ToString(),
+                dto.Priority.Value.ToString()));
+        }
+
+        if (dto.Status.HasValue && task.Status != dto.Status.Value)
+        {
+            activityEntries.Add((
+                ActivityType.StatusChanged,
+                $"{actorName} changed status from {task.Status} to {dto.Status.Value}",
+                "Status",
+                task.Status.ToString(),
+                dto.Status.Value.ToString()));
+        }
+
+        if (dto.Progress.HasValue && task.Progress != dto.Progress.Value)
+        {
+            activityEntries.Add((
+                ActivityType.Updated,
+                $"{actorName} changed progress from {task.Progress}% to {dto.Progress.Value}%",
+                "Progress",
+                task.Progress.ToString(),
+                dto.Progress.Value.ToString()));
+        }
+
+        if (dto.Type.HasValue && task.Type != dto.Type.Value)
+        {
+            activityEntries.Add((
+                ActivityType.Updated,
+                $"{actorName} changed type from {task.Type} to {dto.Type.Value}",
+                "Type",
+                task.Type.ToString(),
+                dto.Type.Value.ToString()));
+        }
+
         if (dto.Name != null) task.Name = dto.Name;
         if (dto.Description != null) task.Description = dto.Description;
         if (dto.ParentTaskId != null) task.ParentTaskId = dto.ParentTaskId;
@@ -151,6 +245,20 @@ public class TaskService : ITaskService
         if (dto.Type.HasValue) task.Type = dto.Type.Value;
 
         await _unitOfWork.Tasks.UpdateAsync(task, ct);
+
+        foreach (var activityEntry in activityEntries)
+        {
+            await _activityLogService.LogActivityAsync(
+                id,
+                currentUserId,
+                activityEntry.Type,
+                activityEntry.Description,
+                activityEntry.Field,
+                activityEntry.OldValue,
+                activityEntry.NewValue,
+                ct);
+        }
+
         await _unitOfWork.SaveChangesAsync(ct);
 
         var updatedTask = await _unitOfWork.Tasks.GetByIdWithUserAsync(id, ct);
@@ -167,6 +275,14 @@ public class TaskService : ITaskService
         {
             throw new UnauthorizedException("You do not have permission to delete this task");
         }
+
+        var actorName = await GetUserNameAsync(currentUserId, ct);
+        await _activityLogService.LogActivityAsync(
+            id,
+            currentUserId,
+            ActivityType.Deleted,
+            $"{actorName} deleted this task",
+            cancellationToken: ct);
 
         await _unitOfWork.Tasks.DeleteAsync(id, ct);
         await _unitOfWork.SaveChangesAsync(ct);
@@ -260,8 +376,21 @@ public class TaskService : ITaskService
         }
 
         // Update parent
+        var oldParentTaskId = task.ParentTaskId;
         task.ParentTaskId = parentTaskId;
         await _unitOfWork.Tasks.UpdateAsync(task, ct);
+
+        var actorName = await GetUserNameAsync(userId, ct);
+        await _activityLogService.LogActivityAsync(
+            taskId,
+            userId,
+            ActivityType.Updated,
+            $"{actorName} set parent task",
+            "ParentTaskId",
+            oldParentTaskId?.ToString(),
+            parentTaskId.ToString(),
+            ct);
+
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("User {UserId} set parent of task {TaskId} to {ParentTaskId}", userId, taskId, parentTaskId);
@@ -280,8 +409,21 @@ public class TaskService : ITaskService
             throw new UnauthorizedException("You do not have permission to modify this task");
         }
 
+        var oldParentTaskId = task.ParentTaskId;
         task.ParentTaskId = null;
         await _unitOfWork.Tasks.UpdateAsync(task, ct);
+
+        var actorName = await GetUserNameAsync(userId, ct);
+        await _activityLogService.LogActivityAsync(
+            taskId,
+            userId,
+            ActivityType.Updated,
+            $"{actorName} removed parent task",
+            "ParentTaskId",
+            oldParentTaskId?.ToString(),
+            null,
+            ct);
+
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("User {UserId} removed parent from task {TaskId}", userId, taskId);
@@ -402,6 +544,19 @@ public class TaskService : ITaskService
         };
 
         await _unitOfWork.TaskAssignments.AddAssignmentAsync(assignment, ct);
+
+        var actorName = await GetUserNameAsync(assignedByUserId, ct);
+        var targetName = targetUser.Name;
+        await _activityLogService.LogActivityAsync(
+            taskId,
+            assignedByUserId,
+            ActivityType.Assigned,
+            $"{actorName} assigned this task to {targetName}",
+            "Assignee",
+            null,
+            targetName,
+            ct);
+        await _unitOfWork.SaveChangesAsync(ct);
         
         _logger.LogInformation("User {AssignedByUserId} assigned user {UserId} to task {TaskId}", assignedByUserId, userId, taskId);
     }
@@ -431,7 +586,22 @@ public class TaskService : ITaskService
             throw new NotFoundException($"User {userId} is not assigned to task {taskId}");
         }
 
+        var targetUser = await _unitOfWork.Users.GetByIdAsync(userId, ct);
+        var actorName = await GetUserNameAsync(currentUserId, ct);
+        var targetName = targetUser?.Name ?? "User";
+
         await _unitOfWork.TaskAssignments.RemoveAssignmentAsync(assignment, ct);
+
+        await _activityLogService.LogActivityAsync(
+            taskId,
+            currentUserId,
+            ActivityType.Unassigned,
+            $"{actorName} unassigned {targetName} from this task",
+            "Assignee",
+            targetName,
+            null,
+            ct);
+        await _unitOfWork.SaveChangesAsync(ct);
         
         _logger.LogInformation("User {CurrentUserId} unassigned user {UserId} from task {TaskId}", currentUserId, userId, taskId);
     }
@@ -562,5 +732,11 @@ public class TaskService : ITaskService
             userId);
 
         return timelineTasks;
+    }
+
+    private async System.Threading.Tasks.Task<string> GetUserNameAsync(Guid userId, CancellationToken ct)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId, ct);
+        return user?.Name ?? "User";
     }
 }

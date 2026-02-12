@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskFlow.Abstractions.Constants;
+using TaskFlow.Abstractions.DTOs.ActivityLogs;
 using TaskFlow.Abstractions.DTOs.Task;
 using TaskFlow.Abstractions.DTOs.Tasks;
 using TaskFlow.Abstractions.DTOs.Shared;
@@ -17,12 +18,18 @@ public class TasksController : ControllerBase
 {
     private readonly ITaskService _taskService;
     private readonly ITimeEntryService _timeEntryService;
+    private readonly IActivityLogService _activityLogService;
     private readonly ILogger<TasksController> _logger;
 
-    public TasksController(ITaskService taskService, ITimeEntryService timeEntryService, ILogger<TasksController> logger)
+    public TasksController(
+        ITaskService taskService,
+        ITimeEntryService timeEntryService,
+        IActivityLogService activityLogService,
+        ILogger<TasksController> logger)
     {
         _taskService = taskService;
         _timeEntryService = timeEntryService;
+        _activityLogService = activityLogService;
         _logger = logger;
     }
 
@@ -141,6 +148,24 @@ public class TasksController : ControllerBase
         var userId = GetCurrentUserId();
         var task = await _taskService.GetTaskByIdAsync(id, userId, ct);
         return Ok(task);
+    }
+
+    [HttpGet("{id}/activity")]
+    [ProducesResponseType(typeof(PaginatedResultDto<ActivityLogResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async System.Threading.Tasks.Task<IActionResult> GetTaskActivity(
+        Guid id,
+        [FromQuery] ActivityLogQueryDto queryDto,
+        CancellationToken ct)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var userId = GetCurrentUserId();
+        var result = await _activityLogService.GetTaskActivityAsync(id, userId, queryDto, ct);
+        return Ok(result);
     }
 
     [HttpPut("{id}")]
