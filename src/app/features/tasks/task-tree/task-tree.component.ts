@@ -223,11 +223,11 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
       case TaskStatus.Done:
         return 'check_circle';
       case TaskStatus.InProgress:
-        return 'hourglass_empty';
+        return 'pending';
       case TaskStatus.Blocked:
         return 'block';
       case TaskStatus.Waiting:
-        return 'schedule';
+        return 'hourglass_top';
       case TaskStatus.ToDo:
       default:
         return 'radio_button_unchecked';
@@ -260,12 +260,10 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
     switch (priority) {
       case TaskPriority.Critical:
       case TaskPriority.High:
-        return 'arrow_upward';
-      case TaskPriority.Low:
-        return 'arrow_downward';
       case TaskPriority.Medium:
+      case TaskPriority.Low:
       default:
-        return 'remove';
+        return 'flag';
     }
   }
 

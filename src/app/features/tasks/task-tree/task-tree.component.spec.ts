@@ -144,17 +144,17 @@ describe('TaskTreeComponent', () => {
 
   it('should return correct status icon', () => {
     expect(component.getStatusIcon(TaskStatus.Done)).toBe('check_circle');
-    expect(component.getStatusIcon(TaskStatus.InProgress)).toBe('hourglass_empty');
+    expect(component.getStatusIcon(TaskStatus.InProgress)).toBe('pending');
     expect(component.getStatusIcon(TaskStatus.Blocked)).toBe('block');
-    expect(component.getStatusIcon(TaskStatus.Waiting)).toBe('schedule');
+    expect(component.getStatusIcon(TaskStatus.Waiting)).toBe('hourglass_top');
     expect(component.getStatusIcon(TaskStatus.ToDo)).toBe('radio_button_unchecked');
   });
 
   it('should return correct priority icon', () => {
-    expect(component.getPriorityIcon(TaskPriority.Critical)).toBe('arrow_upward');
-    expect(component.getPriorityIcon(TaskPriority.High)).toBe('arrow_upward');
-    expect(component.getPriorityIcon(TaskPriority.Medium)).toBe('remove');
-    expect(component.getPriorityIcon(TaskPriority.Low)).toBe('arrow_downward');
+    expect(component.getPriorityIcon(TaskPriority.Critical)).toBe('flag');
+    expect(component.getPriorityIcon(TaskPriority.High)).toBe('flag');
+    expect(component.getPriorityIcon(TaskPriority.Medium)).toBe('flag');
+    expect(component.getPriorityIcon(TaskPriority.Low)).toBe('flag');
   });
 
   it('should return correct type icon', () => {

@@ -16,7 +16,10 @@
       <div class="property-grid">
         <div class="property-item">
           <span class="property-label">Status</span>
-          <mat-chip class="status-chip">{{ getStatusLabel(task().status) }}</mat-chip>
+          <mat-chip class="status-chip" [ngClass]="getStatusClass(task().status)">
+            <mat-icon>{{ getStatusIcon(task().status) }}</mat-icon>
+            <span>{{ getStatusLabel(task().status) }}</span>
+          </mat-chip>
         </div>
         <div class="property-item">
           <span class="property-label">Priority</span>
@@ -146,7 +149,18 @@
     
     <!-- Comments Section -->
     <section class="section-card">
-      <app-comment-thread [taskId]="task().id"></app-comment-thread>
+      <app-comment-thread [taskId]="task().id" (activityChanged)="onCommentActivityChanged()"></app-comment-thread>
+    </section>
+
+    <!-- Activity Section -->
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <mat-icon>history</mat-icon>
+          <h3>Activity</h3>
+        </div>
+      </div>
+      <app-activity-log [taskId]="task().id" [refreshToken]="activityRefreshVersion"></app-activity-log>
     </section>
     
     <!-- Meta Info -->

@@ -189,8 +189,20 @@ describe('TaskListComponent', () => {
   });
 
   it('should return correct status labels', () => {
-    expect(component.getStatusLabel(TaskStatus.ToDo)).toBe('ToDo');
+    expect(component.getStatusLabel(TaskStatus.ToDo)).toBe('To Do');
     expect(component.getStatusLabel(TaskStatus.Done)).toBe('Done');
+  });
+
+  it('should return explicit status icon mapping', () => {
+    expect(component.getStatusIcon(TaskStatus.Done)).toBe('check_circle');
+    expect(component.getStatusIcon(TaskStatus.Blocked)).toBe('block');
+    expect(component.getStatusIcon(TaskStatus.Waiting)).toBe('hourglass_top');
+  });
+
+  it('should return priority flag icon and class mapping', () => {
+    expect(component.getPriorityIcon(TaskPriority.Critical)).toBe('flag');
+    expect(component.getPriorityClass(TaskPriority.Critical)).toBe('priority-critical');
+    expect(component.getPriorityClass(TaskPriority.Low)).toBe('priority-low');
   });
 
   it('should return correct type labels', () => {

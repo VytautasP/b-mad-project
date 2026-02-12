@@ -96,6 +96,43 @@
     font-weight: 500;
     max-width: fit-content;
   }
+
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+
+    &.status-todo {
+      background: #eceff1;
+      color: #455a64;
+    }
+
+    &.status-in-progress {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    &.status-blocked {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    &.status-waiting {
+      background: #fff8e1;
+      color: #b28704;
+    }
+
+    &.status-done {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+  }
   
   .description-block {
     padding-top: 4px;

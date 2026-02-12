@@ -1,0 +1,32 @@
+<div class="activity-log">
+  @if (isLoading()) {
+    <div class="loading-state">
+      <mat-spinner diameter="28"></mat-spinner>
+    </div>
+  } @else {
+    @if (activities().length === 0) {
+      <div class="empty-state">
+        <mat-icon>history</mat-icon>
+        <span>No activity yet</span>
+      </div>
+    } @else {
+      <div class="feed" role="feed" aria-label="Task activity log">
+        @for (activity of activities(); track activity.id) {
+          <app-activity-item [activity]="activity"></app-activity-item>
+        }
+      </div>
+
+      @if (hasMore()) {
+        <div class="load-more-row">
+          <button type="button" mat-stroked-button (click)="onLoadMore()" [disabled]="isLoadingMore()">
+            <mat-icon>expand_more</mat-icon>
+            <span>Load More</span>
+          </button>
+          @if (isLoadingMore()) {
+            <mat-spinner diameter="18"></mat-spinner>
+          }
+        </div>
+      }
+    }
+  }
+</div>

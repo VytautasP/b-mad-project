@@ -19,6 +19,7 @@ import { ManualTimeEntryForm, ManualTimeEntryFormData } from '../components/manu
 import { TimeEntryList } from '../components/time-entry-list/time-entry-list';
 import { formatDuration } from '../../../shared/utils/time.utils';
 import { CommentThreadComponent } from '../../collaboration/comment-thread/comment-thread.component';
+import { ActivityLogComponent } from '../../collaboration/activity-log/activity-log.component';
 
 export interface TaskDetailDialogData {
   task: Task;
@@ -38,7 +39,8 @@ export interface TaskDetailDialogData {
     AssigneeList,
     UserPicker,
     TimeEntryList,
-    CommentThreadComponent
+    CommentThreadComponent,
+    ActivityLogComponent
   ],
   templateUrl: './task-detail-dialog.html',
   styleUrl: './task-detail-dialog.css',
@@ -59,6 +61,7 @@ export class TaskDetailDialog implements OnInit, OnDestroy {
   showUserPicker = signal(false);
   isLoadingAssignees = signal(false);
   currentTimerState: TimerState | null = null;
+  activityRefreshVersion = 0;
   
   TaskPriority = TaskPriority;
   TaskStatus = TaskStatus;
@@ -103,6 +106,7 @@ export class TaskDetailDialog implements OnInit, OnDestroy {
       next: () => {
         this.notificationService.showSuccess('User assigned successfully');
         this.loadAssignees();
+        this.triggerActivityRefresh();
         this.showUserPicker.set(false);
       },
       error: (error) => {
@@ -122,6 +126,7 @@ export class TaskDetailDialog implements OnInit, OnDestroy {
       next: () => {
         this.notificationService.showSuccess('User unassigned successfully');
         this.loadAssignees();
+        this.triggerActivityRefresh();
       },
       error: (error) => {
         const errorMessage = this.getErrorMessage(error);
@@ -139,7 +144,20 @@ export class TaskDetailDialog implements OnInit, OnDestroy {
   }
   
   getStatusLabel(status: number): string {
-    return TaskStatus[status];
+    switch (status) {
+      case TaskStatus.ToDo:
+        return 'To Do';
+      case TaskStatus.InProgress:
+        return 'In Progress';
+      case TaskStatus.Blocked:
+        return 'Blocked';
+      case TaskStatus.Waiting:
+        return 'Waiting';
+      case TaskStatus.Done:
+        return 'Done';
+      default:
+        return 'To Do';
+    }
   }
   
   getTypeLabel(type: number): string {
@@ -212,6 +230,7 @@ export class TaskDetailDialog implements OnInit, OnDestroy {
         this.timeEntryList?.loadTimeEntries();
         // Reload task to update total logged time
         this.refreshTask();
+        this.triggerActivityRefresh();
       }
     });
   }
@@ -219,6 +238,11 @@ export class TaskDetailDialog implements OnInit, OnDestroy {
   onTimeEntryDeleted(): void {
     // Reload task to update total logged time
     this.refreshTask();
+    this.triggerActivityRefresh();
+  }
+
+  onCommentActivityChanged(): void {
+    this.triggerActivityRefresh();
   }
 
   private refreshTask(): void {
@@ -254,6 +278,42 @@ export class TaskDetailDialog implements OnInit, OnDestroy {
    */
   hasChildrenTime(): boolean {
     return this.task().childrenLoggedMinutes > 0;
+  }
+
+  getStatusIcon(status: number): string {
+    switch (status) {
+      case TaskStatus.Done:
+        return 'check_circle';
+      case TaskStatus.Blocked:
+        return 'block';
+      case TaskStatus.Waiting:
+        return 'hourglass_top';
+      case TaskStatus.InProgress:
+        return 'pending';
+      case TaskStatus.ToDo:
+      default:
+        return 'radio_button_unchecked';
+    }
+  }
+
+  getStatusClass(status: number): string {
+    switch (status) {
+      case TaskStatus.Done:
+        return 'status-done';
+      case TaskStatus.InProgress:
+        return 'status-in-progress';
+      case TaskStatus.Blocked:
+        return 'status-blocked';
+      case TaskStatus.Waiting:
+        return 'status-waiting';
+      case TaskStatus.ToDo:
+      default:
+        return 'status-todo';
+    }
+  }
+
+  private triggerActivityRefresh(): void {
+    this.activityRefreshVersion += 1;
   }
 }
 

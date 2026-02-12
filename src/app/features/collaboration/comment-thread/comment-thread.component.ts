@@ -28,6 +28,7 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../sh
 export class CommentThreadComponent implements OnInit, OnDestroy {
   @Input({ required: true }) taskId!: string;
   @Output() commentCountChange = new EventEmitter<number>();
+  @Output() activityChanged = new EventEmitter<void>();
 
   private readonly commentService = inject(CommentService);
   private readonly authService = inject(AuthService);
@@ -80,6 +81,7 @@ export class CommentThreadComponent implements OnInit, OnDestroy {
       next: (newComment) => {
         this.comments.update(comments => [...comments, newComment]);
         this.commentCountChange.emit(this.comments().length);
+        this.activityChanged.emit();
         this.notificationService.showSuccess('Comment posted');
         this.isSubmitting.set(false);
       },
@@ -99,6 +101,7 @@ export class CommentThreadComponent implements OnInit, OnDestroy {
         this.comments.update(comments =>
           comments.map(c => c.id === event.commentId ? updatedComment : c)
         );
+        this.activityChanged.emit();
         this.notificationService.showSuccess('Comment updated');
       },
       error: (error) => {
@@ -129,6 +132,7 @@ export class CommentThreadComponent implements OnInit, OnDestroy {
           next: () => {
             this.comments.update(comments => comments.filter(c => c.id !== commentId));
             this.commentCountChange.emit(this.comments().length);
+            this.activityChanged.emit();
             this.notificationService.showSuccess('Comment deleted');
           },
           error: (error) => {

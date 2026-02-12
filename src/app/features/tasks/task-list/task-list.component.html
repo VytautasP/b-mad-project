@@ -72,9 +72,10 @@
           <ng-container matColumnDef="status">
             <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
             <mat-cell *matCellDef="let task">
-              <mat-chip [color]="getStatusColor(task.status)">
-                {{ getStatusLabel(task.status) }}
-              </mat-chip>
+              <div [class]="getStatusBadgeClass(task.status)">
+                <mat-icon>{{ getStatusIcon(task.status) }}</mat-icon>
+                <span>{{ getStatusLabel(task.status) }}</span>
+              </div>
             </mat-cell>
           </ng-container>
 
@@ -82,9 +83,10 @@
           <ng-container matColumnDef="priority">
             <mat-header-cell *matHeaderCellDef mat-sort-header>Priority</mat-header-cell>
             <mat-cell *matCellDef="let task">
-              <mat-chip [color]="getPriorityColor(task.priority)">
-                {{ getPriorityLabel(task.priority) }}
-              </mat-chip>
+              <div class="priority-indicator" [ngClass]="getPriorityClass(task.priority)">
+                <mat-icon>{{ getPriorityIcon(task.priority) }}</mat-icon>
+                <span>{{ getPriorityLabel(task.priority) }}</span>
+              </div>
             </mat-cell>
           </ng-container>
 
@@ -185,15 +187,17 @@
                 </div>
                 <div class="detail-row">
                   <span class="label">Priority:</span>
-                  <mat-chip [color]="getPriorityColor(task.priority)">
-                    {{ getPriorityLabel(task.priority) }}
-                  </mat-chip>
+                  <div class="priority-indicator" [ngClass]="getPriorityClass(task.priority)">
+                    <mat-icon>{{ getPriorityIcon(task.priority) }}</mat-icon>
+                    <span>{{ getPriorityLabel(task.priority) }}</span>
+                  </div>
                 </div>
                 <div class="detail-row">
                   <span class="label">Status:</span>
-                  <mat-chip [color]="getStatusColor(task.status)">
-                    {{ getStatusLabel(task.status) }}
-                  </mat-chip>
+                  <div [class]="getStatusBadgeClass(task.status)">
+                    <mat-icon>{{ getStatusIcon(task.status) }}</mat-icon>
+                    <span>{{ getStatusLabel(task.status) }}</span>
+                  </div>
                 </div>
               </div>
             </mat-card-content>

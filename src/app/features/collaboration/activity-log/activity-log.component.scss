@@ -1,0 +1,54 @@
+.activity-log {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .loading-state,
+  .empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: rgba(0, 0, 0, 0.6);
+    padding: 16px 8px;
+  }
+
+  .feed {
+    max-height: 320px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 4px;
+  }
+
+  .load-more-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .activity-log {
+    .feed {
+      max-height: 260px;
+    }
+
+    .load-more-row {
+      justify-content: stretch;
+
+      button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  }
+}

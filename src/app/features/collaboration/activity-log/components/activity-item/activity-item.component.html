@@ -1,0 +1,45 @@
+<article class="activity-item" [ngClass]="getActivityClass(activity.activityType)">
+  <div class="icon-wrapper" aria-hidden="true">
+    <mat-icon>{{ getActivityIcon(activity.activityType) }}</mat-icon>
+  </div>
+
+  <div class="content">
+    <div class="main-row">
+      <div class="actor-avatar" [attr.aria-label]="activity.userName">{{ actorInitials }}</div>
+
+      <div class="text-content">
+        <div class="description-row">
+          <span class="actor-name">{{ activity.userName }}</span>
+          <span class="description">{{ activity.description }}</span>
+        </div>
+        <time class="timestamp" [attr.title]="formattedTimestamp">{{ activity.timestamp | relativeTime }}</time>
+      </div>
+    </div>
+
+    @if (hasFieldChangeDetails) {
+      <button type="button" mat-button class="details-toggle" (click)="toggleDetails()">
+        <span>{{ isExpanded ? 'Hide details' : 'Show details' }}</span>
+        <mat-icon>{{ isExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+      </button>
+
+      @if (isExpanded) {
+        <div class="change-details">
+          @if (activity.changedField) {
+            <div class="detail-row">
+              <span class="label">Field</span>
+              <span class="value">{{ activity.changedField }}</span>
+            </div>
+          }
+          <div class="detail-row">
+            <span class="label">From</span>
+            <span class="value">{{ activity.oldValue || '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">To</span>
+            <span class="value">{{ activity.newValue || '—' }}</span>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</article>

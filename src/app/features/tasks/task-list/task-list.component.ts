@@ -255,11 +255,34 @@ export class TaskListComponent implements OnInit, OnDestroy {
   }
 
   getPriorityLabel(priority: number): string {
-    return TaskPriority[priority];
+    switch (priority) {
+      case TaskPriority.Critical:
+        return 'Critical';
+      case TaskPriority.High:
+        return 'High';
+      case TaskPriority.Medium:
+        return 'Medium';
+      case TaskPriority.Low:
+      default:
+        return 'Low';
+    }
   }
 
   getStatusLabel(status: number): string {
-    return TaskStatus[status];
+    switch (status) {
+      case TaskStatus.ToDo:
+        return 'To Do';
+      case TaskStatus.InProgress:
+        return 'In Progress';
+      case TaskStatus.Blocked:
+        return 'Blocked';
+      case TaskStatus.Waiting:
+        return 'Waiting';
+      case TaskStatus.Done:
+        return 'Done';
+      default:
+        return 'To Do';
+    }
   }
 
   getTypeLabel(type: number): string {
@@ -282,6 +305,63 @@ export class TaskListComponent implements OnInit, OnDestroy {
       case TaskStatus.InProgress: return 'accent';
       case TaskStatus.Blocked: return 'warn';
       default: return '';
+    }
+  }
+
+  getStatusIcon(status: number): string {
+    switch (status) {
+      case TaskStatus.Done:
+        return 'check_circle';
+      case TaskStatus.Blocked:
+        return 'block';
+      case TaskStatus.Waiting:
+        return 'hourglass_top';
+      case TaskStatus.InProgress:
+        return 'pending';
+      case TaskStatus.ToDo:
+      default:
+        return 'radio_button_unchecked';
+    }
+  }
+
+  getStatusBadgeClass(status: number): string {
+    switch (status) {
+      case TaskStatus.Done:
+        return 'status-badge status-done';
+      case TaskStatus.InProgress:
+        return 'status-badge status-in-progress';
+      case TaskStatus.Blocked:
+        return 'status-badge status-blocked';
+      case TaskStatus.Waiting:
+        return 'status-badge status-waiting';
+      case TaskStatus.ToDo:
+      default:
+        return 'status-badge status-todo';
+    }
+  }
+
+  getPriorityIcon(priority: number): string {
+    switch (priority) {
+      case TaskPriority.Critical:
+      case TaskPriority.High:
+      case TaskPriority.Medium:
+      case TaskPriority.Low:
+      default:
+        return 'flag';
+    }
+  }
+
+  getPriorityClass(priority: number): string {
+    switch (priority) {
+      case TaskPriority.Critical:
+        return 'priority-critical';
+      case TaskPriority.High:
+        return 'priority-high';
+      case TaskPriority.Medium:
+        return 'priority-medium';
+      case TaskPriority.Low:
+      default:
+        return 'priority-low';
     }
   }
 
