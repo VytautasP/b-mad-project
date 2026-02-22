@@ -12,9 +12,22 @@
     <mat-progress-bar mode="indeterminate"></mat-progress-bar>
   }
 
-  <!-- Task Count -->
-  <div class="task-count">
-    Showing {{ tasks().length }} of {{ totalCount() }} tasks
+  <div class="task-list-header">
+    <div class="task-count">
+      Showing {{ tasks().length }} of {{ totalCount() }} tasks
+    </div>
+    <div class="header-actions">
+      @if (hasActiveFilters()) {
+        <button mat-button type="button" (click)="onFiltersCleared()">
+          <mat-icon>clear_all</mat-icon>
+          Clear Filters
+        </button>
+      }
+      <button mat-raised-button color="primary" type="button" (click)="onCreateTask()">
+        <mat-icon>add</mat-icon>
+        Create Task
+      </button>
+    </div>
   </div>
 
   @if (isLoading() && tasks().length === 0) {
@@ -113,25 +126,27 @@
           <ng-container matColumnDef="actions">
             <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
             <mat-cell *matCellDef="let task">
-              <button mat-icon-button (click)="onViewDetails(task, $event)" matTooltip="View details">
-                <mat-icon>visibility</mat-icon>
-              </button>
-              @if (isTimerRunning(task.id)) {
-                <mat-icon class="timer-running-icon" matTooltip="Timer Running" color="accent">timer</mat-icon>
-              } @else {
-                <button mat-icon-button 
-                        (click)="onStartTimer(task)" 
-                        matTooltip="Start Timer"
-                        [disabled]="isAnotherTimerRunning(task.id)">
-                  <mat-icon>schedule</mat-icon>
+              <div class="action-buttons">
+                <button mat-icon-button (click)="onViewDetails(task, $event)" matTooltip="View details">
+                  <mat-icon>visibility</mat-icon>
                 </button>
-              }
-              <button mat-icon-button (click)="onEdit(task)" matTooltip="Edit task" color="primary">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button (click)="onDelete(task)" matTooltip="Delete task" color="warn">
-                <mat-icon>delete</mat-icon>
-              </button>
+                @if (isTimerRunning(task.id)) {
+                  <mat-icon class="timer-running-icon" matTooltip="Timer Running" color="accent">timer</mat-icon>
+                } @else {
+                  <button mat-icon-button 
+                          (click)="onStartTimer(task)" 
+                          matTooltip="Start Timer"
+                          [disabled]="isAnotherTimerRunning(task.id)">
+                    <mat-icon>schedule</mat-icon>
+                  </button>
+                }
+                <button mat-icon-button (click)="onEdit(task)" matTooltip="Edit task" color="primary">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button (click)="onDelete(task)" matTooltip="Delete task" color="warn">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
             </mat-cell>
           </ng-container>
 

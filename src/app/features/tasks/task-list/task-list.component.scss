@@ -6,10 +6,24 @@
   }
   
   .task-count {
-    margin-bottom: 16px;
     color: rgba(0, 0, 0, 0.6);
     font-size: 14px;
     font-weight: 500;
+  }
+
+  .task-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   
   .loading-container {
@@ -63,12 +77,19 @@
       }
       
       .task-row {
+        min-height: 68px;
         transition: background-color 0.2s ease;
         
         &:hover {
           background-color: #f9f9f9;
           cursor: pointer;
         }
+      }
+
+      mat-header-cell,
+      mat-cell {
+        padding-top: 12px;
+        padding-bottom: 12px;
       }
       
       .task-name {
@@ -208,11 +229,16 @@
         flex: 0.8;
         min-width: 180px;
         text-align: right;
-        
-        button, mat-icon {
-          margin-left: 4px;
+
+        .action-buttons {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: 4px;
+          width: 100%;
+          white-space: nowrap;
         }
-        
+
         button {
           &:hover {
             opacity: 0.8;
@@ -310,6 +336,19 @@
 @media (max-width: 768px) {
   .task-list-container {
     padding: 16px;
+
+    .task-list-header {
+      align-items: flex-start;
+
+      .header-actions {
+        width: 100%;
+
+        button {
+          flex: 1;
+          justify-content: center;
+        }
+      }
+    }
     
     .desktop-view {
       display: none;

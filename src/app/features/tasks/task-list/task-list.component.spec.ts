@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MatNativeDateModule } from '@angular/material/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -82,7 +83,8 @@ describe('TaskListComponent', () => {
     await TestBed.configureTestingModule({
       imports: [
         TaskListComponent,
-        NoopAnimationsModule
+        NoopAnimationsModule,
+        MatNativeDateModule
       ],
       providers: [
         { provide: TaskService, useValue: taskService },
@@ -220,6 +222,36 @@ describe('TaskListComponent', () => {
     expect(component.getStatusColor(TaskStatus.Done)).toBe('primary');
     expect(component.getStatusColor(TaskStatus.InProgress)).toBe('accent');
     expect(component.getStatusColor(TaskStatus.Blocked)).toBe('warn');
+  });
+
+  // Edit functionality tests
+  describe('Create functionality', () => {
+    it('should open dialog when create task is clicked', () => {
+      const mockDialogRef = {
+        componentInstance: { mode: '' },
+        afterClosed: () => of(null)
+      } as any;
+      mockDialog.open.mockReturnValue(mockDialogRef);
+
+      component.onCreateTask();
+
+      expect(mockDialog.open).toHaveBeenCalled();
+      expect(mockDialogRef.componentInstance.mode).toBe('create');
+    });
+
+    it('should reload tasks and show success message after successful create', () => {
+      const mockDialogRef = {
+        componentInstance: { mode: '' },
+        afterClosed: () => of(mockTask)
+      } as any;
+      mockDialog.open.mockReturnValue(mockDialogRef);
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+
+      component.onCreateTask();
+
+      expect(mockSnackBar.open).toHaveBeenCalledWith('Task created successfully', 'Close', expect.any(Object));
+      expect(getTasksPaginatedSpy).toHaveBeenCalled();
+    });
   });
 
   // Edit functionality tests

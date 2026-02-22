@@ -45,6 +45,7 @@ export class TaskFiltersComponent implements OnInit {
 
   filterForm!: FormGroup;
   activeFilterChips = signal<Array<{ key: string; value: string; displayText: string }>>([]);
+  advancedFiltersExpanded = signal(false);
 
   // Enum references for template
   TaskStatus = TaskStatus;
@@ -114,6 +115,12 @@ export class TaskFiltersComponent implements OnInit {
   removeFilter(chip: { key: string; value: string }): void {
     const control = this.filterForm.get(chip.key);
     if (control) {
+      if (chip.key === 'searchTerm') {
+        control.setValue('');
+        this.onApplyFilters();
+        return;
+      }
+
       if (Array.isArray(control.value)) {
         // Remove specific value from array
         const newValue = control.value.filter((v: any) => v.toString() !== chip.value);
@@ -192,6 +199,14 @@ export class TaskFiltersComponent implements OnInit {
         key: 'dueDateTo',
         value: 'dueDateTo',
         displayText: `To: ${new Date(formValue.dueDateTo).toLocaleDateString()}`
+      });
+    }
+
+    if (formValue.searchTerm?.trim()) {
+      chips.push({
+        key: 'searchTerm',
+        value: formValue.searchTerm.trim(),
+        displayText: `Search: ${formValue.searchTerm.trim()}`
       });
     }
 

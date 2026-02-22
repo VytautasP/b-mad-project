@@ -55,6 +55,7 @@ describe('TaskFiltersComponent', () => {
       expect(component.filterForm.get('dueDateFrom')?.value).toBeNull();
       expect(component.filterForm.get('dueDateTo')?.value).toBeNull();
       expect(component.filterForm.get('searchTerm')?.value).toBe('');
+      expect(component.advancedFiltersExpanded()).toBe(false);
     });
 
     it('should populate form with initial filters', () => {
@@ -233,7 +234,7 @@ describe('TaskFiltersComponent', () => {
       component.onApplyFilters();
 
       const chips = component.activeFilterChips();
-      expect(chips.length).toBe(6); // assignee, status, priority, type, dateFrom, dateTo
+      expect(chips.length).toBe(7); // assignee, status, priority, type, dateFrom, dateTo, search
     });
 
     it('should display correct chip text for status', () => {
@@ -275,6 +276,23 @@ describe('TaskFiltersComponent', () => {
       const chips = component.activeFilterChips();
       const assigneeChip = chips.find(c => c.key === 'assigneeId');
       expect(assigneeChip?.displayText).toContain('John Doe');
+    });
+
+    it('should create and remove search chip', () => {
+      component.filterForm.patchValue({
+        searchTerm: 'roadmap'
+      });
+
+      component.onApplyFilters();
+
+      let searchChip = component.activeFilterChips().find(c => c.key === 'searchTerm');
+      expect(searchChip?.displayText).toContain('roadmap');
+
+      component.removeFilter({ key: 'searchTerm', value: 'roadmap' });
+
+      searchChip = component.activeFilterChips().find(c => c.key === 'searchTerm');
+      expect(component.filterForm.get('searchTerm')?.value).toBe('');
+      expect(searchChip).toBeUndefined();
     });
   });
 });

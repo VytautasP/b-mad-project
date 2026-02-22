@@ -1,15 +1,46 @@
 <div class="task-filters-container">
-  <mat-expansion-panel class="filters-panel" [expanded]="true">
-    <mat-expansion-panel-header>
-      <mat-panel-title>
-        <mat-icon>filter_list</mat-icon>
-        Filters
-      </mat-panel-title>
-    </mat-expansion-panel-header>
+  <form [formGroup]="filterForm" class="filters-form">
+    <div class="quick-filter-row">
+      <mat-form-field appearance="outline" class="filter-field search-field">
+        <mat-label>Search</mat-label>
+        <input matInput formControlName="searchTerm" placeholder="Search tasks...">
+        <mat-icon matPrefix>search</mat-icon>
+      </mat-form-field>
 
-    <form [formGroup]="filterForm" class="filters-form">
+      <mat-form-field appearance="outline" class="filter-field status-field">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status" multiple>
+          @for (option of statusOptions; track option.value) {
+            <mat-option [value]="option.value">{{ option.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <div class="filter-actions">
+        <button mat-stroked-button type="button" (click)="onApplyFilters()">
+          <mat-icon>check</mat-icon>
+          Apply
+        </button>
+        <button mat-button type="button" (click)="onClearFilters()">
+          <mat-icon>clear</mat-icon>
+          Clear
+        </button>
+      </div>
+    </div>
+
+    <mat-expansion-panel
+      class="filters-panel"
+      [expanded]="advancedFiltersExpanded()"
+      (opened)="advancedFiltersExpanded.set(true)"
+      (closed)="advancedFiltersExpanded.set(false)">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <mat-icon>tune</mat-icon>
+          Advanced Filters
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
       <div class="filter-row">
-        <!-- Assignee Filter -->
         <mat-form-field appearance="outline" class="filter-field">
           <mat-label>Assignees</mat-label>
           <mat-select formControlName="assigneeId" multiple>
@@ -19,17 +50,6 @@
           </mat-select>
         </mat-form-field>
 
-        <!-- Status Filter -->
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Status</mat-label>
-          <mat-select formControlName="status" multiple>
-            @for (option of statusOptions; track option.value) {
-              <mat-option [value]="option.value">{{ option.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-
-        <!-- Priority Filter -->
         <mat-form-field appearance="outline" class="filter-field">
           <mat-label>Priority</mat-label>
           <mat-select formControlName="priority" multiple>
@@ -39,7 +59,6 @@
           </mat-select>
         </mat-form-field>
 
-        <!-- Type Filter -->
         <mat-form-field appearance="outline" class="filter-field">
           <mat-label>Type</mat-label>
           <mat-select formControlName="type" multiple>
@@ -51,7 +70,6 @@
       </div>
 
       <div class="filter-row">
-        <!-- Due Date From -->
         <mat-form-field appearance="outline" class="filter-field">
           <mat-label>Due Date From</mat-label>
           <input matInput [matDatepicker]="pickerFrom" formControlName="dueDateFrom">
@@ -59,34 +77,15 @@
           <mat-datepicker #pickerFrom></mat-datepicker>
         </mat-form-field>
 
-        <!-- Due Date To -->
         <mat-form-field appearance="outline" class="filter-field">
           <mat-label>Due Date To</mat-label>
           <input matInput [matDatepicker]="pickerTo" formControlName="dueDateTo">
           <mat-datepicker-toggle matIconSuffix [for]="pickerTo"></mat-datepicker-toggle>
           <mat-datepicker #pickerTo></mat-datepicker>
         </mat-form-field>
-
-        <!-- Search Term -->
-        <mat-form-field appearance="outline" class="filter-field search-field">
-          <mat-label>Search</mat-label>
-          <input matInput formControlName="searchTerm" placeholder="Search tasks...">
-          <mat-icon matPrefix>search</mat-icon>
-        </mat-form-field>
       </div>
-
-      <div class="filter-actions">
-        <button mat-raised-button color="primary" type="button" (click)="onApplyFilters()">
-          <mat-icon>check</mat-icon>
-          Apply Filters
-        </button>
-        <button mat-button type="button" (click)="onClearFilters()">
-          <mat-icon>clear</mat-icon>
-          Clear Filters
-        </button>
-      </div>
-    </form>
-  </mat-expansion-panel>
+    </mat-expansion-panel>
+  </form>
 
   <!-- Active Filter Chips -->
   @if (activeFilterChips().length > 0) {

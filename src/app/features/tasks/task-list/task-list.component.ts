@@ -382,6 +382,26 @@ export class TaskListComponent implements OnInit, OnDestroy {
     });
   }
 
+  onCreateTask(): void {
+    const dialogRef = this.dialog.open(TaskFormComponent, {
+      width: '600px',
+      data: { mode: 'create' }
+    });
+
+    dialogRef.componentInstance.mode = 'create';
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loadTasks();
+        this.snackBar.open('Task created successfully', 'Close', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top'
+        });
+      }
+    });
+  }
+
   onEdit(task: Task): void {
     const dialogRef = this.dialog.open(TaskFormComponent, {
       width: '600px',
