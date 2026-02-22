@@ -1,0 +1,26 @@
+<div class="empty-state">
+  <mat-icon>event_busy</mat-icon>
+  <h2>Timeline is empty</h2>
+  @if (noDueDateCount > 0 || invalidDueDateCount > 0) {
+    <p>
+      @if (noDueDateCount > 0) {
+        <span>{{ noDueDateCount }} task(s) have no due date.</span>
+      }
+      @if (invalidDueDateCount > 0) {
+        <span>{{ invalidDueDateCount }} task(s) have incomplete date data.</span>
+      }
+    </p>
+  } @else {
+    <p>Tasks need due dates before they can appear in timeline view.</p>
+  }
+
+  <button
+    mat-raised-button
+    color="primary"
+    type="button"
+    (click)="onCtaClick()"
+    aria-label="Add a task due date from the dashboard"
+  >
+    Add due date
+  </button>
+</div>

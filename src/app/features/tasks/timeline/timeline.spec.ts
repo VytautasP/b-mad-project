@@ -2,11 +2,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { TimelineComponent } from './timeline';
 import { TaskService } from '../services/task.service';
 import { Task, TaskStatus, TaskPriority, TaskType } from '../../../shared/models/task.model';
-import { signal } from '@angular/core';
 
 describe('TimelineComponent', () => {
   let component: TimelineComponent;
@@ -14,6 +14,7 @@ describe('TimelineComponent', () => {
   let mockTaskService: jasmine.SpyObj<TaskService>;
   let mockDialog: jasmine.SpyObj<MatDialog>;
   let mockBreakpointObserver: jasmine.SpyObj<BreakpointObserver>;
+  let mockRouter: jasmine.SpyObj<Router>;
 
   const mockTask: Task = {
     id: '1',
@@ -44,6 +45,7 @@ describe('TimelineComponent', () => {
     ]);
     mockDialog = jasmine.createSpyObj('MatDialog', ['open']);
     mockBreakpointObserver = jasmine.createSpyObj('BreakpointObserver', ['observe']);
+    mockRouter = jasmine.createSpyObj('Router', ['navigate']);
 
     // Default mock implementations
     mockTaskService.getTimelineTasks.and.returnValue(of([mockTask]));
@@ -54,7 +56,8 @@ describe('TimelineComponent', () => {
       providers: [
         { provide: TaskService, useValue: mockTaskService },
         { provide: MatDialog, useValue: mockDialog },
-        { provide: BreakpointObserver, useValue: mockBreakpointObserver }
+        { provide: BreakpointObserver, useValue: mockBreakpointObserver },
+        { provide: Router, useValue: mockRouter }
       ]
     }).compileComponents();
 
@@ -216,5 +219,29 @@ describe('TimelineComponent', () => {
     expect(timelineItems[0].className).not.toContain('locked');
     expect(timelineItems[0].content).not.toContain('🔒');
     expect(timelineItems[0].editable).toBe(true);
+  });
+
+  it('should navigate to dashboard date-edit context from empty-state CTA', () => {
+    component.onAddDueDateCta();
+
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/dashboard'], {
+      queryParams: {
+        openTaskForm: 'true',
+        focusField: 'dueDate',
+        returnTo: 'timeline'
+      }
+    });
+  });
+
+  it('should track no-date and partial-date tasks when loading timeline data', () => {
+    const noDateTask = { ...mockTask, id: '2', dueDate: null };
+    const invalidDateTask = { ...mockTask, id: '3', dueDate: '2026-01-' as any };
+    mockTaskService.getTimelineTasks.and.returnValue(of([mockTask, noDateTask, invalidDateTask]));
+
+    component.loadTimelineData(new Date('2026-01-01'), new Date('2026-01-31'));
+
+    expect(component.tasks().length).toBe(1);
+    expect(component.noDueDateCount()).toBe(1);
+    expect(component.invalidDueDateCount()).toBe(1);
   });
 });

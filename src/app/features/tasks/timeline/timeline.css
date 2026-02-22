@@ -24,6 +24,24 @@
   align-items: center;
 }
 
+:host ::ng-deep .view-controls .mat-button-toggle.view-toggle-active {
+  font-weight: 700;
+}
+
+:host ::ng-deep .view-controls .mat-button-toggle.view-toggle-active .mat-button-toggle-label-content {
+  text-decoration: underline;
+}
+
+:host ::ng-deep .view-controls .mat-button-toggle.mat-button-toggle-checked {
+  box-shadow: inset 0 0 0 2px currentColor;
+}
+
+:host ::ng-deep .view-controls .mat-button-toggle-focus-overlay,
+:host ::ng-deep .view-controls .mat-button-toggle:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -36,36 +54,6 @@
 .loading-container p {
   color: rgba(0, 0, 0, 0.6);
   font-size: 16px;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 64px 24px;
-  text-align: center;
-}
-
-.empty-state mat-icon {
-  font-size: 64px;
-  width: 64px;
-  height: 64px;
-  color: rgba(0, 0, 0, 0.3);
-  margin-bottom: 16px;
-}
-
-.empty-state h2 {
-  margin: 0 0 8px 0;
-  font-size: 24px;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.87);
-}
-
-.empty-state p {
-  margin: 0;
-  font-size: 16px;
-  color: rgba(0, 0, 0, 0.6);
 }
 
 .timeline-wrapper {

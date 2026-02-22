@@ -8,6 +8,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Timeline } from 'vis-timeline/standalone';
@@ -15,6 +16,7 @@ import { DataSet } from 'vis-data';
 import { TaskService } from '../services/task.service';
 import { Task, TaskStatus } from '../../../shared/models/task.model';
 import { TaskDetailDialog, TaskDetailDialogData } from '../task-detail-dialog/task-detail-dialog';
+import { TimelineEmptyStateComponent } from './timeline-empty-state/timeline-empty-state';
 
 @Component({
   selector: 'app-timeline',
@@ -26,7 +28,8 @@ import { TaskDetailDialog, TaskDetailDialogData } from '../task-detail-dialog/ta
     MatButtonModule,
     MatButtonToggleModule,
     MatIconModule,
-    MatCardModule
+    MatCardModule,
+    TimelineEmptyStateComponent
   ],
   templateUrl: './timeline.html',
   styleUrl: './timeline.css',
@@ -36,6 +39,7 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly taskService = inject(TaskService);
   private readonly dialog = inject(MatDialog);
   private readonly breakpointObserver = inject(BreakpointObserver);
+  private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
   
   @ViewChild('timelineContainer', { static: false }) timelineContainer?: ElementRef<HTMLDivElement>;
@@ -45,6 +49,8 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
   isUpdating = signal(false);
   viewMode = signal<'day' | 'week' | 'month'>('week');
   isMobile = signal(false);
+  noDueDateCount = signal(0);
+  invalidDueDateCount = signal(0);
   
   private timelineInstance?: Timeline;
   private startDate: Date = new Date();
@@ -97,15 +103,16 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (tasks) => {
-          // Filter tasks that have due dates
-          const tasksWithDueDates = tasks.filter(t => t.dueDate != null);
-          this.tasks.set(tasksWithDueDates);
+          const { validTimelineTasks, noDueDateCount, invalidDueDateCount } = this.validateDueDateCoverage(tasks);
+          this.noDueDateCount.set(noDueDateCount);
+          this.invalidDueDateCount.set(invalidDueDateCount);
+          this.tasks.set(validTimelineTasks);
           this.isLoading.set(false);
           
-          console.log('Timeline tasks loaded:', tasksWithDueDates.length);
+          console.log('Timeline tasks loaded:', validTimelineTasks.length);
           
           // Initialize or refresh Timeline after data loads
-          if (tasksWithDueDates.length > 0) {
+          if (validTimelineTasks.length > 0) {
             setTimeout(() => this.initializeTimeline(), 0);
           }
         },
@@ -114,6 +121,43 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
           this.isLoading.set(false);
         }
       });
+  }
+
+  onAddDueDateCta(): void {
+    this.router.navigate(['/dashboard'], {
+      queryParams: {
+        openTaskForm: 'true',
+        focusField: 'dueDate',
+        returnTo: 'timeline'
+      }
+    });
+  }
+
+  private validateDueDateCoverage(tasks: Task[]): {
+    validTimelineTasks: Task[];
+    noDueDateCount: number;
+    invalidDueDateCount: number;
+  } {
+    let noDueDateCount = 0;
+    let invalidDueDateCount = 0;
+    const validTimelineTasks: Task[] = [];
+
+    tasks.forEach((task) => {
+      if (!task.dueDate) {
+        noDueDateCount += 1;
+        return;
+      }
+
+      const dueDate = new Date(task.dueDate);
+      if (Number.isNaN(dueDate.getTime())) {
+        invalidDueDateCount += 1;
+        return;
+      }
+
+      validTimelineTasks.push(task);
+    });
+
+    return { validTimelineTasks, noDueDateCount, invalidDueDateCount };
   }
 
   /**

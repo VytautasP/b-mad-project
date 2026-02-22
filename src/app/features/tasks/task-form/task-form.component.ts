@@ -1,4 +1,4 @@
-import { Component, inject, Output, EventEmitter, Input, OnInit, HostListener } from '@angular/core';
+import { Component, inject, Output, EventEmitter, Input, OnInit, HostListener, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -29,13 +29,16 @@ import { Task, TaskCreateDto, TaskUpdateDto, TaskPriority, TaskStatus, TaskType 
   templateUrl: './task-form.component.html',
   styleUrl: './task-form.component.scss'
 })
-export class TaskFormComponent implements OnInit {
+export class TaskFormComponent implements OnInit, AfterViewInit {
   private readonly fb = inject(FormBuilder);
   private readonly taskService = inject(TaskService);
   private readonly dialogRef = inject(MatDialogRef<TaskFormComponent>, { optional: true });
   
   @Input() mode: 'create' | 'edit' = 'create';
   @Input() taskToEdit: Task | null = null;
+  @Input() initialFocusField: 'dueDate' | null = null;
+
+  @ViewChild('dueDateInput') dueDateInput?: ElementRef<HTMLInputElement>;
   
   @Output() taskCreated = new EventEmitter<void>();
   @Output() taskUpdated = new EventEmitter<Task>();
@@ -74,6 +77,14 @@ export class TaskFormComponent implements OnInit {
         status: this.taskToEdit.status,
         type: this.taskToEdit.type
       });
+    }
+  }
+
+  ngAfterViewInit(): void {
+    if (this.initialFocusField === 'dueDate' && this.dueDateInput?.nativeElement) {
+      setTimeout(() => {
+        this.dueDateInput?.nativeElement.focus();
+      }, 0);
     }
   }
 

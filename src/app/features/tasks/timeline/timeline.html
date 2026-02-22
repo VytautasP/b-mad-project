@@ -5,16 +5,32 @@
     
     <!-- View Mode Controls -->
     <div class="view-controls">
-      <mat-button-toggle-group [value]="viewMode()" (change)="changeViewMode($event.value)" aria-label="View mode">
-        <mat-button-toggle value="day">
+      <mat-button-toggle-group
+        [value]="viewMode()"
+        (change)="changeViewMode($event.value)"
+        aria-label="Timeline granularity"
+      >
+        <mat-button-toggle
+          value="day"
+          [class.view-toggle-active]="viewMode() === 'day'"
+          aria-label="Day view"
+        >
           <mat-icon>today</mat-icon>
           Day
         </mat-button-toggle>
-        <mat-button-toggle value="week">
+        <mat-button-toggle
+          value="week"
+          [class.view-toggle-active]="viewMode() === 'week'"
+          aria-label="Week view"
+        >
           <mat-icon>view_week</mat-icon>
           Week
         </mat-button-toggle>
-        <mat-button-toggle value="month">
+        <mat-button-toggle
+          value="month"
+          [class.view-toggle-active]="viewMode() === 'month'"
+          aria-label="Month view"
+        >
           <mat-icon>calendar_month</mat-icon>
           Month
         </mat-button-toggle>
@@ -37,11 +53,11 @@
 
   <!-- Empty State -->
   @if (!isLoading() && tasks().length === 0) {
-    <div class="empty-state">
-      <mat-icon>event_busy</mat-icon>
-      <h2>No tasks in timeline</h2>
-      <p>Add due dates to your tasks to see them in the timeline view</p>
-    </div>
+    <app-timeline-empty-state
+      [noDueDateCount]="noDueDateCount()"
+      [invalidDueDateCount]="invalidDueDateCount()"
+      (ctaClick)="onAddDueDateCta()"
+    ></app-timeline-empty-state>
   }
 
   <!-- Timeline Chart Container -->
