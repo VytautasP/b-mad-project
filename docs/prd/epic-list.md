@@ -12,4 +12,8 @@
 
 **Goal**: Complete the professional task management experience by adding multiple data visualization methods (sortable/filterable list view and visual Gantt timeline) and team collaboration features (comments, mentions, activity log) that enable teams to coordinate work and stakeholders to track progress without requiring status meetings.
 
+## Epic 4: UX-Friendly UI Refinement
+
+**Goal**: Improve usability, clarity, and workflow efficiency by introducing a dedicated Task Details page for complex workflows, a simplified Quick Inspect modal for fast checks, and strong accessibility, responsiveness, feedback, and performance UX foundations.
+
 ---

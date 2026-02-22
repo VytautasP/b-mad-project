@@ -1,5 +1,12 @@
 # Next Steps
 
+## Epic 4 Planning Reference
+
+- Epic 4 UX refinement backlog: [4.0-ux-friendly-ui-refinement-prioritized.md](./4.0-ux-friendly-ui-refinement-prioritized.md)
+- Individual implementation stories: [../stories/4.1-task-details-page-quick-inspect-modal-split.md](../stories/4.1-task-details-page-quick-inspect-modal-split.md) through [../stories/4.8-ux-performance-optimizations-dense-views.md](../stories/4.8-ux-performance-optimizations-dense-views.md)
+
+---
+
 ## UX Expert Prompt
 
 ```

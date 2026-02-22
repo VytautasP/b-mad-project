@@ -17,3 +17,4 @@
   - [12. Coding Standards](./12-coding-standards.md)
   - [13. Unified Project Structure](./13-unified-project-structure.md)
   - [14. Development Workflow](./14-development-workflow.md)
+  - [Epic 4 UX-Friendly UI Refinement Plan](../prd/4.0-ux-friendly-ui-refinement-prioritized.md)
