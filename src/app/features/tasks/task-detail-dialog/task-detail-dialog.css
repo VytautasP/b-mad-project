@@ -1,381 +1,138 @@
-/* ===== Dialog Container ===== */
 .task-detail-dialog {
-  min-width: 520px;
-  max-width: 700px;
+  min-width: 480px;
+  max-width: 640px;
 }
 
-/* ===== Header ===== */
 .dialog-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0;
   margin: 0 0 8px 0;
-  
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    min-width: 0;
-    
-    .header-icon {
-      color: #1976d2;
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
-      flex-shrink: 0;
-    }
-    
-    h2 {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 500;
-      line-height: 1.3;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-  
-  .close-button {
-    flex-shrink: 0;
-    margin-left: 8px;
-    color: rgba(0, 0, 0, 0.54);
-  }
 }
 
-/* ===== Content ===== */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.header-icon {
+  color: #1976d2;
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.header-left h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .dialog-content {
-  padding: 8px 0 0 0;
+  padding-top: 8px;
 }
 
-/* ===== Task Properties ===== */
-.task-properties {
-  margin-bottom: 20px;
-  
-  .property-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px 24px;
-    margin-bottom: 16px;
-  }
-  
-  .property-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  
-  .property-label {
-    font-size: 12px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: rgba(0, 0, 0, 0.5);
-  }
-  
-  .property-value {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 14px;
-    color: rgba(0, 0, 0, 0.87);
-  }
-  
-  .inline-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
-    color: rgba(0, 0, 0, 0.4);
-  }
-  
-  .status-chip,
-  .priority-chip {
-    font-size: 13px;
-    font-weight: 500;
-    max-width: fit-content;
-  }
-
-  .status-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-
-    mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-    }
-
-    &.status-todo {
-      background: #eceff1;
-      color: #455a64;
-    }
-
-    &.status-in-progress {
-      background: #e3f2fd;
-      color: #1565c0;
-    }
-
-    &.status-blocked {
-      background: #ffebee;
-      color: #c62828;
-    }
-
-    &.status-waiting {
-      background: #fff8e1;
-      color: #b28704;
-    }
-
-    &.status-done {
-      background: #e8f5e9;
-      color: #2e7d32;
-    }
-  }
-  
-  .description-block {
-    padding-top: 4px;
-    
-    .description-text {
-      margin: 6px 0 0 0;
-      font-size: 14px;
-      line-height: 1.6;
-      color: rgba(0, 0, 0, 0.75);
-      background: #fafafa;
-      border-radius: 8px;
-      padding: 12px 16px;
-      border-left: 3px solid #1976d2;
-    }
-  }
+.property-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
 }
 
-/* ===== Section Cards ===== */
-.section-card {
+.property-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.property-label {
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.property-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.inline-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+}
+
+.status-chip mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.status-chip.status-todo {
+  background: #eceff1;
+  color: #455a64;
+}
+
+.status-chip.status-in-progress {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.status-chip.status-blocked {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.status-chip.status-waiting {
+  background: #fff8e1;
+  color: #b28704;
+}
+
+.status-chip.status-done {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.description-block {
+  margin-top: 16px;
+}
+
+.description-text {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
   background: #fafafa;
   border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 16px;
-  border: 1px solid #e8e8e8;
+  padding: 10px 12px;
 }
 
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  
-  .section-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    
-    mat-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      color: #1976d2;
-    }
-    
-    h3 {
-      margin: 0;
-      font-size: 15px;
-      font-weight: 600;
-      color: rgba(0, 0, 0, 0.87);
-    }
-  }
-  
-  .section-action-btn {
-    font-size: 13px;
-    line-height: 32px;
-    height: 32px;
-    padding: 0 12px;
-    
-    mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      margin-right: 4px;
-    }
-  }
-}
-
-.loading-state {
-  display: flex;
-  justify-content: center;
-  padding: 20px;
-}
-
-.assignees-content {
-  min-height: 32px;
-}
-
-.user-picker-container {
-  margin-top: 12px;
-  padding: 12px;
-  background: white;
-  border-radius: 6px;
-  border: 1px dashed #ccc;
-}
-
-.empty-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 16px;
-  color: rgba(0, 0, 0, 0.4);
-  font-style: italic;
-  font-size: 14px;
-  
-  mat-icon {
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-  }
-}
-
-/* ===== Time Summary ===== */
-.time-summary-grid {
-  display: flex;
-  gap: 12px;
-  
-  .time-stat {
-    flex: 1;
-    background: white;
-    border-radius: 6px;
-    padding: 12px;
-    text-align: center;
-    border: 1px solid #e8e8e8;
-    
-    .time-stat-label {
-      display: block;
-      font-size: 11px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: rgba(0, 0, 0, 0.5);
-      margin-bottom: 4px;
-    }
-    
-    .time-stat-value {
-      display: block;
-      font-size: 18px;
-      font-weight: 600;
-      color: rgba(0, 0, 0, 0.87);
-    }
-    
-    &.total {
-      background: #e8eaf6;
-      border-color: #c5cae9;
-      
-      .time-stat-value {
-        color: #1976d2;
-      }
-    }
-  }
-}
-
-/* ===== Meta Section ===== */
-.meta-section {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  padding: 12px 0 4px 0;
-  border-top: 1px solid #e8e8e8;
-  
-  .meta-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  
-  .meta-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-    color: rgba(0, 0, 0, 0.35);
-  }
-  
-  .meta-text {
-    font-size: 12px;
-    color: rgba(0, 0, 0, 0.5);
-    
-    strong {
-      color: rgba(0, 0, 0, 0.7);
-      font-weight: 500;
-    }
-  }
-}
-
-/* ===== Dialog Actions ===== */
 .dialog-actions {
-  display: flex;
-  align-items: center;
-  padding: 12px 0 0 0;
-  gap: 8px;
-  
-  .close-action {
-    color: rgba(0, 0, 0, 0.6);
-  }
-  
-  .action-spacer {
-    flex: 1;
-  }
-  
-  .timer-indicator {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #1976d2;
-    font-size: 14px;
-    font-weight: 500;
-    padding: 6px 16px;
-    background: #e3f2fd;
-    border-radius: 20px;
-    
-    .timer-pulse {
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-  }
+  justify-content: flex-end;
+  padding-top: 12px;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-/* ===== Responsive ===== */
 @media (max-width: 600px) {
   .task-detail-dialog {
-    min-width: unset;
-    width: 100%;
+    min-width: 100%;
   }
-  
-  .task-properties .property-grid {
+
+  .property-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  
-  .time-summary-grid {
-    flex-direction: column;
-  }
-  
-  .section-header {
-    flex-wrap: wrap;
-    gap: 8px;
-    
-    .section-action-btn .btn-label {
-      display: none;
-    }
-  }
-  
-  .meta-section {
-    flex-direction: column;
-    gap: 8px;
-  }
-  
-  .dialog-actions {
-    flex-wrap: wrap;
   }
 }

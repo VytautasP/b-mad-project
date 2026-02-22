@@ -229,8 +229,12 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
     const dialogRef = this.dialog.open(TaskDetailDialog, {
       width: '800px',
       maxWidth: '95vw',
-      maxHeight: '90vh',
-      data: { task } as TaskDetailDialogData,
+      data: {
+        task,
+        openerElement: this.timelineContainer?.nativeElement ?? null
+      } as TaskDetailDialogData,
+      disableClose: true,
+      autoFocus: false,
       panelClass: 'task-detail-dialog'
     });
 

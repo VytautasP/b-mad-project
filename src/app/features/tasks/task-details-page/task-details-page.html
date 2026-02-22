@@ -1,0 +1,194 @@
+<div class="task-details-page">
+  <div class="page-header">
+    <button mat-button (click)="onBack()" class="back-button">
+      <mat-icon>arrow_back</mat-icon>
+      Back
+    </button>
+
+    @if (task(); as currentTask) {
+      <div class="title-block">
+        <h1>{{ currentTask.name }}</h1>
+        <p class="breadcrumbs">Tasks / {{ currentTask.name }}</p>
+      </div>
+    }
+  </div>
+
+  @if (isLoading()) {
+    <div class="loading-state page-loading">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  } @else if (task(); as currentTask) {
+    <div class="task-properties">
+      <div class="property-grid">
+        <div class="property-item">
+          <span class="property-label">Status</span>
+          <mat-chip class="status-chip" [ngClass]="getStatusClass(currentTask.status)">
+            <mat-icon>{{ getStatusIcon(currentTask.status) }}</mat-icon>
+            <span>{{ getStatusLabel(currentTask.status) }}</span>
+          </mat-chip>
+        </div>
+        <div class="property-item">
+          <span class="property-label">Priority</span>
+          <mat-chip class="priority-chip">{{ getPriorityLabel(currentTask.priority) }}</mat-chip>
+        </div>
+        <div class="property-item">
+          <span class="property-label">Type</span>
+          <span class="property-value">
+            <mat-icon class="inline-icon">category</mat-icon>
+            {{ getTypeLabel(currentTask.type) }}
+          </span>
+        </div>
+        <div class="property-item">
+          <span class="property-label">Due Date</span>
+          <span class="property-value">
+            <mat-icon class="inline-icon">event</mat-icon>
+            {{ formatDate(currentTask.dueDate) }}
+          </span>
+        </div>
+      </div>
+
+      @if (currentTask.description) {
+        <div class="description-block">
+          <span class="property-label">Description</span>
+          <p class="description-text">{{ currentTask.description }}</p>
+        </div>
+      }
+    </div>
+
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <mat-icon>group</mat-icon>
+          <h3>Assignees</h3>
+        </div>
+        <button mat-stroked-button color="primary" (click)="toggleUserPicker()" class="section-action-btn">
+          <mat-icon>person_add</mat-icon>
+          <span class="btn-label">Add</span>
+        </button>
+      </div>
+
+      @if (isLoadingAssignees()) {
+        <div class="loading-state">
+          <mat-spinner diameter="28"></mat-spinner>
+        </div>
+      } @else {
+        <div class="assignees-content">
+          <app-assignee-list
+            [assignees]="assignees()"
+            [maxVisible]="10"
+            [showActions]="true"
+            (removeAssignee)="onRemoveAssignee($event)">
+          </app-assignee-list>
+        </div>
+
+        @if (showUserPicker()) {
+          <div class="user-picker-container">
+            <app-user-picker
+              [excludedUserIds]="getExcludedUserIds()"
+              (userSelected)="onAddAssignee($event)">
+            </app-user-picker>
+          </div>
+        }
+      }
+    </section>
+
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <mat-icon>pie_chart</mat-icon>
+          <h3>Time Summary</h3>
+        </div>
+      </div>
+
+      @if (!hasChildrenTime() && currentTask.totalLoggedMinutes === 0) {
+        <div class="empty-section">
+          <mat-icon>hourglass_empty</mat-icon>
+          <span>No time logged yet</span>
+        </div>
+      } @else {
+        <div class="time-summary-grid">
+          <div class="time-stat">
+            <span class="time-stat-label">Direct</span>
+            <span class="time-stat-value">{{ formatDuration(currentTask.directLoggedMinutes) }}</span>
+          </div>
+          @if (hasChildrenTime()) {
+            <div class="time-stat">
+              <span class="time-stat-label">Subtasks</span>
+              <span class="time-stat-value">{{ formatDuration(currentTask.childrenLoggedMinutes) }}</span>
+            </div>
+          }
+          <div class="time-stat total">
+            <span class="time-stat-label">Total</span>
+            <span class="time-stat-value">{{ formatDuration(currentTask.totalLoggedMinutes) }}</span>
+          </div>
+        </div>
+      }
+    </section>
+
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <mat-icon>schedule</mat-icon>
+          <h3>Time Log</h3>
+        </div>
+        <button mat-stroked-button color="primary" (click)="onLogTime()" class="section-action-btn">
+          <mat-icon>add</mat-icon>
+          <span class="btn-label">Log Time</span>
+        </button>
+      </div>
+
+      <app-time-entry-list
+        #timeEntryList
+        [taskId]="currentTask.id"
+        (timeEntryDeleted)="onTimeEntryDeleted()">
+      </app-time-entry-list>
+    </section>
+
+    <section class="section-card">
+      <app-comment-thread [taskId]="currentTask.id" (activityChanged)="onCommentActivityChanged()"></app-comment-thread>
+    </section>
+
+    <section class="section-card">
+      <div class="section-header">
+        <div class="section-title">
+          <mat-icon>history</mat-icon>
+          <h3>Activity</h3>
+        </div>
+      </div>
+      <app-activity-log [taskId]="currentTask.id" [refreshToken]="activityRefreshVersion"></app-activity-log>
+    </section>
+
+    <section class="meta-section">
+      <div class="meta-item">
+        <mat-icon class="meta-icon">person</mat-icon>
+        <span class="meta-text">Created by <strong>{{ currentTask.createdByUserName }}</strong></span>
+      </div>
+      <div class="meta-item">
+        <mat-icon class="meta-icon">calendar_today</mat-icon>
+        <span class="meta-text">Created {{ currentTask.createdDate | date:'mediumDate' }}</span>
+      </div>
+      <div class="meta-item">
+        <mat-icon class="meta-icon">update</mat-icon>
+        <span class="meta-text">Updated {{ currentTask.modifiedDate | date:'mediumDate' }}</span>
+      </div>
+    </section>
+
+    <div class="page-actions">
+      @if (isTimerRunning()) {
+        <div class="timer-indicator" matTooltip="Timer is running for this task">
+          <mat-icon class="timer-pulse">timer</mat-icon>
+          <span>Timer Running</span>
+        </div>
+      } @else {
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="onStartTimer()"
+          [disabled]="isAnotherTimerRunning()">
+          <mat-icon>play_circle</mat-icon>
+          Start Timer
+        </button>
+      }
+    </div>
+  }
+</div>

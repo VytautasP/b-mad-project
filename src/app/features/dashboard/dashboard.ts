@@ -10,6 +10,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { AuthService } from '../../core/services/auth.service';
 import { TaskFormComponent } from '../tasks/task-form/task-form.component';
+import { TaskDetailDialog } from '../tasks/task-detail-dialog/task-detail-dialog';
 import { TaskListComponent } from '../tasks/task-list/task-list.component';
 import { TaskTreeComponent } from '../tasks/task-tree/task-tree.component';
 import { Task } from '../../shared/models/task.model';
@@ -57,19 +58,12 @@ export class DashboardComponent {
   }
 
   onTaskSelected(task: Task): void {
-    const dialogRef = this.dialog.open(TaskFormComponent, {
-      width: '600px',
+    this.dialog.open(TaskDetailDialog, {
+      width: '700px',
       maxWidth: '90vw',
+      disableClose: true,
+      autoFocus: false,
       data: { task }
-    });
-
-    dialogRef.componentInstance.taskUpdated.subscribe(() => {
-      this.snackBar.open('Task updated successfully!', 'Close', {
-        duration: 3000,
-        horizontalPosition: 'center',
-        verticalPosition: 'top'
-      });
-      dialogRef.close();
     });
   }
 

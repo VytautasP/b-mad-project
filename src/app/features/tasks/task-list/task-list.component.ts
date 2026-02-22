@@ -370,11 +370,15 @@ export class TaskListComponent implements OnInit, OnDestroy {
     return new Date(date).toLocaleDateString();
   }
 
-  onViewDetails(task: Task): void {
+  onViewDetails(task: Task, event?: Event): void {
+    const openerElement = event?.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+
     this.dialog.open(TaskDetailDialog, {
       width: '700px',
       maxWidth: '90vw',
-      data: { task }
+      disableClose: true,
+      autoFocus: false,
+      data: { task, openerElement }
     });
   }
 

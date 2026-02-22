@@ -47,7 +47,7 @@
           <ng-container matColumnDef="name">
             <mat-header-cell *matHeaderCellDef mat-sort-header>Task Name</mat-header-cell>
             <mat-cell *matCellDef="let task">
-              <div class="task-name" (click)="onViewDetails(task)" role="button" tabindex="0">
+              <div class="task-name" (click)="onViewDetails(task, $event)" role="button" tabindex="0">
                 <strong>{{ task.name }}</strong>
                 @if (task.description) {
                   <small>{{ task.description }}</small>
@@ -113,7 +113,7 @@
           <ng-container matColumnDef="actions">
             <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
             <mat-cell *matCellDef="let task">
-              <button mat-icon-button (click)="onViewDetails(task)" matTooltip="View details">
+              <button mat-icon-button (click)="onViewDetails(task, $event)" matTooltip="View details">
                 <mat-icon>visibility</mat-icon>
               </button>
               @if (isTimerRunning(task.id)) {
@@ -155,7 +155,7 @@
         @for (task of tasks(); track task.id) {
           <mat-card class="task-card">
             <mat-card-header>
-              <mat-card-title (click)="onViewDetails(task)" role="button">
+              <mat-card-title (click)="onViewDetails(task, $event)" role="button">
                 {{ task.name }}
               </mat-card-title>
             </mat-card-header>
