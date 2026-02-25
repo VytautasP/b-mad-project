@@ -94,7 +94,23 @@ describe('TimeEntryList', () => {
     it('should handle error loading time entries', () => {
       mockTimeTrackingService.getTaskTimeEntries.mockReturnValue(throwError(() => new Error('API Error')));
       component.ngOnInit();
-      expect(mockNotificationService.showError).toHaveBeenCalledWith('Failed to load time entries');
+      expect(component.hasLoadError()).toBe(true);
+      expect(component.isLoading()).toBe(false);
+    });
+
+    it('should retry loading time entries', () => {
+      mockTimeTrackingService.getTaskTimeEntries
+        .mockReturnValueOnce(throwError(() => new Error('API Error')))
+        .mockReturnValueOnce(of(mockTimeEntries));
+
+      component.ngOnInit();
+      expect(component.hasLoadError()).toBe(true);
+
+      component.onRetryLoadTimeEntries();
+
+      expect(mockTimeTrackingService.getTaskTimeEntries).toHaveBeenCalledTimes(2);
+      expect(component.hasLoadError()).toBe(false);
+      expect(component.timeEntries().length).toBe(2);
     });
   });
 

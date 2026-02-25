@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, inject, signal, OnInit, OnDestr
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { Subject, takeUntil } from 'rxjs';
 import { CommentService } from '../services/comment.service';
@@ -19,6 +20,7 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../sh
     CommonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatButtonModule,
     CommentItemComponent,
     CommentFormComponent
   ],
@@ -37,8 +39,9 @@ export class CommentThreadComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
 
   comments = signal<CommentResponseDto[]>([]);
-  isLoading = signal<boolean>(true);
+  isLoading = signal<boolean>(false);
   isSubmitting = signal<boolean>(false);
+  hasLoadError = signal<boolean>(false);
   currentUserId = '';
 
   ngOnInit(): void {
@@ -53,6 +56,11 @@ export class CommentThreadComponent implements OnInit, OnDestroy {
   }
 
   loadComments(): void {
+    if (this.isLoading()) {
+      return;
+    }
+
+    this.hasLoadError.set(false);
     this.isLoading.set(true);
     this.commentService.getTaskComments(this.taskId).pipe(
       takeUntil(this.destroy$)
@@ -60,17 +68,26 @@ export class CommentThreadComponent implements OnInit, OnDestroy {
       next: (comments) => {
         this.comments.set(comments);
         this.commentCountChange.emit(comments.length);
+        this.hasLoadError.set(false);
         this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load comments:', error);
-        this.notificationService.showError('Failed to load comments');
+        this.hasLoadError.set(true);
         this.isLoading.set(false);
       }
     });
   }
 
+  onRetryLoadComments(): void {
+    this.loadComments();
+  }
+
   onPostComment(event: { content: string; mentionedUserIds: string[] }): void {
+    if (this.isSubmitting()) {
+      return;
+    }
+
     this.isSubmitting.set(true);
     this.commentService.createComment(this.taskId, {
       content: event.content,

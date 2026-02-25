@@ -102,7 +102,23 @@ describe('ActivityLogComponent', () => {
   it('should stop loading flags on error', () => {
     mockService.getTaskActivity.mockReturnValueOnce(throwError(() => new Error('fail')));
     fixture.detectChanges();
+    expect(component.hasLoadError()).toBe(true);
     expect(component.isLoading()).toBe(false);
+  });
+
+  it('should retry initial load when retry is triggered', () => {
+    mockService.getTaskActivity
+      .mockReturnValueOnce(throwError(() => new Error('fail')))
+      .mockReturnValueOnce(of(pageOne));
+
+    fixture.detectChanges();
+    expect(component.hasLoadError()).toBe(true);
+
+    component.onRetryLoad();
+
+    expect(mockService.getTaskActivity).toHaveBeenCalledTimes(2);
+    expect(component.hasLoadError()).toBe(false);
+    expect(component.activities().length).toBe(1);
   });
 
   it('should reload when refresh token changes', () => {

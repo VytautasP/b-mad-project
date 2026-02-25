@@ -31,7 +31,8 @@ export class TimeEntryList implements OnInit {
   private readonly dialog = inject(MatDialog);
 
   timeEntries = signal<TimeEntryResponseDto[]>([]);
-  isLoading = signal(true);
+  isLoading = signal(false);
+  hasLoadError = signal(false);
   currentUserId: string | null = null;
 
   ngOnInit(): void {
@@ -40,6 +41,11 @@ export class TimeEntryList implements OnInit {
   }
 
   loadTimeEntries(): void {
+    if (this.isLoading()) {
+      return;
+    }
+
+    this.hasLoadError.set(false);
     this.isLoading.set(true);
     this.timeTrackingService.getTaskTimeEntries(this.taskId).subscribe({
       next: (entries) => {
@@ -48,14 +54,19 @@ export class TimeEntryList implements OnInit {
           new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime()
         );
         this.timeEntries.set(sortedEntries);
+        this.hasLoadError.set(false);
         this.isLoading.set(false);
       },
       error: (error) => {
         console.error('Failed to load time entries:', error);
-        this.notificationService.showError('Failed to load time entries');
+        this.hasLoadError.set(true);
         this.isLoading.set(false);
       }
     });
+  }
+
+  onRetryLoadTimeEntries(): void {
+    this.loadTimeEntries();
   }
 
   getTotalLoggedTime(): string {

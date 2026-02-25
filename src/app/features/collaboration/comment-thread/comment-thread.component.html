@@ -12,6 +12,15 @@
   @if (isLoading()) {
     <div class="loading-state">
       <mat-spinner diameter="28"></mat-spinner>
+      <span>Loading comments...</span>
+    </div>
+  } @else if (hasLoadError()) {
+    <div class="error-state" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <p>Couldn’t load comments right now.</p>
+      <button mat-stroked-button color="warn" (click)="onRetryLoadComments()">
+        Retry
+      </button>
     </div>
   } @else {
     @if (comments().length === 0) {

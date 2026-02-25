@@ -12,10 +12,16 @@
     <div class="loading-state">
       Loading time entries...
     </div>
+  } @else if (hasLoadError()) {
+    <div class="error-state" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <p>Couldn’t load time entries.</p>
+      <button mat-stroked-button color="warn" (click)="onRetryLoadTimeEntries()">Retry</button>
+    </div>
   } @else if (timeEntries().length === 0) {
     <div class="empty-state">
       <mat-icon>schedule</mat-icon>
-      <p>No time logged yet</p>
+      <p>No time has been logged for this task yet.</p>
     </div>
   } @else {
     <mat-list>

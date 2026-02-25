@@ -2,6 +2,13 @@
   @if (isLoading()) {
     <div class="loading-state">
       <mat-spinner diameter="28"></mat-spinner>
+      <span>Loading activity...</span>
+    </div>
+  } @else if (hasLoadError()) {
+    <div class="error-state" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>Couldn’t load activity right now.</span>
+      <button type="button" mat-stroked-button color="warn" (click)="onRetryLoad()">Retry</button>
     </div>
   } @else {
     @if (activities().length === 0) {
@@ -26,6 +33,13 @@
             <mat-spinner diameter="18"></mat-spinner>
           }
         </div>
+
+        @if (hasLoadMoreError()) {
+          <div class="load-more-error" role="alert">
+            <span>Failed to load more activity.</span>
+            <button type="button" mat-button color="warn" (click)="onRetryLoadMore()">Retry</button>
+          </div>
+        }
       }
     }
   }

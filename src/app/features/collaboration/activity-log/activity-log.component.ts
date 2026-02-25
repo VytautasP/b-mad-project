@@ -24,6 +24,8 @@ export class ActivityLogComponent implements OnInit, OnChanges {
   isLoading = signal(false);
   isLoadingMore = signal(false);
   hasMore = signal(false);
+  hasLoadError = signal(false);
+  hasLoadMoreError = signal(false);
 
   private page = 1;
   private readonly pageSize = 20;
@@ -66,10 +68,20 @@ export class ActivityLogComponent implements OnInit, OnChanges {
       return;
     }
 
+    if (reset && this.isLoading()) {
+      return;
+    }
+
+    if (!reset && this.isLoadingMore()) {
+      return;
+    }
+
     if (reset) {
       this.isLoading.set(true);
+      this.hasLoadError.set(false);
     } else {
       this.isLoadingMore.set(true);
+      this.hasLoadMoreError.set(false);
     }
 
     this.activityLogService.getTaskActivity(this.taskId, this.page, this.pageSize).subscribe({
@@ -77,16 +89,32 @@ export class ActivityLogComponent implements OnInit, OnChanges {
         const merged = reset ? result.items : [...this.activities(), ...result.items];
         this.activities.set(this.sortByTimestampDesc(merged));
         this.hasMore.set(result.hasNextPage);
+        this.hasLoadError.set(false);
+        this.hasLoadMoreError.set(false);
         this.isLoading.set(false);
         this.isLoadingMore.set(false);
       },
       error: (error) => {
         console.error('Failed to load activity log:', error);
+        if (reset) {
+          this.hasLoadError.set(true);
+        } else {
+          this.hasLoadMoreError.set(true);
+          this.page = Math.max(1, this.page - 1);
+        }
         this.isLoading.set(false);
         this.isLoadingMore.set(false);
-        this.hasMore.set(false);
+        this.hasMore.set(this.activities().length > 0);
       }
     });
+  }
+
+  onRetryLoad(): void {
+    this.resetAndLoad();
+  }
+
+  onRetryLoadMore(): void {
+    this.onLoadMore();
   }
 
   private sortByTimestampDesc(items: ActivityLog[]): ActivityLog[] {

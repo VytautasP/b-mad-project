@@ -155,7 +155,7 @@ describe('CommentThreadComponent', () => {
   });
 
   it('should show loading state during fetch', () => {
-    expect(component.isLoading()).toBe(true);
+    expect(component.isLoading()).toBe(false);
     fixture.detectChanges();
     expect(component.isLoading()).toBe(false);
   });
@@ -163,8 +163,23 @@ describe('CommentThreadComponent', () => {
   it('should handle load error', () => {
     mockCommentService.getTaskComments.mockReturnValue(throwError(() => new Error('fail')));
     fixture.detectChanges();
-    expect(mockNotificationService.showError).toHaveBeenCalledWith('Failed to load comments');
+    expect(component.hasLoadError()).toBe(true);
     expect(component.isLoading()).toBe(false);
+  });
+
+  it('should retry comments load from inline retry action', () => {
+    mockCommentService.getTaskComments
+      .mockReturnValueOnce(throwError(() => new Error('fail')))
+      .mockReturnValueOnce(of(mockComments));
+
+    fixture.detectChanges();
+    expect(component.hasLoadError()).toBe(true);
+
+    component.onRetryLoadComments();
+
+    expect(mockCommentService.getTaskComments).toHaveBeenCalledTimes(2);
+    expect(component.hasLoadError()).toBe(false);
+    expect(component.comments().length).toBe(2);
   });
 
   it('should emit commentCountChange on load', () => {
