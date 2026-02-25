@@ -371,6 +371,34 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
     return task.status !== TaskStatus.Done;
   }
 
+  canAdjustTaskDate(task: Task): boolean {
+    if (!task.dueDate) {
+      return false;
+    }
+
+    return this.isTaskDraggable(task);
+  }
+
+  async moveTaskByDays(task: Task, dayDelta: number): Promise<void> {
+    if (!this.canAdjustTaskDate(task) || this.isUpdating()) {
+      return;
+    }
+
+    const currentDueDate = new Date(task.dueDate as Date | string);
+    if (Number.isNaN(currentDueDate.getTime())) {
+      this.showError('Task due date is invalid and cannot be adjusted');
+      return;
+    }
+
+    const nextDueDate = new Date(currentDueDate);
+    nextDueDate.setDate(nextDueDate.getDate() + dayDelta);
+
+    const success = await this.onTaskDragEnd(task.id, new Date(task.createdDate), nextDueDate);
+    if (success) {
+      this.loadTimelineData(this.startDate, this.endDate);
+    }
+  }
+
   /**
    * Show error message
    */

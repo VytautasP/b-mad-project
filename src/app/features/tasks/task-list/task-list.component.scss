@@ -18,6 +18,11 @@
     gap: 16px;
     margin-bottom: 16px;
     flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #fff;
+    padding: 8px 0;
   }
 
   .header-actions {
@@ -240,6 +245,8 @@
         }
 
         button {
+          min-width: 44px;
+          min-height: 44px;
           &:hover {
             opacity: 0.8;
           }
@@ -311,10 +318,15 @@
       mat-card-actions {
         display: flex;
         justify-content: flex-end;
+        align-items: center;
+        flex-wrap: wrap;
         padding: 8px 16px;
         gap: 8px;
         
-        button, mat-icon {
+        button,
+        mat-icon {
+          min-width: 44px;
+          min-height: 44px;
           &:hover {
             opacity: 0.8;
           }
@@ -333,7 +345,7 @@
 }
 
 // Responsive breakpoints
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .task-list-container {
     padding: 16px;
 
@@ -356,6 +368,28 @@
     
     .mobile-view {
       display: block;
+    }
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .task-list-container {
+    .desktop-view {
+      .task-table {
+        .mat-column-assignees,
+        .mat-column-priority,
+        .mat-column-timeLogged {
+          display: none;
+        }
+
+        .mat-column-name {
+          min-width: 220px;
+        }
+
+        .mat-column-actions {
+          min-width: 160px;
+        }
+      }
     }
   }
 }

@@ -181,12 +181,11 @@
               }
               <div class="task-details">
                 <div class="detail-row">
-                  <span class="label">Assignees:</span>
-                  <app-assignee-list 
-                    [assignees]="task.assignees || []"
-                    [maxVisible]="2"
-                    [showActions]="false">
-                  </app-assignee-list>
+                  <span class="label">Status:</span>
+                  <div [class]="getStatusBadgeClass(task.status)">
+                    <mat-icon>{{ getStatusIcon(task.status) }}</mat-icon>
+                    <span>{{ getStatusLabel(task.status) }}</span>
+                  </div>
                 </div>
                 <div class="detail-row">
                   <span class="label">Due Date:</span>
@@ -202,22 +201,27 @@
                   </span>
                 </div>
                 <div class="detail-row">
+                  <span class="label">Assignees:</span>
+                  <app-assignee-list 
+                    [assignees]="task.assignees || []"
+                    [maxVisible]="2"
+                    [showActions]="false">
+                  </app-assignee-list>
+                </div>
+                <div class="detail-row">
                   <span class="label">Priority:</span>
                   <div class="priority-indicator" [ngClass]="getPriorityClass(task.priority)">
                     <mat-icon>{{ getPriorityIcon(task.priority) }}</mat-icon>
                     <span>{{ getPriorityLabel(task.priority) }}</span>
                   </div>
                 </div>
-                <div class="detail-row">
-                  <span class="label">Status:</span>
-                  <div [class]="getStatusBadgeClass(task.status)">
-                    <mat-icon>{{ getStatusIcon(task.status) }}</mat-icon>
-                    <span>{{ getStatusLabel(task.status) }}</span>
-                  </div>
-                </div>
               </div>
             </mat-card-content>
             <mat-card-actions>
+              <button mat-stroked-button (click)="onViewDetails(task, $event)" aria-label="View details">
+                <mat-icon>visibility</mat-icon>
+                View
+              </button>
               @if (isTimerRunning(task.id)) {
                 <mat-icon class="timer-running-icon" matTooltip="Timer Running" color="accent">timer</mat-icon>
               } @else {

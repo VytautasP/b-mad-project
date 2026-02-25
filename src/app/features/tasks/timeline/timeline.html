@@ -64,6 +64,42 @@
   @if (!isLoading() && tasks().length > 0) {
     <div class="timeline-wrapper">
       <div #timelineContainer class="timeline-chart"></div>
+
+      @if (isMobile()) {
+        <section class="timeline-touch-controls" aria-label="Timeline date controls">
+          <h2>Adjust dates without drag</h2>
+          <div class="touch-task-list">
+            @for (task of tasks(); track task.id) {
+              <article class="touch-task-item">
+                <div class="touch-task-meta">
+                  <strong>{{ task.name }}</strong>
+                  <span>{{ getStatusLabel(task.status) }} • {{ task.dueDate | date:'mediumDate' }}</span>
+                </div>
+                <div class="touch-actions">
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="moveTaskByDays(task, -1)"
+                    [disabled]="!canAdjustTaskDate(task) || isUpdating()"
+                    aria-label="Move due date one day earlier">
+                    <mat-icon>remove</mat-icon>
+                    1 day
+                  </button>
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="moveTaskByDays(task, 1)"
+                    [disabled]="!canAdjustTaskDate(task) || isUpdating()"
+                    aria-label="Move due date one day later">
+                    <mat-icon>add</mat-icon>
+                    1 day
+                  </button>
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      }
     </div>
   }
 </div>
