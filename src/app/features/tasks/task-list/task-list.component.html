@@ -60,7 +60,7 @@
           <ng-container matColumnDef="name">
             <mat-header-cell *matHeaderCellDef mat-sort-header>Task Name</mat-header-cell>
             <mat-cell *matCellDef="let task">
-              <div class="task-name" (click)="onViewDetails(task, $event)" role="button" tabindex="0">
+              <div class="task-name" (click)="onViewDetails(task, $event)" (keydown.enter)="onViewDetails(task, $event)" (keydown.space)="onViewDetails(task, $event)" role="button" tabindex="0">
                 <strong>{{ task.name }}</strong>
                 @if (task.description) {
                   <small>{{ task.description }}</small>
@@ -127,7 +127,7 @@
             <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
             <mat-cell *matCellDef="let task">
               <div class="action-buttons">
-                <button mat-icon-button (click)="onViewDetails(task, $event)" matTooltip="View details">
+                <button mat-icon-button (click)="onViewDetails(task, $event)" matTooltip="View details" aria-label="View details">
                   <mat-icon>visibility</mat-icon>
                 </button>
                 @if (isTimerRunning(task.id)) {
@@ -136,14 +136,15 @@
                   <button mat-icon-button 
                           (click)="onStartTimer(task)" 
                           matTooltip="Start Timer"
+                          aria-label="Start Timer"
                           [disabled]="isAnotherTimerRunning(task.id)">
                     <mat-icon>schedule</mat-icon>
                   </button>
                 }
-                <button mat-icon-button (click)="onEdit(task)" matTooltip="Edit task" color="primary">
+                <button mat-icon-button (click)="onEdit(task)" matTooltip="Edit task" color="primary" aria-label="Edit task">
                   <mat-icon>edit</mat-icon>
                 </button>
-                <button mat-icon-button (click)="onDelete(task)" matTooltip="Delete task" color="warn">
+                <button mat-icon-button (click)="onDelete(task)" matTooltip="Delete task" color="warn" aria-label="Delete task">
                   <mat-icon>delete</mat-icon>
                 </button>
               </div>
@@ -170,7 +171,7 @@
         @for (task of tasks(); track task.id) {
           <mat-card class="task-card">
             <mat-card-header>
-              <mat-card-title (click)="onViewDetails(task, $event)" role="button">
+              <mat-card-title (click)="onViewDetails(task, $event)" role="button" tabindex="0" (keydown.enter)="onViewDetails(task, $event)" (keydown.space)="onViewDetails(task, $event)">
                 {{ task.name }}
               </mat-card-title>
             </mat-card-header>
@@ -223,14 +224,15 @@
                 <button mat-icon-button 
                         (click)="onStartTimer(task)" 
                         matTooltip="Start Timer"
+                        aria-label="Start Timer"
                         [disabled]="isAnotherTimerRunning(task.id)">
                   <mat-icon>schedule</mat-icon>
                 </button>
               }
-              <button mat-icon-button (click)="onEdit(task)" matTooltip="Edit task" color="primary">
+              <button mat-icon-button (click)="onEdit(task)" matTooltip="Edit task" color="primary" aria-label="Edit task">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button (click)="onDelete(task)" matTooltip="Delete task" color="warn">
+              <button mat-icon-button (click)="onDelete(task)" matTooltip="Delete task" color="warn" aria-label="Delete task">
                 <mat-icon>delete</mat-icon>
               </button>
             </mat-card-actions>

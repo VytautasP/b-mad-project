@@ -25,7 +25,7 @@
                  (cdkDragEnded)="onDragEnd()"
                  [class.dragging]="draggedNode && draggedNode.task.id === node.task.id"
                  class="node-drag-handle">
-              <button mat-icon-button disabled></button>
+              <button mat-icon-button disabled aria-label="Drag handle"></button>
               <div class="tree-node-content"
                    [class.valid-drop-target]="isValidDropTarget(node) && dropTargetNode && dropTargetNode.task.id === node.task.id"
                    [class.invalid-drop-target]="!isValidDropTarget(node) && dropTargetNode && dropTargetNode.task.id === node.task.id"
@@ -34,7 +34,7 @@
                 <mat-icon class="status-icon" [ngClass]="getStatusClass(node.task.status)">
                   {{ getStatusIcon(node.task.status) }}
                 </mat-icon>
-                <span class="task-name" (click)="onTaskClick(node.task)">{{ node.task.name }}</span>
+                <span class="task-name" (click)="onTaskClick(node.task)" (keydown.enter)="onTaskClick(node.task)" (keydown.space)="onTaskClick(node.task)" role="button" tabindex="0">{{ node.task.name }}</span>
                 <mat-icon class="priority-icon" [ngClass]="getPriorityClass(node.task.priority)">
                   {{ getPriorityIcon(node.task.priority) }}
                 </mat-icon>
@@ -70,7 +70,7 @@
                 <mat-icon class="status-icon" [ngClass]="getStatusClass(node.task.status)">
                   {{ getStatusIcon(node.task.status) }}
                 </mat-icon>
-                <span class="task-name" (click)="onTaskClick(node.task)">{{ node.task.name }}</span>
+                <span class="task-name" (click)="onTaskClick(node.task)" (keydown.enter)="onTaskClick(node.task)" (keydown.space)="onTaskClick(node.task)" role="button" tabindex="0">{{ node.task.name }}</span>
                 <mat-icon class="priority-icon" [ngClass]="getPriorityClass(node.task.priority)">
                   {{ getPriorityIcon(node.task.priority) }}
                 </mat-icon>

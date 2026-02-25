@@ -119,7 +119,7 @@ describe('TimerWidgetComponent', () => {
     timerStateSubject.next(runningState);
     fixture.detectChanges();
 
-    const pauseButton = fixture.nativeElement.querySelector('[matTooltip="Pause Timer"]');
+    const pauseButton = fixture.nativeElement.querySelector('[aria-label="Pause Timer"]');
     expect(pauseButton).toBeTruthy();
   });
 
@@ -135,7 +135,7 @@ describe('TimerWidgetComponent', () => {
     timerStateSubject.next(pausedState);
     fixture.detectChanges();
 
-    const resumeButton = fixture.nativeElement.querySelector('[matTooltip="Resume Timer"]');
+    const resumeButton = fixture.nativeElement.querySelector('[aria-label="Resume Timer"]');
     expect(resumeButton).toBeTruthy();
   });
 

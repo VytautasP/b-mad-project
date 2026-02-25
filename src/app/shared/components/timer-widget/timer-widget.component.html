@@ -13,16 +13,16 @@
         </div>
         <div class="timer-actions">
           @if (!currentState.isPaused) {
-            <button mat-icon-button (click)="onPause()" matTooltip="Pause Timer">
+            <button mat-icon-button (click)="onPause()" matTooltip="Pause Timer" aria-label="Pause Timer">
               <mat-icon>pause</mat-icon>
             </button>
           }
           @if (currentState.isPaused) {
-            <button mat-icon-button (click)="onResume()" matTooltip="Resume Timer">
+            <button mat-icon-button (click)="onResume()" matTooltip="Resume Timer" aria-label="Resume Timer">
               <mat-icon>play_arrow</mat-icon>
             </button>
           }
-          <button mat-icon-button (click)="onStop()" matTooltip="Stop Timer" color="warn">
+          <button mat-icon-button (click)="onStop()" matTooltip="Stop Timer" color="warn" aria-label="Stop Timer">
             <mat-icon>stop</mat-icon>
           </button>
         </div>

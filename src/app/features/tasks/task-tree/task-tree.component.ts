@@ -388,8 +388,7 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
    * Handle mouse leave from node
    */
   onNodeMouseLeave(): void {
-    // Don't clear drop target during drag - let it persist until drop or drag end
-    // Only clear visual feedback, keep the target for drop processing
+    this.dropTargetNode = null;
   }
 
   /**

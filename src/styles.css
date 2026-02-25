@@ -77,3 +77,44 @@ html, body {
   overflow: auto;
   font-size: 12px;
 }
+
+/* Accessibility Baseline (WCAG 2.2 AA) */
+
+/* 3. Consistent focus indicators */
+*:focus-visible {
+  outline: 2px solid #3f51b5 !important; /* Primary color for focus */
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(63, 81, 181, 0.2) !important;
+}
+
+/* 4. Minimum touch target size (44x44px) for interactive controls on mobile/tablet */
+@media (max-width: 768px) {
+  button, 
+  a, 
+  input[type="checkbox"], 
+  input[type="radio"], 
+  .mat-mdc-icon-button,
+  .mat-mdc-button,
+  .mat-mdc-raised-button,
+  .mat-mdc-outlined-button {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+  
+  /* Ensure mat-icon-button touch target is centered */
+  .mat-mdc-icon-button {
+    padding: 10px !important;
+  }
+}
+
+/* 1. Contrast improvements */
+.text-gray-400 {
+  color: #595959 !important; /* Darker gray for better contrast */
+}
+.text-gray-500 {
+  color: #4b5563 !important; /* Ensure gray-500 meets contrast */
+}
+.bg-gray-100 {
+  background-color: #f3f4f6 !important;
+}
+

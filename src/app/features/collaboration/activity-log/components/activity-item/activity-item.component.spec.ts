@@ -54,6 +54,9 @@ describe('ActivityItemComponent', () => {
     };
     fixture.detectChanges();
 
+    // Need to trigger change detection again to render the toggle button
+    fixture.detectChanges();
+
     component.toggleDetails();
     fixture.detectChanges();
 
