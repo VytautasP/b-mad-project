@@ -55,7 +55,7 @@
     } @else {
       <!-- Desktop view: Table with sorting -->
       <div class="desktop-view">
-        <mat-table [dataSource]="tasks()" matSort (matSortChange)="onSortChange($event)" class="task-table">
+        <mat-table [dataSource]="tasks()" [trackBy]="trackByTaskId" matSort (matSortChange)="onSortChange($event)" class="task-table">
           <!-- Name Column -->
           <ng-container matColumnDef="name">
             <mat-header-cell *matHeaderCellDef mat-sort-header>Task Name</mat-header-cell>

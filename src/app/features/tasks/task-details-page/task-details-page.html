@@ -68,8 +68,10 @@
       </div>
 
       @if (isLoadingAssignees()) {
-        <div class="loading-state">
-          <mat-spinner diameter="28"></mat-spinner>
+        <div class="section-skeleton" aria-label="Loading assignees">
+          <div class="skeleton-line skeleton-title"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line skeleton-short"></div>
         </div>
       } @else {
         <div class="assignees-content">
@@ -145,7 +147,16 @@
     </section>
 
     <section class="section-card">
-      <app-comment-thread [taskId]="currentTask.id" (activityChanged)="onCommentActivityChanged()"></app-comment-thread>
+      @if (showDeferredSections()) {
+        <app-comment-thread [taskId]="currentTask.id" (activityChanged)="onCommentActivityChanged()"></app-comment-thread>
+      } @else {
+        <div class="section-skeleton" aria-label="Loading comments">
+          <div class="skeleton-line skeleton-title"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line skeleton-short"></div>
+        </div>
+      }
     </section>
 
     <section class="section-card">
@@ -155,7 +166,15 @@
           <h3>Activity</h3>
         </div>
       </div>
-      <app-activity-log [taskId]="currentTask.id" [refreshToken]="activityRefreshVersion"></app-activity-log>
+      @if (showDeferredActivity()) {
+        <app-activity-log [taskId]="currentTask.id" [refreshToken]="activityRefreshVersion"></app-activity-log>
+      } @else {
+        <div class="section-skeleton" aria-label="Loading activity">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line skeleton-short"></div>
+        </div>
+      }
     </section>
 
     <section class="meta-section">

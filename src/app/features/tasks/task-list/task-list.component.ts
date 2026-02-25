@@ -19,8 +19,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatBadgeModule } from '@angular/material/badge';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Observable, Subject } from 'rxjs';
-import { map, debounceTime, distinctUntilChanged, takeUntil, take } from 'rxjs/operators';
+import { Subject, Subscription } from 'rxjs';
+import { takeUntil, take } from 'rxjs/operators';
 import { TaskService } from '../services/task.service';
 import { Task, TaskPriority, TaskStatus, TaskType, TaskFilters, PaginatedResult } from '../../../shared/models/task.model';
 import { TaskFormComponent } from '../task-form/task-form.component';
@@ -70,6 +70,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroy$ = new Subject<void>();
+  private loadSubscription?: Subscription;
   
   @ViewChild(MatSort) sort?: MatSort;
   @ViewChild(MatPaginator) paginator?: MatPaginator;
@@ -118,6 +119,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   }
   
   ngOnDestroy(): void {
+    this.loadSubscription?.unsubscribe();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -193,9 +195,10 @@ export class TaskListComponent implements OnInit, OnDestroy {
   }
 
   loadTasks(): void {
+    this.loadSubscription?.unsubscribe();
     this.isLoading.set(true);
     
-    this.taskService.getTasksPaginated(
+    this.loadSubscription = this.taskService.getTasksPaginated(
       this.filters,
       this.sortBy,
       this.sortOrder,
@@ -217,6 +220,10 @@ export class TaskListComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  trackByTaskId(_index: number, task: Task): string {
+    return task.id;
   }
 
   onFiltersChanged(filters: TaskFilters): void {

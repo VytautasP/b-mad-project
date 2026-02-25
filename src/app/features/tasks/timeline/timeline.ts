@@ -54,6 +54,7 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
   invalidDueDateCount = signal(0);
   
   private timelineInstance?: Timeline;
+  private timelineDataSet = new DataSet<any>([]);
   private startDate: Date = new Date();
   private endDate: Date = new Date();
 
@@ -87,6 +88,11 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+
+    if (this.timelineInstance) {
+      this.timelineInstance.destroy();
+      this.timelineInstance = undefined;
+    }
   }
 
   /**
@@ -110,11 +116,11 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
           this.tasks.set(validTimelineTasks);
           this.isLoading.set(false);
           
-          console.log('Timeline tasks loaded:', validTimelineTasks.length);
-          
-          // Initialize or refresh Timeline after data loads
           if (validTimelineTasks.length > 0) {
-            setTimeout(() => this.initializeTimeline(), 0);
+            this.initializeTimeline();
+          } else if (this.timelineInstance) {
+            this.timelineDataSet.clear();
+            this.timelineInstance.redraw();
           }
         },
         error: (error) => {
@@ -180,10 +186,13 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    console.log('Initializing Timeline with tasks:', timelineItems);
+    this.timelineDataSet.clear();
+    this.timelineDataSet.add(timelineItems);
 
-    // Create DataSet
-    const items = new DataSet(timelineItems);
+    if (this.timelineInstance) {
+      this.timelineInstance.redraw();
+      return;
+    }
 
     // Timeline options
     const options: any = {
@@ -236,13 +245,7 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     try {
-      // Destroy existing timeline if it exists
-      if (this.timelineInstance) {
-        this.timelineInstance.destroy();
-      }
-      
-      // Create new timeline
-      this.timelineInstance = new Timeline(container, items, options);
+      this.timelineInstance = new Timeline(container, this.timelineDataSet, options);
       
       // Register click event handler
       this.timelineInstance.on('click', (properties) => {
@@ -251,10 +254,7 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
       
-      console.log('Timeline initialized successfully');
-      
-      // Fit to view based on current view mode
-      setTimeout(() => this.fitTimelineToView(), 100);
+      this.fitTimelineToView(false);
     } catch (error) {
       console.error('Failed to initialize Timeline:', error);
     }
@@ -499,13 +499,13 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
     // Persist zoom level in session storage
     sessionStorage.setItem('timeline-zoom', mode);
     
-    this.fitTimelineToView();
+    this.fitTimelineToView(true);
   }
 
   /**
    * Fit timeline to appropriate view range
    */
-  private fitTimelineToView(): void {
+  private fitTimelineToView(animate: boolean): void {
     if (!this.timelineInstance) {
       return;
     }
@@ -532,7 +532,7 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
         end = this.endDate;
     }
 
-    this.timelineInstance.setWindow(start, end, { animation: true });
+    this.timelineInstance.setWindow(start, end, { animation: animate });
   }
 
   /**

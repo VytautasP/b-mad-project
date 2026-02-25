@@ -59,8 +59,12 @@ export class TaskDetailsPageComponent implements OnInit, OnDestroy {
   showUserPicker = signal(false);
   isLoading = signal(true);
   isLoadingAssignees = signal(false);
+  showDeferredSections = signal(false);
+  showDeferredActivity = signal(false);
   currentTimerState: TimerState | null = null;
   activityRefreshVersion = 0;
+  private deferredSectionsTimerId?: ReturnType<typeof setTimeout>;
+  private deferredActivityTimerId?: ReturnType<typeof setTimeout>;
 
   TaskPriority = TaskPriority;
   TaskStatus = TaskStatus;
@@ -87,18 +91,24 @@ export class TaskDetailsPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.clearDeferredTimers();
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   private loadTask(taskId: string): void {
     this.isLoading.set(true);
+    this.showDeferredSections.set(false);
+    this.showDeferredActivity.set(false);
+    this.clearDeferredTimers();
+
     this.taskService.getTaskById(taskId).subscribe({
       next: (task) => {
         this.task.set(task);
         this.assignees.set(task.assignees || []);
         this.isLoading.set(false);
         this.loadAssignees();
+        this.queueDeferredSections();
       },
       error: () => {
         this.notificationService.showError('Failed to load task details.');
@@ -357,5 +367,29 @@ export class TaskDetailsPageComponent implements OnInit, OnDestroy {
 
   private triggerActivityRefresh(): void {
     this.activityRefreshVersion += 1;
+  }
+
+  private queueDeferredSections(): void {
+    this.clearDeferredTimers();
+
+    this.deferredSectionsTimerId = setTimeout(() => {
+      this.showDeferredSections.set(true);
+    }, 120);
+
+    this.deferredActivityTimerId = setTimeout(() => {
+      this.showDeferredActivity.set(true);
+    }, 260);
+  }
+
+  private clearDeferredTimers(): void {
+    if (this.deferredSectionsTimerId) {
+      clearTimeout(this.deferredSectionsTimerId);
+      this.deferredSectionsTimerId = undefined;
+    }
+
+    if (this.deferredActivityTimerId) {
+      clearTimeout(this.deferredActivityTimerId);
+      this.deferredActivityTimerId = undefined;
+    }
   }
 }

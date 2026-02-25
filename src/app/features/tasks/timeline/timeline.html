@@ -45,9 +45,19 @@
 
   <!-- Loading State -->
   @if (isLoading() && tasks().length === 0) {
-    <div class="loading-container">
-      <mat-spinner></mat-spinner>
-      <p>Loading timeline...</p>
+    <div class="timeline-skeleton" aria-label="Loading timeline">
+      <div class="skeleton-header">
+        <span class="skeleton-line skeleton-title"></span>
+        <span class="skeleton-line skeleton-short"></span>
+      </div>
+      <div class="skeleton-lanes">
+        @for (lane of [1, 2, 3, 4, 5, 6]; track lane) {
+          <div class="skeleton-lane">
+            <span class="skeleton-line"></span>
+            <span class="skeleton-bar"></span>
+          </div>
+        }
+      </div>
     </div>
   }
 
