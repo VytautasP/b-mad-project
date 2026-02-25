@@ -9,6 +9,17 @@ html, body {
   font-family: Roboto, "Helvetica Neue", sans-serif;
 }
 
+:root {
+  --motion-duration-view-switch: 150ms;
+  --motion-duration-feedback: 120ms;
+  --motion-duration-dialog-enter: 160ms;
+  --motion-duration-dialog-exit: 120ms;
+  --motion-duration-toast-enter: 180ms;
+  --motion-duration-toast-exit: 120ms;
+  --motion-ease-standard: ease-out;
+  --motion-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+}
+
 /* Frappe Gantt base styles */
 .gantt .bar-wrapper {
   cursor: pointer;
@@ -18,7 +29,7 @@ html, body {
   fill: #b8c2cc;
   stroke: #8D99A6;
   stroke-width: 0;
-  transition: stroke-width 0.3s ease;
+  transition: stroke-width var(--motion-duration-feedback) var(--motion-ease-standard);
   user-select: none;
 }
 
@@ -43,6 +54,56 @@ html, body {
 .gantt .bar-wrapper:hover .bar {
   stroke-width: 2;
   opacity: 0.9;
+}
+
+.quick-inspect-dialog-panel {
+  animation: quick-inspect-enter var(--motion-duration-dialog-enter) var(--motion-ease-emphasized);
+}
+
+@keyframes quick-inspect-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.mat-mdc-snack-bar-container {
+  animation: toast-in var(--motion-duration-toast-enter) var(--motion-ease-standard);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mat-mdc-snack-bar-container.success-snackbar {
+  --mdc-snackbar-container-color: #2e7d32;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+  --mat-mdc-snack-bar-button-color: #ffffff;
+}
+
+.mat-mdc-snack-bar-container.error-snackbar {
+  --mdc-snackbar-container-color: #c62828;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+  --mat-mdc-snack-bar-button-color: #ffffff;
+}
+
+.mat-mdc-snack-bar-container.info-snackbar {
+  --mdc-snackbar-container-color: #1565c0;
+  --mdc-snackbar-supporting-text-color: #ffffff;
+  --mat-mdc-snack-bar-button-color: #ffffff;
 }
 
 .gantt .bar-wrapper .handle {
@@ -116,5 +177,25 @@ html, body {
 }
 .bg-gray-100 {
   background-color: #f3f4f6 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-view-switch: 1ms;
+    --motion-duration-feedback: 1ms;
+    --motion-duration-dialog-enter: 1ms;
+    --motion-duration-dialog-exit: 1ms;
+    --motion-duration-toast-enter: 1ms;
+    --motion-duration-toast-exit: 1ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 

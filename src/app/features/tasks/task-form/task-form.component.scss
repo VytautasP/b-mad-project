@@ -11,6 +11,22 @@
   .full-width {
     width: 100%;
     margin-bottom: 16px;
+
+    ::ng-deep .mdc-notched-outline__leading,
+    ::ng-deep .mdc-notched-outline__notch,
+    ::ng-deep .mdc-notched-outline__trailing {
+      transition: border-color var(--motion-duration-feedback) var(--motion-ease-standard);
+    }
+
+    ::ng-deep .mat-mdc-form-field-error-wrapper {
+      transition: opacity var(--motion-duration-feedback) var(--motion-ease-standard),
+        transform var(--motion-duration-feedback) var(--motion-ease-standard);
+      transform-origin: top;
+    }
+
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      transition: opacity var(--motion-duration-feedback) var(--motion-ease-standard);
+    }
   }
   
   .error-message {
@@ -19,6 +35,8 @@
     padding: 12px;
     border-radius: 4px;
     margin-bottom: 16px;
+    transition: opacity var(--motion-duration-feedback) var(--motion-ease-standard),
+      transform var(--motion-duration-feedback) var(--motion-ease-standard);
   }
   
   .form-actions {

@@ -40,12 +40,16 @@
 
     <!-- Task List View -->
     @if (viewMode() === 'list') {
-      <app-task-list></app-task-list>
+      <section class="view-shell" @viewSwitch>
+        <app-task-list></app-task-list>
+      </section>
     }
 
     <!-- Task Tree View -->
     @if (viewMode() === 'tree') {
-      <app-task-tree (taskSelected)="onTaskSelected($event)"></app-task-tree>
+      <section class="view-shell" @viewSwitch>
+        <app-task-tree (taskSelected)="onTaskSelected($event)"></app-task-tree>
+      </section>
     }
   </div>
 </div>

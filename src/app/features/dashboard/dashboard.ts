@@ -15,6 +15,8 @@ import { TaskDetailDialog } from '../tasks/task-detail-dialog/task-detail-dialog
 import { TaskListComponent } from '../tasks/task-list/task-list.component';
 import { TaskTreeComponent } from '../tasks/task-tree/task-tree.component';
 import { Task } from '../../shared/models/task.model';
+import { getDialogAnimationDurations } from '../../shared/utils/motion.utils';
+import { animate, style, transition, trigger } from '@angular/animations';
 
 @Component({
   selector: 'app-dashboard',
@@ -32,6 +34,17 @@ import { Task } from '../../shared/models/task.model';
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
+  animations: [
+    trigger('viewSwitch', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(4px)' }),
+        animate('150ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ]),
+      transition(':leave', [
+        animate('120ms ease-out', style({ opacity: 0 }))
+      ])
+    ])
+  ]
 })
 export class DashboardComponent implements OnInit {
   private readonly authService = inject(AuthService);
@@ -64,6 +77,7 @@ export class DashboardComponent implements OnInit {
     const dialogRef = this.dialog.open(TaskFormComponent, {
       width: '600px',
       maxWidth: '90vw',
+      ...getDialogAnimationDurations(),
       data: { mode: 'create' }
     });
 
@@ -97,6 +111,8 @@ export class DashboardComponent implements OnInit {
       maxWidth: '90vw',
       disableClose: true,
       autoFocus: false,
+      panelClass: 'quick-inspect-dialog-panel',
+      ...getDialogAnimationDurations(),
       data: { task }
     });
   }

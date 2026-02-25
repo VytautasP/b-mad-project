@@ -30,6 +30,7 @@ import { AssigneeList } from '../components/assignee-list/assignee-list';
 import { TaskFiltersComponent, User } from './components/task-filters/task-filters.component';
 import { TimerStateService, TimerState } from '../../../core/services/state/timer-state.service';
 import { formatDuration, formatDurationWithTotal } from '../../../shared/utils/time.utils';
+import { getDialogAnimationDurations } from '../../../shared/utils/motion.utils';
 
 @Component({
   selector: 'app-task-list',
@@ -378,6 +379,8 @@ export class TaskListComponent implements OnInit, OnDestroy {
       maxWidth: '90vw',
       disableClose: true,
       autoFocus: false,
+      panelClass: 'quick-inspect-dialog-panel',
+      ...getDialogAnimationDurations(),
       data: { task, openerElement }
     });
   }
@@ -385,6 +388,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   onCreateTask(): void {
     const dialogRef = this.dialog.open(TaskFormComponent, {
       width: '600px',
+      ...getDialogAnimationDurations(),
       data: { mode: 'create' }
     });
 
@@ -405,6 +409,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   onEdit(task: Task): void {
     const dialogRef = this.dialog.open(TaskFormComponent, {
       width: '600px',
+      ...getDialogAnimationDurations(),
       data: { mode: 'edit', task }
     });
 
@@ -433,6 +438,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: '400px',
+      ...getDialogAnimationDurations(),
       data: dialogData
     });
 
@@ -472,6 +478,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
       const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
         width: '400px',
+        ...getDialogAnimationDurations(),
         data: dialogData
       });
 

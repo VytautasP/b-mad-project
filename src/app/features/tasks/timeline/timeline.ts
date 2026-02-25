@@ -16,6 +16,7 @@ import { DataSet } from 'vis-data';
 import { TaskService } from '../services/task.service';
 import { Task, TaskStatus } from '../../../shared/models/task.model';
 import { TaskDetailDialog, TaskDetailDialogData } from '../task-detail-dialog/task-detail-dialog';
+import { getDialogAnimationDurations } from '../../../shared/utils/motion.utils';
 import { TimelineEmptyStateComponent } from './timeline-empty-state/timeline-empty-state';
 
 @Component({
@@ -279,7 +280,8 @@ export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
       } as TaskDetailDialogData,
       disableClose: true,
       autoFocus: false,
-      panelClass: 'task-detail-dialog'
+      panelClass: ['task-detail-dialog', 'quick-inspect-dialog-panel'],
+      ...getDialogAnimationDurations()
     });
 
     // Refresh timeline when dialog closes (in case task was updated)

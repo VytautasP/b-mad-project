@@ -11,6 +11,7 @@ import { TaskService } from '../../../features/tasks/services/task.service';
 import { StopTimerDialogComponent, StopTimerDialogData, StopTimerDialogResult } from '../stop-timer-dialog/stop-timer-dialog.component';
 import { NotificationService } from '../../../core/services/notification.service';
 import { Subscription } from 'rxjs';
+import { getDialogAnimationDurations } from '../../utils/motion.utils';
 
 @Component({
   selector: 'app-timer-widget',
@@ -76,6 +77,7 @@ export class TimerWidgetComponent implements OnDestroy {
       StopTimerDialogComponent,
       {
         width: '400px',
+        ...getDialogAnimationDurations(),
         data: { elapsedMinutes }
       }
     );

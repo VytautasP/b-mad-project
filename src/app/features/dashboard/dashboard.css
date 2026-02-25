@@ -46,6 +46,12 @@
         display: flex;
         align-items: center;
         gap: 16px;
+
+        mat-button-toggle-group,
+        .mat-mdc-button-base {
+          transition: opacity var(--motion-duration-feedback) var(--motion-ease-standard),
+            transform var(--motion-duration-feedback) var(--motion-ease-standard);
+        }
       }
       
       button {
@@ -53,6 +59,10 @@
         align-items: center;
         gap: 8px;
       }
+    }
+
+    .view-shell {
+      min-height: 1px;
     }
   }
 }

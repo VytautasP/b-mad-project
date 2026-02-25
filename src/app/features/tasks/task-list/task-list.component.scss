@@ -83,10 +83,14 @@
       
       .task-row {
         min-height: 68px;
-        transition: background-color 0.2s ease;
+        transition: background-color var(--motion-duration-feedback) var(--motion-ease-standard),
+          transform var(--motion-duration-feedback) var(--motion-ease-standard),
+          box-shadow var(--motion-duration-feedback) var(--motion-ease-standard);
         
         &:hover {
           background-color: #f9f9f9;
+          box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+          transform: translateY(-1px);
           cursor: pointer;
         }
       }
@@ -103,7 +107,8 @@
         gap: 4px;
         cursor: pointer;
         padding: 4px 0;
-        transition: color 0.2s ease;
+        transition: color var(--motion-duration-feedback) var(--motion-ease-standard),
+          opacity var(--motion-duration-feedback) var(--motion-ease-standard);
         
         &:hover {
           color: #1976d2;
@@ -247,8 +252,12 @@
         button {
           min-width: 44px;
           min-height: 44px;
+          transition: opacity var(--motion-duration-feedback) var(--motion-ease-standard),
+            transform var(--motion-duration-feedback) var(--motion-ease-standard);
+
           &:hover {
             opacity: 0.8;
+            transform: translateY(-1px);
           }
         }
         
@@ -275,6 +284,7 @@
         font-size: 18px;
         font-weight: 500;
         cursor: pointer;
+        transition: color var(--motion-duration-feedback) var(--motion-ease-standard);
         
         &:hover {
           color: #1976d2;
@@ -327,8 +337,12 @@
         mat-icon {
           min-width: 44px;
           min-height: 44px;
+          transition: opacity var(--motion-duration-feedback) var(--motion-ease-standard),
+            transform var(--motion-duration-feedback) var(--motion-ease-standard);
+
           &:hover {
             opacity: 0.8;
+            transform: translateY(-1px);
           }
         }
         
