@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatSortModule, MatSort, Sort } from '@angular/material/sort';
-import { MatPaginatorModule, MatPaginator, PageEvent } from '@angular/material/paginator';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -40,7 +41,8 @@ import { getDialogAnimationDurations } from '../../../shared/utils/motion.utils'
     ReactiveFormsModule,
     MatTableModule,
     MatSortModule,
-    MatPaginatorModule,
+    MatCheckboxModule,
+    MatMenuModule,
     MatCardModule,
     MatProgressSpinnerModule,
     MatProgressBarModule,
@@ -73,15 +75,28 @@ export class TaskListComponent implements OnInit, OnDestroy {
   private loadSubscription?: Subscription;
   
   @ViewChild(MatSort) sort?: MatSort;
-  @ViewChild(MatPaginator) paginator?: MatPaginator;
 
   // Task data
   tasks = signal<Task[]>([]);
   totalCount = signal(0);
   isLoading = signal(false);
   
-  // Table columns
-  displayedColumns: string[] = ['name', 'assignees', 'status', 'priority', 'dueDate', 'timeLogged', 'actions'];
+  // Table columns — Figma order: Checkbox → Status → Task Name → Priority → Due Date → Time Logged → Actions
+  displayedColumns: string[] = ['select', 'status', 'name', 'priority', 'dueDate', 'timeLogged', 'actions'];
+  
+  // Checkbox selection state
+  selectedTasks = new Set<string>();
+  
+  // Quick-filter tab state
+  quickFilter: 'all' | 'pending' | 'done' = 'all';
+  
+  // Task count signals for tab badges
+  allTasksCount = signal(0);
+  pendingTasksCount = signal(0);
+  doneTasksCount = signal(0);
+  
+  // Filter panel visibility
+  isFilterPanelVisible = signal(false);
   
   // Timer state
   currentTimerState: TimerState | null = null;
@@ -112,6 +127,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
     this.route.queryParams.pipe(take(1)).subscribe(params => {
       this.parseQueryParams(params);
       this.loadTasks();
+      this.refreshTaskCounts();
     });
 
     // Load users for filter dropdown (mock for now - would come from UserService)
@@ -198,8 +214,11 @@ export class TaskListComponent implements OnInit, OnDestroy {
     this.loadSubscription?.unsubscribe();
     this.isLoading.set(true);
     
+    // Merge quick-filter status with existing advanced filters
+    const effectiveFilters = this.getEffectiveFilters();
+    
     this.loadSubscription = this.taskService.getTasksPaginated(
-      this.filters,
+      effectiveFilters,
       this.sortBy,
       this.sortOrder,
       this.page,
@@ -209,6 +228,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
         this.tasks.set(result.items);
         this.totalCount.set(result.totalCount);
         this.isLoading.set(false);
+        this.selectedTasks.clear();
       },
       error: (error) => {
         console.error('Failed to load tasks:', error);
@@ -220,6 +240,32 @@ export class TaskListComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  private getEffectiveFilters(): TaskFilters {
+    const filters = { ...this.filters };
+    if (this.quickFilter === 'pending') {
+      filters.status = [TaskStatus.ToDo, TaskStatus.InProgress, TaskStatus.Blocked, TaskStatus.Waiting];
+    } else if (this.quickFilter === 'done') {
+      filters.status = [TaskStatus.Done];
+    }
+    return filters;
+  }
+
+  refreshTaskCounts(): void {
+    this.taskService.getTasksPaginated({}, 'createdDate', 'desc', 1, 1).pipe(
+      take(1), takeUntil(this.destroy$)
+    ).subscribe(result => this.allTasksCount.set(result.totalCount));
+
+    this.taskService.getTasksPaginated(
+      { status: [TaskStatus.ToDo, TaskStatus.InProgress, TaskStatus.Blocked, TaskStatus.Waiting] },
+      'createdDate', 'desc', 1, 1
+    ).pipe(take(1), takeUntil(this.destroy$)).subscribe(result => this.pendingTasksCount.set(result.totalCount));
+
+    this.taskService.getTasksPaginated(
+      { status: [TaskStatus.Done] },
+      'createdDate', 'desc', 1, 1
+    ).pipe(take(1), takeUntil(this.destroy$)).subscribe(result => this.doneTasksCount.set(result.totalCount));
   }
 
   trackByTaskId(_index: number, task: Task): string {
@@ -240,6 +286,18 @@ export class TaskListComponent implements OnInit, OnDestroy {
     this.loadTasks();
   }
 
+  onQuickFilterChange(filter: 'all' | 'pending' | 'done'): void {
+    this.quickFilter = filter;
+    this.page = 1;
+    this.selectedTasks.clear();
+    this.updateQueryParams();
+    this.loadTasks();
+  }
+
+  toggleFilterPanel(): void {
+    this.isFilterPanelVisible.update(v => !v);
+  }
+
   onSortChange(sort: Sort): void {
     this.sortBy = sort.active;
     this.sortOrder = sort.direction === 'asc' ? 'asc' : 'desc';
@@ -247,11 +305,67 @@ export class TaskListComponent implements OnInit, OnDestroy {
     this.loadTasks();
   }
 
-  onPageChange(event: PageEvent): void {
-    this.page = event.pageIndex + 1; // MatPaginator uses 0-based indexing
-    this.pageSize = event.pageSize;
-    this.updateQueryParams();
-    this.loadTasks();
+  // Custom pagination
+  get paginationStart(): number {
+    if (this.totalCount() === 0) return 0;
+    return (this.page - 1) * this.pageSize + 1;
+  }
+
+  get paginationEnd(): number {
+    return Math.min(this.page * this.pageSize, this.totalCount());
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.totalCount() / this.pageSize);
+  }
+
+  get hasPreviousPage(): boolean {
+    return this.page > 1;
+  }
+
+  get hasNextPage(): boolean {
+    return this.page < this.totalPages;
+  }
+
+  onPreviousPage(): void {
+    if (this.hasPreviousPage) {
+      this.page--;
+      this.updateQueryParams();
+      this.loadTasks();
+    }
+  }
+
+  onNextPage(): void {
+    if (this.hasNextPage) {
+      this.page++;
+      this.updateQueryParams();
+      this.loadTasks();
+    }
+  }
+
+  // Checkbox selection
+  isSelected(taskId: string): boolean {
+    return this.selectedTasks.has(taskId);
+  }
+
+  isAllSelected(): boolean {
+    return this.tasks().length > 0 && this.selectedTasks.size === this.tasks().length;
+  }
+
+  toggleSelection(taskId: string): void {
+    if (this.selectedTasks.has(taskId)) {
+      this.selectedTasks.delete(taskId);
+    } else {
+      this.selectedTasks.add(taskId);
+    }
+  }
+
+  toggleAllSelection(): void {
+    if (this.isAllSelected()) {
+      this.selectedTasks.clear();
+    } else {
+      this.tasks().forEach(task => this.selectedTasks.add(task.id));
+    }
   }
 
   hasActiveFilters(): boolean {
@@ -351,11 +465,14 @@ export class TaskListComponent implements OnInit, OnDestroy {
   getPriorityIcon(priority: number): string {
     switch (priority) {
       case TaskPriority.Critical:
+        return 'keyboard_double_arrow_up';
       case TaskPriority.High:
+        return 'arrow_upward';
       case TaskPriority.Medium:
+        return 'arrow_forward';
       case TaskPriority.Low:
       default:
-        return 'flag';
+        return 'arrow_downward';
     }
   }
 
@@ -375,7 +492,9 @@ export class TaskListComponent implements OnInit, OnDestroy {
 
   formatDate(date: Date | null): string {
     if (!date) return '-';
-    return new Date(date).toLocaleDateString();
+    const d = new Date(date);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[d.getMonth()]} ${String(d.getDate()).padStart(2, '0')}, ${d.getFullYear()}`;
   }
 
   onViewDetails(task: Task, event?: Event): void {
@@ -404,6 +523,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.loadTasks();
+        this.refreshTaskCounts();
         this.snackBar.open('Task created successfully', 'Close', {
           duration: 3000,
           horizontalPosition: 'end',
@@ -426,6 +546,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.loadTasks();
+        this.refreshTaskCounts();
         this.snackBar.open('Task updated successfully', 'Close', {
           duration: 3000,
           horizontalPosition: 'end',
@@ -454,6 +575,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
         this.taskService.deleteTask(task.id).subscribe({
           next: () => {
             this.loadTasks();
+            this.refreshTaskCounts();
             this.snackBar.open('Task deleted successfully', 'Close', {
               duration: 3000,
               horizontalPosition: 'end',
@@ -531,8 +653,8 @@ export class TaskListComponent implements OnInit, OnDestroy {
    * Get formatted time display with visual indicator for parent tasks
    */
   getTimeDisplay(task: Task): string {
-    if (!task.totalLoggedMinutes && task.totalLoggedMinutes !== 0) {
-      return '0m';
+    if (!task.totalLoggedMinutes || task.totalLoggedMinutes === 0) {
+      return '--';
     }
     return formatDurationWithTotal(task.totalLoggedMinutes, task.childrenLoggedMinutes > 0);
   }

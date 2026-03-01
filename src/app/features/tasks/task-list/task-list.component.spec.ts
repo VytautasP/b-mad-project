@@ -10,7 +10,6 @@ import { TaskService } from '../services/task.service';
 import { Task, TaskPriority, TaskStatus, TaskType, TaskFilters, PaginatedResult } from '../../../shared/models/task.model';
 import { ConfirmationDialogComponent } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { Sort } from '@angular/material/sort';
-import { PageEvent } from '@angular/material/paginator';
 
 describe('TaskListComponent', () => {
   let component: TaskListComponent;
@@ -174,10 +173,16 @@ describe('TaskListComponent', () => {
     expect(mockSnackBar.open).toHaveBeenCalledWith('Failed to load tasks', 'Close', expect.any(Object));
   });
 
-  it('should format dates correctly', () => {
+  it('should format dates in MMM dd, yyyy format', () => {
     const date = new Date('2024-12-31');
     const formatted = component.formatDate(date);
-    expect(formatted).toContain('2024');
+    expect(formatted).toBe('Dec 31, 2024');
+  });
+
+  it('should format single-digit dates with leading zero', () => {
+    const date = new Date('2024-01-05');
+    const formatted = component.formatDate(date);
+    expect(formatted).toBe('Jan 05, 2024');
   });
 
   it('should return "-" for null dates', () => {
@@ -201,9 +206,17 @@ describe('TaskListComponent', () => {
     expect(component.getStatusIcon(TaskStatus.Waiting)).toBe('hourglass_top');
   });
 
-  it('should return priority flag icon and class mapping', () => {
-    expect(component.getPriorityIcon(TaskPriority.Critical)).toBe('flag');
+  it('should return directional priority icons', () => {
+    expect(component.getPriorityIcon(TaskPriority.Critical)).toBe('keyboard_double_arrow_up');
+    expect(component.getPriorityIcon(TaskPriority.High)).toBe('arrow_upward');
+    expect(component.getPriorityIcon(TaskPriority.Medium)).toBe('arrow_forward');
+    expect(component.getPriorityIcon(TaskPriority.Low)).toBe('arrow_downward');
+  });
+
+  it('should return correct priority class mapping', () => {
     expect(component.getPriorityClass(TaskPriority.Critical)).toBe('priority-critical');
+    expect(component.getPriorityClass(TaskPriority.High)).toBe('priority-high');
+    expect(component.getPriorityClass(TaskPriority.Medium)).toBe('priority-medium');
     expect(component.getPriorityClass(TaskPriority.Low)).toBe('priority-low');
   });
 
@@ -463,47 +476,195 @@ describe('TaskListComponent', () => {
     });
   });
 
-  // Pagination functionality tests
-  describe('Pagination functionality', () => {
-    it('should update page state and reload tasks', () => {
-      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
-      const pageEvent: PageEvent = {
-        pageIndex: 1,
-        pageSize: 50,
-        length: 100
-      };
+  // Custom Pagination functionality tests
+  describe('Custom Pagination', () => {
+    it('should compute paginationStart correctly', () => {
+      component.page = 1;
+      component.pageSize = 50;
+      component.totalCount.set(100);
+      expect(component.paginationStart).toBe(1);
 
-      component.onPageChange(pageEvent);
-
-      expect(component.page).toBe(2); // Convert from 0-based to 1-based
-      expect(component.pageSize).toBe(50);
-      expect(getTasksPaginatedSpy).toHaveBeenCalledWith(expect.any(Object), expect.any(String), expect.any(String), 2, 50);
+      component.page = 2;
+      expect(component.paginationStart).toBe(51);
     });
 
-    it('should handle page size change', () => {
-      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
-      const pageEvent: PageEvent = {
-        pageIndex: 0,
-        pageSize: 100,
-        length: 100
-      };
-
-      component.onPageChange(pageEvent);
-
-      expect(component.pageSize).toBe(100);
+    it('should return 0 for paginationStart when no tasks', () => {
+      component.totalCount.set(0);
+      expect(component.paginationStart).toBe(0);
     });
 
-    it('should update URL when pagination changes', () => {
+    it('should compute paginationEnd correctly', () => {
+      component.page = 1;
+      component.pageSize = 50;
+      component.totalCount.set(100);
+      expect(component.paginationEnd).toBe(50);
+
+      component.page = 2;
+      expect(component.paginationEnd).toBe(100);
+    });
+
+    it('should cap paginationEnd at totalCount', () => {
+      component.page = 1;
+      component.pageSize = 50;
+      component.totalCount.set(30);
+      expect(component.paginationEnd).toBe(30);
+    });
+
+    it('should compute hasPreviousPage correctly', () => {
+      component.page = 1;
+      expect(component.hasPreviousPage).toBe(false);
+
+      component.page = 2;
+      expect(component.hasPreviousPage).toBe(true);
+    });
+
+    it('should compute hasNextPage correctly', () => {
+      component.page = 1;
+      component.pageSize = 50;
+      component.totalCount.set(100);
+      expect(component.hasNextPage).toBe(true);
+
+      component.page = 2;
+      expect(component.hasNextPage).toBe(false);
+    });
+
+    it('should go to previous page', () => {
       getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
-      const pageEvent: PageEvent = {
-        pageIndex: 2,
-        pageSize: 100,
-        length: 300
-      };
+      component.page = 2;
 
-      component.onPageChange(pageEvent);
+      component.onPreviousPage();
 
+      expect(component.page).toBe(1);
+      expect(getTasksPaginatedSpy).toHaveBeenCalled();
       expect(mockRouter.navigate).toHaveBeenCalled();
+    });
+
+    it('should not go below page 1', () => {
+      component.page = 1;
+
+      component.onPreviousPage();
+
+      expect(component.page).toBe(1);
+    });
+
+    it('should go to next page', () => {
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+      component.page = 1;
+      component.pageSize = 50;
+      component.totalCount.set(100);
+
+      component.onNextPage();
+
+      expect(component.page).toBe(2);
+      expect(getTasksPaginatedSpy).toHaveBeenCalled();
+    });
+
+    it('should not go past last page', () => {
+      component.page = 2;
+      component.pageSize = 50;
+      component.totalCount.set(100);
+
+      component.onNextPage();
+
+      expect(component.page).toBe(2);
+    });
+  });
+
+  // Checkbox Selection tests
+  describe('Checkbox Selection', () => {
+    it('should toggle individual task selection', () => {
+      expect(component.isSelected('123')).toBe(false);
+
+      component.toggleSelection('123');
+      expect(component.isSelected('123')).toBe(true);
+
+      component.toggleSelection('123');
+      expect(component.isSelected('123')).toBe(false);
+    });
+
+    it('should select all tasks', () => {
+      component.tasks.set([mockTask, { ...mockTask, id: '456', name: 'Task 2' }]);
+      expect(component.isAllSelected()).toBe(false);
+
+      component.toggleAllSelection();
+      expect(component.isAllSelected()).toBe(true);
+      expect(component.selectedTasks.size).toBe(2);
+    });
+
+    it('should deselect all tasks when all are selected', () => {
+      component.tasks.set([mockTask]);
+      component.selectedTasks.add('123');
+      expect(component.isAllSelected()).toBe(true);
+
+      component.toggleAllSelection();
+      expect(component.selectedTasks.size).toBe(0);
+    });
+
+    it('should clear selection when tasks are loaded', () => {
+      component.selectedTasks.add('123');
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+
+      component.loadTasks();
+
+      expect(component.selectedTasks.size).toBe(0);
+    });
+  });
+
+  // Quick Filter Tab tests
+  describe('Quick Filter Tabs', () => {
+    it('should default to all filter', () => {
+      expect(component.quickFilter).toBe('all');
+    });
+
+    it('should change quick filter and reload tasks', () => {
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+
+      component.onQuickFilterChange('pending');
+
+      expect(component.quickFilter).toBe('pending');
+      expect(component.page).toBe(1);
+      expect(getTasksPaginatedSpy).toHaveBeenCalled();
+    });
+
+    it('should clear selection when quick filter changes', () => {
+      component.selectedTasks.add('123');
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+
+      component.onQuickFilterChange('done');
+
+      expect(component.selectedTasks.size).toBe(0);
+    });
+
+    it('should toggle filter panel visibility', () => {
+      expect(component.isFilterPanelVisible()).toBe(false);
+
+      component.toggleFilterPanel();
+      expect(component.isFilterPanelVisible()).toBe(true);
+
+      component.toggleFilterPanel();
+      expect(component.isFilterPanelVisible()).toBe(false);
+    });
+  });
+
+  // Column order test
+  describe('Column Order', () => {
+    it('should have Figma-aligned column order', () => {
+      expect(component.displayedColumns).toEqual([
+        'select', 'status', 'name', 'priority', 'dueDate', 'timeLogged', 'actions'
+      ]);
+    });
+  });
+
+  // Time display tests
+  describe('Time Display', () => {
+    it('should return -- for zero logged time', () => {
+      const task = { ...mockTask, totalLoggedMinutes: 0 };
+      expect(component.getTimeDisplay(task)).toBe('--');
+    });
+
+    it('should return -- for null logged time', () => {
+      const task = { ...mockTask, totalLoggedMinutes: null as any };
+      expect(component.getTimeDisplay(task)).toBe('--');
     });
   });
 
@@ -566,6 +727,35 @@ describe('TaskListComponent', () => {
       expect(component.pageSize).toBe(50);
       expect(component.sortBy).toBe('createdDate');
       expect(component.sortOrder).toBe('desc');
+    });
+  });
+
+  // Refresh task counts tests
+  describe('Task Counts', () => {
+    it('should call refreshTaskCounts on init', () => {
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+
+      component.ngOnInit();
+
+      // refreshTaskCounts makes 3 additional calls (all, pending, done) + 1 for loadTasks
+      expect(getTasksPaginatedSpy.mock.calls.length).toBeGreaterThanOrEqual(4);
+    });
+
+    it('should update count signals from API responses', () => {
+      const allResult = { ...mockPaginatedResult, totalCount: 48 };
+      const pendingResult = { ...mockPaginatedResult, totalCount: 35 };
+      const doneResult = { ...mockPaginatedResult, totalCount: 13 };
+
+      getTasksPaginatedSpy
+        .mockReturnValueOnce(of(allResult))
+        .mockReturnValueOnce(of(pendingResult))
+        .mockReturnValueOnce(of(doneResult));
+
+      component.refreshTaskCounts();
+
+      expect(component.allTasksCount()).toBe(48);
+      expect(component.pendingTasksCount()).toBe(35);
+      expect(component.doneTasksCount()).toBe(13);
     });
   });
 });

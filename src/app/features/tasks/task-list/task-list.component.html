@@ -1,34 +1,83 @@
 <div class="task-list-container">
-  <!-- Filters Component -->
-  <app-task-filters
-    [users]="users()"
-    [initialFilters]="filters"
-    (filtersChanged)="onFiltersChanged($event)"
-    (filtersCleared)="onFiltersCleared()">
-  </app-task-filters>
+  <!-- Page Heading -->
+  <div class="page-heading">
+    <h2 class="page-title">My Tasks</h2>
+    <span class="heading-divider"></span>
+    <div class="active-task-badge">
+      <span class="badge-count">{{ pendingTasksCount() }}</span>
+      <span class="badge-label">active tasks</span>
+    </div>
+    <div class="heading-spacer"></div>
+    <button class="btn-create-task" (click)="onCreateTask()">
+      <mat-icon>add</mat-icon>
+      New Task
+    </button>
+  </div>
+
+  <!-- Quick Filter Tab Bar -->
+  <div class="tab-bar-row">
+    <div class="quick-filter-tabs">
+      <button class="filter-tab" [class.active]="quickFilter === 'all'" (click)="onQuickFilterChange('all')">
+        All Tasks
+        <span class="tab-badge" [class.active]="quickFilter === 'all'">{{ allTasksCount() }}</span>
+      </button>
+      <button class="filter-tab" [class.active]="quickFilter === 'pending'" (click)="onQuickFilterChange('pending')">
+        Pending
+        <span class="tab-badge" [class.active]="quickFilter === 'pending'">{{ pendingTasksCount() }}</span>
+      </button>
+      <button class="filter-tab" [class.active]="quickFilter === 'done'" (click)="onQuickFilterChange('done')">
+        Done
+        <span class="tab-badge" [class.active]="quickFilter === 'done'">{{ doneTasksCount() }}</span>
+      </button>
+    </div>
+    <div class="tab-bar-actions">
+      <button class="btn-outlined" (click)="toggleFilterPanel()" [class.active]="isFilterPanelVisible()">
+        <mat-icon>filter_list</mat-icon>
+        Filter
+      </button>
+      <button class="btn-outlined" [matMenuTriggerFor]="sortMenu">
+        <mat-icon>swap_vert</mat-icon>
+        Sort
+      </button>
+      <mat-menu #sortMenu="matMenu">
+        <button mat-menu-item (click)="onSortChange({active: 'createdDate', direction: 'desc'})">
+          <mat-icon>schedule</mat-icon>
+          <span>Newest First</span>
+        </button>
+        <button mat-menu-item (click)="onSortChange({active: 'createdDate', direction: 'asc'})">
+          <mat-icon>history</mat-icon>
+          <span>Oldest First</span>
+        </button>
+        <button mat-menu-item (click)="onSortChange({active: 'name', direction: 'asc'})">
+          <mat-icon>sort_by_alpha</mat-icon>
+          <span>Name A–Z</span>
+        </button>
+        <button mat-menu-item (click)="onSortChange({active: 'dueDate', direction: 'asc'})">
+          <mat-icon>event</mat-icon>
+          <span>Due Date</span>
+        </button>
+        <button mat-menu-item (click)="onSortChange({active: 'priority', direction: 'desc'})">
+          <mat-icon>flag</mat-icon>
+          <span>Priority</span>
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+
+  <!-- Advanced Filters Panel (toggled via Filter button) -->
+  @if (isFilterPanelVisible()) {
+    <app-task-filters
+      [users]="users()"
+      [initialFilters]="filters"
+      (filtersChanged)="onFiltersChanged($event)"
+      (filtersCleared)="onFiltersCleared()">
+    </app-task-filters>
+  }
 
   <!-- Loading Bar -->
   @if (isLoading()) {
     <mat-progress-bar mode="indeterminate"></mat-progress-bar>
   }
-
-  <div class="task-list-header">
-    <div class="task-count">
-      Showing {{ tasks().length }} of {{ totalCount() }} tasks
-    </div>
-    <div class="header-actions">
-      @if (hasActiveFilters()) {
-        <button mat-button type="button" (click)="onFiltersCleared()">
-          <mat-icon>clear_all</mat-icon>
-          Clear Filters
-        </button>
-      }
-      <button mat-raised-button color="primary" type="button" (click)="onCreateTask()">
-        <mat-icon>add</mat-icon>
-        Create Task
-      </button>
-    </div>
-  </div>
 
   @if (isLoading() && tasks().length === 0) {
     <div class="loading-container">
@@ -53,117 +102,129 @@
         }
       </div>
     } @else {
-      <!-- Desktop view: Table with sorting -->
+      <!-- Desktop view: Card-wrapped table -->
       <div class="desktop-view">
-        <mat-table [dataSource]="tasks()" [trackBy]="trackByTaskId" matSort (matSortChange)="onSortChange($event)" class="task-table">
-          <!-- Name Column -->
-          <ng-container matColumnDef="name">
-            <mat-header-cell *matHeaderCellDef mat-sort-header>Task Name</mat-header-cell>
-            <mat-cell *matCellDef="let task">
-              <div class="task-name" (click)="onViewDetails(task, $event)" (keydown.enter)="onViewDetails(task, $event)" (keydown.space)="onViewDetails(task, $event)" role="button" tabindex="0">
-                <strong>{{ task.name }}</strong>
-                @if (task.description) {
-                  <small>{{ task.description }}</small>
-                }
-              </div>
-            </mat-cell>
-          </ng-container>
+        <div class="table-card">
+          <mat-table [dataSource]="tasks()" [trackBy]="trackByTaskId" matSort (matSortChange)="onSortChange($event)" class="task-table">
+            <!-- Checkbox Column -->
+            <ng-container matColumnDef="select">
+              <mat-header-cell *matHeaderCellDef>
+                <mat-checkbox
+                  [checked]="isAllSelected()"
+                  [indeterminate]="selectedTasks.size > 0 && !isAllSelected()"
+                  (change)="toggleAllSelection()"
+                  aria-label="Select all tasks">
+                </mat-checkbox>
+              </mat-header-cell>
+              <mat-cell *matCellDef="let task">
+                <mat-checkbox
+                  [checked]="isSelected(task.id)"
+                  (change)="toggleSelection(task.id)"
+                  (click)="$event.stopPropagation()"
+                  [aria-label]="'Select ' + task.name">
+                </mat-checkbox>
+              </mat-cell>
+            </ng-container>
 
-          <!-- Assignees Column -->
-          <ng-container matColumnDef="assignees">
-            <mat-header-cell *matHeaderCellDef>Assignees</mat-header-cell>
-            <mat-cell *matCellDef="let task">
-              <app-assignee-list 
-                [assignees]="task.assignees || []"
-                [maxVisible]="3"
-                [showActions]="false">
-              </app-assignee-list>
-            </mat-cell>
-          </ng-container>
+            <!-- Status Column -->
+            <ng-container matColumnDef="status">
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
+              <mat-cell *matCellDef="let task">
+                <div [class]="getStatusBadgeClass(task.status)">
+                  <span class="status-dot"></span>
+                  <span>{{ getStatusLabel(task.status) }}</span>
+                </div>
+              </mat-cell>
+            </ng-container>
 
-          <!-- Status Column -->
-          <ng-container matColumnDef="status">
-            <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
-            <mat-cell *matCellDef="let task">
-              <div [class]="getStatusBadgeClass(task.status)">
-                <mat-icon>{{ getStatusIcon(task.status) }}</mat-icon>
-                <span>{{ getStatusLabel(task.status) }}</span>
-              </div>
-            </mat-cell>
-          </ng-container>
+            <!-- Name Column -->
+            <ng-container matColumnDef="name">
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Task Name</mat-header-cell>
+              <mat-cell *matCellDef="let task">
+                <div class="task-name" (click)="onViewDetails(task, $event)" (keydown.enter)="onViewDetails(task, $event)" (keydown.space)="onViewDetails(task, $event)" role="button" tabindex="0">
+                  <span class="task-title">{{ task.name }}</span>
+                  <span class="task-subtitle">{{ getTypeLabel(task.type) }}</span>
+                </div>
+              </mat-cell>
+            </ng-container>
 
-          <!-- Priority Column -->
-          <ng-container matColumnDef="priority">
-            <mat-header-cell *matHeaderCellDef mat-sort-header>Priority</mat-header-cell>
-            <mat-cell *matCellDef="let task">
-              <div class="priority-indicator" [ngClass]="getPriorityClass(task.priority)">
-                <mat-icon>{{ getPriorityIcon(task.priority) }}</mat-icon>
-                <span>{{ getPriorityLabel(task.priority) }}</span>
-              </div>
-            </mat-cell>
-          </ng-container>
+            <!-- Priority Column -->
+            <ng-container matColumnDef="priority">
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Priority</mat-header-cell>
+              <mat-cell *matCellDef="let task">
+                <div class="priority-indicator" [ngClass]="getPriorityClass(task.priority)">
+                  <mat-icon>{{ getPriorityIcon(task.priority) }}</mat-icon>
+                  <span>{{ getPriorityLabel(task.priority) }}</span>
+                </div>
+              </mat-cell>
+            </ng-container>
 
-          <!-- Due Date Column -->
-          <ng-container matColumnDef="dueDate">
-            <mat-header-cell *matHeaderCellDef mat-sort-header>Due Date</mat-header-cell>
-            <mat-cell *matCellDef="let task">{{ formatDate(task.dueDate) }}</mat-cell>
-          </ng-container>
+            <!-- Due Date Column -->
+            <ng-container matColumnDef="dueDate">
+              <mat-header-cell *matHeaderCellDef mat-sort-header>Due Date</mat-header-cell>
+              <mat-cell *matCellDef="let task">
+                <span class="due-date-text">{{ formatDate(task.dueDate) }}</span>
+              </mat-cell>
+            </ng-container>
 
-          <!-- Time Logged Column -->
-          <ng-container matColumnDef="timeLogged">
-            <mat-header-cell *matHeaderCellDef mat-sort-header="totalLoggedMinutes">Time Logged</mat-header-cell>
-            <mat-cell *matCellDef="let task">
-              <div class="time-logged-cell" [matTooltip]="getTimeTooltip(task)">
-                @if (task.childrenLoggedMinutes > 0) {
-                  <mat-icon class="rollup-indicator" inline>schedule</mat-icon>
-                }
-                <span>{{ getTimeDisplay(task) }}</span>
-              </div>
-            </mat-cell>
-          </ng-container>
+            <!-- Time Logged Column -->
+            <ng-container matColumnDef="timeLogged">
+              <mat-header-cell *matHeaderCellDef mat-sort-header="totalLoggedMinutes">Time Logged</mat-header-cell>
+              <mat-cell *matCellDef="let task">
+                <span class="time-logged-text" [matTooltip]="getTimeTooltip(task)">{{ getTimeDisplay(task) }}</span>
+              </mat-cell>
+            </ng-container>
 
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
-            <mat-cell *matCellDef="let task">
-              <div class="action-buttons">
-                <button mat-icon-button (click)="onViewDetails(task, $event)" matTooltip="View details" aria-label="View details">
-                  <mat-icon>visibility</mat-icon>
-                </button>
-                @if (isTimerRunning(task.id)) {
-                  <mat-icon class="timer-running-icon" matTooltip="Timer Running" color="accent">timer</mat-icon>
-                } @else {
-                  <button mat-icon-button 
-                          (click)="onStartTimer(task)" 
-                          matTooltip="Start Timer"
-                          aria-label="Start Timer"
-                          [disabled]="isAnotherTimerRunning(task.id)">
-                    <mat-icon>schedule</mat-icon>
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+              <mat-cell *matCellDef="let task">
+                <div class="actions-cell">
+                  <button mat-icon-button [matMenuTriggerFor]="actionsMenu" aria-label="Task actions" (click)="$event.stopPropagation()">
+                    <mat-icon>more_horiz</mat-icon>
                   </button>
-                }
-                <button mat-icon-button (click)="onEdit(task)" matTooltip="Edit task" color="primary" aria-label="Edit task">
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button mat-icon-button (click)="onDelete(task)" matTooltip="Delete task" color="warn" aria-label="Delete task">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </div>
-            </mat-cell>
-          </ng-container>
+                  <mat-menu #actionsMenu="matMenu">
+                    <button mat-menu-item (click)="onViewDetails(task)">
+                      <mat-icon>visibility</mat-icon>
+                      <span>View Details</span>
+                    </button>
+                    <button mat-menu-item (click)="onEdit(task)">
+                      <mat-icon>edit</mat-icon>
+                      <span>Edit</span>
+                    </button>
+                    @if (isTimerRunning(task.id)) {
+                      <button mat-menu-item disabled>
+                        <mat-icon color="accent">timer</mat-icon>
+                        <span>Timer Running</span>
+                      </button>
+                    } @else {
+                      <button mat-menu-item (click)="onStartTimer(task)" [disabled]="isAnotherTimerRunning(task.id)">
+                        <mat-icon>schedule</mat-icon>
+                        <span>Start Timer</span>
+                      </button>
+                    }
+                    <button mat-menu-item (click)="onDelete(task)">
+                      <mat-icon color="warn">delete</mat-icon>
+                      <span>Delete</span>
+                    </button>
+                  </mat-menu>
+                </div>
+              </mat-cell>
+            </ng-container>
 
-          <mat-header-row *matHeaderRowDef="displayedColumns" class="task-header-row"></mat-header-row>
-          <mat-row *matRowDef="let row; columns: displayedColumns;" class="task-row"></mat-row>
-        </mat-table>
+            <mat-header-row *matHeaderRowDef="displayedColumns" class="task-header-row"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns;" class="task-row"></mat-row>
+          </mat-table>
 
-        <!-- Paginator -->
-        <mat-paginator
-          [length]="totalCount()"
-          [pageSize]="pageSize"
-          [pageSizeOptions]="[25, 50, 100, 200]"
-          [pageIndex]="page - 1"
-          (page)="onPageChange($event)"
-          showFirstLastButtons>
-        </mat-paginator>
+          <!-- Custom Pagination Footer -->
+          <div class="pagination-footer">
+            <span class="pagination-text">Showing {{ paginationStart }}–{{ paginationEnd }} of {{ totalCount() }} tasks</span>
+            <div class="pagination-buttons">
+              <button class="pagination-btn" [disabled]="!hasPreviousPage" (click)="onPreviousPage()">Previous</button>
+              <button class="pagination-btn" [disabled]="!hasNextPage" (click)="onNextPage()">Next</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Mobile view: Cards -->
@@ -183,7 +244,7 @@
                 <div class="detail-row">
                   <span class="label">Status:</span>
                   <div [class]="getStatusBadgeClass(task.status)">
-                    <mat-icon>{{ getStatusIcon(task.status) }}</mat-icon>
+                    <span class="status-dot"></span>
                     <span>{{ getStatusLabel(task.status) }}</span>
                   </div>
                 </div>
@@ -193,10 +254,7 @@
                 </div>
                 <div class="detail-row">
                   <span class="label">Time Logged:</span>
-                  <span [matTooltip]="getTimeTooltip(task)">
-                    @if (task.childrenLoggedMinutes > 0) {
-                      <mat-icon inline class="rollup-indicator">schedule</mat-icon>
-                    }
+                  <span class="time-logged-text" [matTooltip]="getTimeTooltip(task)">
                     {{ getTimeDisplay(task) }}
                   </span>
                 </div>
@@ -243,14 +301,14 @@
           </mat-card>
         }
 
-        <!-- Mobile Pagination -->
-        <mat-paginator
-          [length]="totalCount()"
-          [pageSize]="pageSize"
-          [pageSizeOptions]="[25, 50, 100]"
-          [pageIndex]="page - 1"
-          (page)="onPageChange($event)">
-        </mat-paginator>
+        <!-- Mobile Custom Pagination -->
+        <div class="pagination-footer">
+          <span class="pagination-text">Showing {{ paginationStart }}–{{ paginationEnd }} of {{ totalCount() }} tasks</span>
+          <div class="pagination-buttons">
+            <button class="pagination-btn" [disabled]="!hasPreviousPage" (click)="onPreviousPage()">Previous</button>
+            <button class="pagination-btn" [disabled]="!hasNextPage" (click)="onNextPage()">Next</button>
+          </div>
+        </div>
       </div>
     }
   }
