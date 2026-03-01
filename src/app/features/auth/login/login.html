@@ -1,51 +1,124 @@
-﻿<div class="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-  <mat-card class="w-full max-w-md">
-    <mat-card-header class="pb-4">
-      <mat-card-title class="text-center text-2xl font-bold">Sign In to TaskFlow</mat-card-title>
-    </mat-card-header>
-    
-    <mat-card-content>
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-4">
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Email</mat-label>
-          <input matInput type="email" formControlName="email" placeholder="you@example.com">
-          @if (emailControl?.hasError('required') && emailControl?.touched) {
-            <mat-error>Email is required</mat-error>
-          }
-          @if (emailControl?.hasError('email') && emailControl?.touched) {
-            <mat-error>Please enter a valid email address</mat-error>
-          }
-        </mat-form-field>
+﻿<!-- Login page: header – card – legal strip layout per Figma node 1:2 -->
+<div class="login-page">
+  <!-- ====== Header / Navbar ====== -->
+  <header class="login-header">
+    <div class="login-header__brand">
+      <!-- TaskFlow logo mark -->
+      <svg width="25" height="25" viewBox="0 0 25 25" fill="none" aria-hidden="true">
+        <rect width="25" height="25" rx="6" fill="#137FEC" />
+        <path d="M7 13l3 3 8-8" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <span class="login-header__title">TaskFlow</span>
+    </div>
+    <div class="login-header__actions">
+      <span class="login-header__prompt">Don't have an account?</span>
+      <a routerLink="/register" class="login-header__signup-btn">Sign Up</a>
+    </div>
+  </header>
 
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Password</mat-label>
-          <input matInput type="password" formControlName="password" placeholder="Enter your password">
-          @if (passwordControl?.hasError('required') && passwordControl?.touched) {
-            <mat-error>Password is required</mat-error>
-          }
-        </mat-form-field>
-
-        <div class="flex items-center">
-          <mat-checkbox formControlName="rememberMe">Remember me</mat-checkbox>
+  <!-- ====== Main Content Area ====== -->
+  <main class="login-main">
+    <div class="login-card">
+      <!-- Card body -->
+      <div class="login-card__body">
+        <!-- Header section -->
+        <div class="login-card__header">
+          <h1 class="login-card__heading">Welcome back</h1>
+          <p class="login-card__subheading">
+            Enter your credentials to access your workspace.
+          </p>
         </div>
 
-        <button 
-          mat-raised-button 
-          color="primary" 
-          type="submit" 
-          class="w-full"
-          [disabled]="loginForm.invalid || isLoading">
-          @if (isLoading) {
-            <mat-spinner diameter="20" class="inline-block mr-2"></mat-spinner>
-          }
-          Sign In
-        </button>
-      </form>
+        <!-- Form section -->
+        <form
+          [formGroup]="loginForm"
+          (ngSubmit)="onSubmit()"
+          class="login-form"
+        >
+          <!-- Email field -->
+          <div class="login-field">
+            <label for="login-email" class="login-field__label">Email</label>
+            <div class="login-field__input-wrap">
+              <mat-icon class="login-field__icon" aria-hidden="true">mail</mat-icon>
+              <input
+                id="login-email"
+                type="email"
+                formControlName="email"
+                placeholder="name&#64;company.com"
+                class="login-field__input"
+                autocomplete="email"
+              />
+            </div>
+            @if (emailControl?.hasError('required') && emailControl?.touched) {
+              <span class="login-field__error" role="alert">Email is required</span>
+            }
+            @if (emailControl?.hasError('email') && emailControl?.touched) {
+              <span class="login-field__error" role="alert">Please enter a valid email address</span>
+            }
+          </div>
 
-      <div class="mt-4 text-center text-sm">
-        <span class="text-gray-600">Don't have an account?</span>
-        <a routerLink="/register" class="ml-1 text-primary font-medium hover:underline">Sign up</a>
+          <!-- Password field -->
+          <div class="login-field">
+            <div class="login-field__label-row">
+              <label for="login-password" class="login-field__label">Password</label>
+              <a href="javascript:void(0)" class="login-field__forgot-link">Forgot password?</a>
+            </div>
+            <div class="login-field__input-wrap">
+              <mat-icon class="login-field__icon" aria-hidden="true">lock</mat-icon>
+              <input
+                id="login-password"
+                type="password"
+                formControlName="password"
+                placeholder="Enter your password"
+                class="login-field__input"
+                autocomplete="current-password"
+              />
+            </div>
+            @if (passwordControl?.hasError('required') && passwordControl?.touched) {
+              <span class="login-field__error" role="alert">Password is required</span>
+            }
+          </div>
+
+          <!-- Submit button -->
+          <button
+            type="submit"
+            class="login-submit-btn"
+            [disabled]="loginForm.invalid || isLoading"
+          >
+            @if (isLoading) {
+              <mat-spinner diameter="20"></mat-spinner>
+            }
+            <span>Sign In</span>
+            <mat-icon class="login-submit-btn__arrow" aria-hidden="true">arrow_forward</mat-icon>
+          </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="login-divider">
+          <span class="login-divider__line"></span>
+          <span class="login-divider__text">Or continue with</span>
+          <span class="login-divider__line"></span>
+        </div>
+
+        <!-- Social login -->
+        <button type="button" class="login-social-btn" aria-label="Sign in with Google">
+          <svg class="login-social-btn__icon" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M19.6 10.23c0-.68-.06-1.36-.17-2.01H10v3.8h5.38a4.6 4.6 0 0 1-2 3.02l3.23 2.51c1.89-1.74 2.98-4.3 2.98-7.32z" fill="#4285F4"/>
+            <path d="M10 20c2.7 0 4.96-.9 6.62-2.42l-3.23-2.51a5.98 5.98 0 0 1-8.92-3.15l-3.3 2.55A10 10 0 0 0 10 20z" fill="#34A853"/>
+            <path d="M4.47 11.92a6.01 6.01 0 0 1 0-3.84L1.17 5.53a10 10 0 0 0 0 8.94l3.3-2.55z" fill="#FBBC05"/>
+            <path d="M10 3.96c1.47 0 2.79.51 3.83 1.5l2.87-2.87A9.96 9.96 0 0 0 10 0 10 10 0 0 0 1.17 5.53l3.3 2.55A5.96 5.96 0 0 1 10 3.96z" fill="#EA4335"/>
+          </svg>
+          <span>Google</span>
+        </button>
       </div>
-    </mat-card-content>
-  </mat-card>
+
+      <!-- Bottom legal strip -->
+      <div class="login-card__legal">
+        <p>
+          By clicking "Sign In", you agree to our Terms of Service and
+          <a href="javascript:void(0)" class="login-card__legal-link">Privacy Policy</a>.
+        </p>
+      </div>
+    </div>
+  </main>
 </div>
