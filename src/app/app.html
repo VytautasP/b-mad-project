@@ -1,7 +1,12 @@
 ﻿@if (showNavigation()) {
-  <app-sidebar></app-sidebar>
+  <app-shellbar></app-shellbar>
 }
-<main class="main-content" [class.with-sidebar]="showNavigation()">
-  <router-outlet></router-outlet>
-  <app-timer-widget></app-timer-widget>
-</main>
+<div class="app-body" [class.with-nav]="showNavigation()">
+  @if (showNavigation()) {
+    <app-sidebar></app-sidebar>
+  }
+  <main class="main-content">
+    <router-outlet></router-outlet>
+    <app-timer-widget></app-timer-widget>
+  </main>
+</div>

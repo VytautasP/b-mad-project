@@ -1,0 +1,91 @@
+<!-- Shellbar / Header — Figma node 7:3 -->
+<header role="banner" aria-label="Application header" class="shellbar">
+  <!-- Left Zone: Brand + Search -->
+  <div class="shellbar-left">
+    <!-- Brand Section -->
+    <div class="brand">
+      <div class="brand-logo" aria-hidden="true">
+        <mat-icon class="brand-logo-icon">task_alt</mat-icon>
+      </div>
+      <span class="brand-name">TaskFlow</span>
+    </div>
+
+    <!-- Search Input -->
+    <div class="search-container">
+      <mat-icon class="search-icon" aria-hidden="true">search</mat-icon>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search tasks, projects, people..."
+        aria-label="Search tasks, projects, and people"
+        [value]="searchValue()"
+        (input)="onSearchInput($event)" />
+    </div>
+  </div>
+
+  <!-- Right Zone: CTA + Divider + Bell + Profile -->
+  <div class="shellbar-right">
+    <!-- Create Task Button -->
+    <button
+      class="create-task-btn"
+      type="button"
+      aria-label="Create new task"
+      (click)="onCreateTask()">
+      <mat-icon class="create-task-icon">add</mat-icon>
+      <span class="create-task-text">Create Task</span>
+    </button>
+
+    <!-- Vertical Divider -->
+    <div class="divider-container" aria-hidden="true">
+      <div class="vertical-divider"></div>
+    </div>
+
+    <!-- Notification Bell -->
+    <button
+      class="bell-btn"
+      type="button"
+      aria-label="Notifications"
+      (click)="onNotificationsClick()">
+      <mat-icon class="bell-icon">notifications_none</mat-icon>
+    </button>
+
+    <!-- User Profile Section -->
+    @if (currentUser$ | async; as user) {
+      <button
+        class="profile-container"
+        type="button"
+        [matMenuTriggerFor]="profileMenu"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="profileMenuOpen()"
+        aria-label="User profile menu">
+        <!-- Avatar -->
+        @if (user.profileImageUrl) {
+          <img
+            class="profile-avatar"
+            [src]="user.profileImageUrl"
+            [alt]="user.name + ' avatar'" />
+        } @else {
+          <div class="profile-avatar-fallback" [attr.aria-hidden]="true">
+            <mat-icon class="profile-avatar-icon">account_circle</mat-icon>
+          </div>
+        }
+        <!-- User Info -->
+        <div class="profile-info">
+          <span class="profile-name">{{ user.name }}</span>
+          <span class="profile-role">Member</span>
+        </div>
+        <!-- Dropdown Caret -->
+        <mat-icon class="profile-caret">expand_more</mat-icon>
+      </button>
+
+      <mat-menu #profileMenu="matMenu"
+        (menuOpened)="onProfileMenuOpened()"
+        (menuClosed)="onProfileMenuClosed()">
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </mat-menu>
+    }
+  </div>
+</header>

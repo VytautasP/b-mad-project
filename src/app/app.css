@@ -1,7 +1,15 @@
 ﻿:host {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   width: 100%;
+  overflow: hidden;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -11,12 +19,8 @@
   min-width: 0;
 }
 
-.main-content.with-sidebar {
-  /* Content area fills remaining width beside 256px sidebar */
-}
-
 @media (max-width: 1023px) {
-  .main-content.with-sidebar {
+  .app-body.with-nav .main-content {
     /* On mobile, content takes full width since sidebar is overlay */
     padding-top: 56px; /* Space for hamburger toggle */
   }

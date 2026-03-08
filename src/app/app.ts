@@ -1,13 +1,14 @@
 import { Component, signal, inject } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { SidebarComponent } from './shared/components/sidebar/sidebar';
+import { ShellbarComponent } from './shared/components/shellbar/shellbar';
 import { TimerWidgetComponent } from './shared/components/timer-widget/timer-widget.component';
 import { filter, map } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, SidebarComponent, TimerWidgetComponent],
+  imports: [RouterOutlet, SidebarComponent, ShellbarComponent, TimerWidgetComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
