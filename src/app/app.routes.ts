@@ -21,8 +21,23 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'project',
+    loadComponent: () => import('./features/project/project').then(m => m.ProjectComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'timeline',
     loadComponent: () => import('./features/tasks/timeline/timeline').then(m => m.TimelineComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'logs',
+    loadComponent: () => import('./features/logs/logs').then(m => m.LogsComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'settings',
+    loadComponent: () => import('./features/settings/settings').then(m => m.SettingsComponent),
     canActivate: [authGuard]
   },
   {

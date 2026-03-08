@@ -1,0 +1,67 @@
+﻿<!-- Mobile hamburger toggle -->
+<button
+  class="mobile-toggle"
+  (click)="toggleMobile()"
+  aria-label="Toggle navigation menu"
+  type="button">
+  <mat-icon>menu</mat-icon>
+</button>
+
+<!-- Mobile overlay backdrop -->
+@if (mobileOpen()) {
+  <div class="sidebar-overlay" (click)="closeMobile()"></div>
+}
+
+<!-- Sidebar -->
+<aside class="sidebar" [class.open]="mobileOpen()">
+  <div class="sidebar-container">
+    <!-- Main Navigation -->
+    <nav class="sidebar-nav" aria-label="Main navigation">
+      @for (item of navItems; track item.route) {
+        <a
+          class="nav-link"
+          [routerLink]="item.route"
+          routerLinkActive="active"
+          #rla="routerLinkActive"
+          [routerLinkActiveOptions]="{ exact: item.exact }"
+          [attr.aria-current]="rla.isActive ? 'page' : null">
+          <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <!-- Bottom Section -->
+    <div class="sidebar-bottom">
+      <div class="bottom-border">
+        <a
+          class="nav-link"
+          [routerLink]="settingsItem.route"
+          routerLinkActive="active"
+          #rlaSettings="routerLinkActive"
+          [routerLinkActiveOptions]="{ exact: settingsItem.exact }"
+          [attr.aria-current]="rlaSettings.isActive ? 'page' : null">
+          <mat-icon class="nav-icon">{{ settingsItem.icon }}</mat-icon>
+          <span class="nav-label">{{ settingsItem.label }}</span>
+        </a>
+
+        <!-- User info and logout -->
+        @if (currentUser$ | async; as user) {
+          <div class="user-section">
+            <div class="user-info">
+              <mat-icon class="user-icon">account_circle</mat-icon>
+              <span class="user-name">{{ user.name }}</span>
+            </div>
+            <button
+              class="logout-btn"
+              (click)="logout()"
+              type="button"
+              aria-label="Log out">
+              <mat-icon class="logout-icon">logout</mat-icon>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</aside>

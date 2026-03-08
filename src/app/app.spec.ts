@@ -23,24 +23,24 @@ describe('App', () => {
     expect(app['title']()).toBe('b-mad-project');
   });
 
-  it('should render TaskFlow heading', () => {
-    const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('TaskFlow');
-  });
-
-  it('should render status message', () => {
-    const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.status')?.textContent).toContain('Development Environment Ready');
-  });
-
   it('should have router outlet', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('router-outlet')).toBeTruthy();
+  });
+
+  it('should render sidebar on authenticated routes', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('app-sidebar')).toBeTruthy();
+  });
+
+  it('should render main content area', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.main-content')).toBeTruthy();
   });
 });

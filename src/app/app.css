@@ -1,30 +1,23 @@
-﻿.container {
+﻿:host {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
 }
 
-.content {
-  text-align: center;
-  padding: 2rem;
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
 }
 
-h1 {
-  font-size: 3rem;
-  color: #1976d2;
-  margin: 0 0 1rem 0;
+.main-content.with-sidebar {
+  /* Content area fills remaining width beside 256px sidebar */
 }
 
-p {
-  font-size: 1.25rem;
-  color: #666;
-  margin: 0.5rem 0;
-}
-
-.status {
-  color: #4caf50;
-  font-weight: 500;
+@media (max-width: 1023px) {
+  .main-content.with-sidebar {
+    /* On mobile, content takes full width since sidebar is overlay */
+    padding-top: 56px; /* Space for hamburger toggle */
+  }
 }
