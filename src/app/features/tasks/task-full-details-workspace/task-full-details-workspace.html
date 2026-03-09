@@ -1,0 +1,436 @@
+<div class="workspace-page">
+  <div class="workspace-container">
+    @if (isLoading()) {
+      <section class="workspace-card state-card loading-card" aria-label="Loading task details">
+        <mat-spinner diameter="40"></mat-spinner>
+        <div>
+          <h2>Loading task workspace</h2>
+          <p>Pulling the latest task details, activity, and time context.</p>
+        </div>
+      </section>
+    } @else if (hasLoadError()) {
+      <section class="workspace-card state-card error-card" role="alert">
+        <div class="state-card-icon">
+          <mat-icon>error_outline</mat-icon>
+        </div>
+        <div class="state-copy">
+          <h2>We couldn’t load this task</h2>
+          <p>Try again or head back to the dashboard.</p>
+        </div>
+        <div class="state-actions">
+          <button mat-stroked-button type="button" (click)="onBack()">Back</button>
+          <button mat-flat-button type="button" (click)="onRetryTask()">Retry</button>
+        </div>
+      </section>
+    } @else if (task(); as currentTask) {
+      <div class="workspace-grid">
+        <div class="primary-column">
+          <article class="workspace-card overview-card">
+            <div class="overview-top-row">
+              <button mat-button type="button" class="back-link" (click)="onBack()">
+                <mat-icon>arrow_back</mat-icon>
+                Back to tasks
+              </button>
+
+              <button
+                mat-icon-button
+                type="button"
+                class="utility-button"
+                matTooltip="Refresh task"
+                aria-label="Refresh task"
+                (click)="refreshTask(true)">
+                <mat-icon>refresh</mat-icon>
+              </button>
+            </div>
+
+            <div class="overview-meta-row">
+              <span class="task-reference">{{ getTaskReference(currentTask) }}</span>
+              <span class="meta-separator"></span>
+              <span class="meta-copy">{{ getTypeLabel(currentTask.type) }}</span>
+              <span class="meta-separator"></span>
+              <span class="meta-copy">Created by {{ currentTask.createdByUserName }}</span>
+            </div>
+
+            <div class="overview-copy">
+              @if (isEditingName()) {
+                <input
+                  class="inline-edit-name"
+                  type="text"
+                  [(ngModel)]="editNameValue"
+                  (blur)="onSaveName()"
+                  (keydown)="onNameKeydown($event)"
+                  #nameInput>
+              } @else {
+                <h1
+                  class="editable-text"
+                  (click)="onStartEditName()"
+                  matTooltip="Click to edit name">
+                  {{ currentTask.name }}
+                </h1>
+              }
+              @if (isEditingDescription()) {
+                <textarea
+                  class="inline-edit-description"
+                  [(ngModel)]="editDescriptionValue"
+                  (blur)="onSaveDescription()"
+                  (keydown)="onDescriptionKeydown($event)"
+                  rows="3"
+                  #descInput></textarea>
+              } @else {
+                <p
+                  class="editable-text"
+                  (click)="onStartEditDescription()"
+                  matTooltip="Click to edit description">
+                  {{ currentTask.description || 'Add a richer description so collaborators can understand the intent, scope, and next action from this page.' }}
+                </p>
+              }
+            </div>
+
+            <div class="overview-footer">
+              <span class="pill" [class]="'pill ' + getStatusClass(currentTask.status)">
+                {{ getStatusLabel(currentTask.status) }}
+              </span>
+              <span class="pill neutral-pill" [class]="getPriorityClass(currentTask.priority)">
+                {{ getPriorityLabel(currentTask.priority) }} priority
+              </span>
+              <span class="meta-badge">
+                <mat-icon>event</mat-icon>
+                {{ formatDate(currentTask.dueDate) }}
+              </span>
+            </div>
+          </article>
+
+          <article class="workspace-card subtasks-card">
+            <div class="subtasks-header">
+              <div class="subtasks-title-row">
+                <mat-icon class="subtasks-icon">account_tree</mat-icon>
+                <h2>Subtasks</h2>
+              </div>
+              @if (childTasks().length > 0) {
+                <div class="subtasks-progress-pill">
+                  <span>{{ completedSubtaskCount() }} of {{ childTasks().length }}</span>
+                  <span class="pill-divider">·</span>
+                  <span>{{ subtaskStatusSummary() }}</span>
+                </div>
+              }
+            </div>
+
+            <div class="subtasks-list">
+              @if (isLoadingSubtasks()) {
+                <div class="subtasks-loading">
+                  <mat-spinner diameter="20"></mat-spinner>
+                  <span>Loading subtasks...</span>
+                </div>
+              } @else if (childTasks().length === 0) {
+                <div class="subtasks-empty">
+                  <mat-icon>checklist</mat-icon>
+                  <span>No subtasks yet. Break this task into smaller pieces.</span>
+                </div>
+              } @else {
+                @for (subtask of childTasks(); track subtask.id) {
+                  <div class="subtask-row" [class.completed]="subtask.status === TaskStatus.Done">
+                    <div
+                      class="subtask-checkbox"
+                      [class.checked]="subtask.status === TaskStatus.Done"
+                      (click)="onToggleSubtaskStatus(subtask)"
+                      role="checkbox"
+                      [attr.aria-checked]="subtask.status === TaskStatus.Done"
+                      tabindex="0">
+                      @if (subtask.status === TaskStatus.Done) {
+                        <mat-icon>check</mat-icon>
+                      }
+                    </div>
+                    <span class="subtask-name" (click)="onNavigateToSubtask(subtask)">{{ subtask.name }}</span>
+                    @if (subtask.assignees && subtask.assignees.length > 0) {
+                      <div class="subtask-assignee-avatar" [matTooltip]="subtask.assignees[0].userName">
+                        {{ getSubtaskInitials(subtask.assignees[0].userName) }}
+                      </div>
+                    }
+                  </div>
+                }
+              }
+            </div>
+
+            <div class="subtasks-footer">
+              <button mat-button type="button" class="add-subtask-btn" (click)="onAddSubtask()">
+                <mat-icon>add</mat-icon>
+                Add Subtask
+              </button>
+            </div>
+          </article>
+
+          <article class="workspace-card attachments-card">
+            <div class="card-header attachments-header">
+              <div>
+                <h2>Attachments</h2>
+                <p>Scaffolded safely until attachment APIs are defined.</p>
+              </div>
+              <span class="attachment-count">0</span>
+            </div>
+
+            <div class="attachment-grid" aria-label="Attachment placeholders">
+              @for (item of attachmentScaffolds; track item.title) {
+                <div class="attachment-tile">
+                  <div class="attachment-icon-shell">
+                    <mat-icon>{{ item.icon }}</mat-icon>
+                  </div>
+                  <h3>{{ item.title }}</h3>
+                  <p>{{ item.description }}</p>
+                </div>
+              }
+            </div>
+
+            <div class="attachment-empty-state">
+              <mat-icon>attach_file</mat-icon>
+              <span>No attachments have been added to this task yet.</span>
+            </div>
+          </article>
+        </div>
+
+        <aside class="secondary-column">
+          <article class="workspace-card time-card">
+            <div class="time-card-hero">
+              <div>
+                <span class="section-kicker">Time Tracking</span>
+                <h2>Focused work</h2>
+              </div>
+
+              <div class="timer-pill">
+                {{ formatElapsedTime(isTimerRunningForCurrentTask() ? currentTimerState?.elapsedSeconds || 0 : 0) }}
+              </div>
+            </div>
+
+            <div class="time-card-body">
+              <div class="time-actions-row">
+                <button
+                  mat-flat-button
+                  type="button"
+                  class="start-button"
+                  (click)="onStartTimer()"
+                  [disabled]="isTimerRunningForCurrentTask()">
+                  Start
+                </button>
+                <button
+                  mat-stroked-button
+                  type="button"
+                  class="stop-button"
+                  (click)="onStopTimer()"
+                  [disabled]="!isTimerRunningForCurrentTask()">
+                  Stop
+                </button>
+                <button mat-button type="button" class="log-time-link" (click)="onLogTime()">
+                  Log time
+                </button>
+              </div>
+
+              @if (isAnotherTimerRunning()) {
+                <p class="time-note" role="status">
+                  Another task currently owns the running timer. Starting here will switch focus.
+                </p>
+              } @else if (isTimerRunningForCurrentTask()) {
+                <p class="time-note success" role="status">
+                  Timer is running for this task right now.
+                </p>
+              }
+
+              <div class="time-summary-list">
+                <div class="summary-row">
+                  <span>Direct</span>
+                  <strong>{{ formatDuration(currentTask.directLoggedMinutes) }}</strong>
+                </div>
+                @if (hasChildrenTime()) {
+                  <div class="summary-row">
+                    <span>Subtasks</span>
+                    <strong>{{ formatDuration(currentTask.childrenLoggedMinutes) }}</strong>
+                  </div>
+                }
+                <div class="summary-row total-row">
+                  <span>Total</span>
+                  <strong>{{ formatDuration(currentTask.totalLoggedMinutes) }}</strong>
+                </div>
+              </div>
+
+              <div class="embedded-list-block">
+                <div class="embedded-list-header">
+                  <h3>Recent entries</h3>
+                </div>
+
+                <app-time-entry-list
+                  #timeEntryList
+                  [taskId]="currentTask.id"
+                  [showHeader]="false"
+                  (timeEntryDeleted)="onTimeEntryDeleted()">
+                </app-time-entry-list>
+              </div>
+            </div>
+          </article>
+
+          <article class="workspace-card sidebar-details-card">
+            <div class="sidebar-details-header">
+              <h2>Details</h2>
+              <button mat-icon-button type="button" class="utility-button" matTooltip="Refresh" (click)="refreshTask(true)">
+                <mat-icon>refresh</mat-icon>
+              </button>
+            </div>
+
+            <div class="sidebar-sections">
+              <!-- Status (inline edit) -->
+              <div class="sidebar-field">
+                <span class="sidebar-field-label">Status</span>
+                <div class="sidebar-field-value">
+                  <span
+                    class="pill clickable-pill"
+                    [class]="'pill clickable-pill ' + getStatusClass(currentTask.status)"
+                    [matMenuTriggerFor]="statusMenu">
+                    {{ getStatusLabel(currentTask.status) }}
+                    <mat-icon class="inline-chevron">keyboard_arrow_down</mat-icon>
+                  </span>
+                  <mat-menu #statusMenu="matMenu">
+                    @for (s of allStatuses; track s.value) {
+                      <button mat-menu-item (click)="onChangeStatus(s.value)" [disabled]="s.value === currentTask.status">
+                        <span class="pill menu-pill" [class]="'pill menu-pill ' + getStatusClass(s.value)">
+                          {{ s.label }}
+                        </span>
+                      </button>
+                    }
+                  </mat-menu>
+                </div>
+              </div>
+
+              <!-- Priority (inline edit) -->
+              <div class="sidebar-field">
+                <span class="sidebar-field-label">Priority</span>
+                <div
+                  class="sidebar-priority-chip"
+                  [class]="getPrioritySidebarClass(currentTask.priority)"
+                  [matMenuTriggerFor]="priorityMenu"
+                  style="cursor: pointer">
+                  <mat-icon class="priority-chip-icon">{{ getPriorityIcon(currentTask.priority) }}</mat-icon>
+                  <span>{{ getPriorityLabel(currentTask.priority) }}</span>
+                  <mat-icon class="priority-chip-chevron">keyboard_arrow_down</mat-icon>
+                </div>
+                <mat-menu #priorityMenu="matMenu">
+                  @for (p of allPriorities; track p.value) {
+                    <button mat-menu-item (click)="onChangePriority(p.value)" [disabled]="p.value === currentTask.priority">
+                      <span class="sidebar-priority-chip menu-priority-chip" [class]="'menu-priority-chip ' + getPrioritySidebarClass(p.value)">
+                        <mat-icon class="priority-chip-icon">{{ getPriorityIcon(p.value) }}</mat-icon>
+                        <span>{{ p.label }}</span>
+                      </span>
+                    </button>
+                  }
+                </mat-menu>
+              </div>
+
+              <!-- Assignees -->
+              <div class="sidebar-field">
+                <span class="sidebar-field-label">Assignees</span>
+                <div class="sidebar-assignee-row">
+                  @if (isLoadingAssignees()) {
+                    <mat-spinner diameter="20"></mat-spinner>
+                  } @else {
+                    <app-assignee-list
+                      [assignees]="assignees()"
+                      [maxVisible]="5"
+                      [avatarSize]="36"
+                      [showActions]="false">
+                    </app-assignee-list>
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="add-assignee-circle"
+                      (click)="toggleUserPicker()"
+                      matTooltip="Add assignee">
+                      <mat-icon>add</mat-icon>
+                    </button>
+                  }
+                </div>
+                @if (showUserPicker()) {
+                  <div class="sidebar-picker-shell">
+                    <app-user-picker
+                      [excludedUserIds]="getExcludedUserIds()"
+                      (userSelected)="onAddAssignee($event)">
+                    </app-user-picker>
+                  </div>
+                }
+              </div>
+
+              <!-- Dates (inline edit for due date) -->
+              <div class="sidebar-dates">
+                <div class="sidebar-date-col">
+                  <div class="sidebar-date-label">
+                    <span>Start</span>
+                    <mat-icon>calendar_today</mat-icon>
+                  </div>
+                  <div class="sidebar-date-value">
+                    <mat-icon>event</mat-icon>
+                    <span>{{ formatShortDate(currentTask.createdDate) }}</span>
+                  </div>
+                </div>
+                <div class="sidebar-date-col">
+                  <div class="sidebar-date-label">
+                    <span>Due</span>
+                    <mat-icon>calendar_today</mat-icon>
+                  </div>
+                  <div class="sidebar-date-value clickable-date" [class.overdue]="isOverdue(currentTask.dueDate)" (click)="dueDatePicker.open()">
+                    <mat-icon>event</mat-icon>
+                    <span>{{ formatShortDate(currentTask.dueDate) }}</span>
+                    <mat-icon class="inline-chevron">edit_calendar</mat-icon>
+                  </div>
+                  <mat-form-field class="hidden-datepicker-field">
+                    <input matInput [matDatepicker]="dueDatePicker" [value]="currentTask.dueDate" (dateChange)="onChangeDueDate($event)">
+                    <mat-datepicker #dueDatePicker></mat-datepicker>
+                  </mat-form-field>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="workspace-card activity-card" [class.expanded]="activityExpanded()">
+            <div class="card-header compact-header">
+              <div>
+                <h2>Activity</h2>
+                <p>Recent changes, comments, and collaboration notes.</p>
+              </div>
+
+              <button mat-button type="button" class="view-all-button" (click)="toggleActivityExpanded()">
+                {{ activityExpanded() ? 'Collapse' : 'View all' }}
+              </button>
+            </div>
+
+            @if (showDeferredActivity()) {
+              <div class="activity-feed-shell">
+                <app-activity-log [taskId]="currentTask.id" [refreshToken]="activityRefreshVersion"></app-activity-log>
+              </div>
+            } @else {
+              <div class="section-skeleton" aria-label="Loading activity">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line skeleton-short"></div>
+              </div>
+            }
+
+            <div class="card-divider"></div>
+
+            @if (showDeferredComments()) {
+              <div class="comment-shell">
+                <app-comment-thread
+                  [taskId]="currentTask.id"
+                  [showHeader]="false"
+                  (commentCountChange)="onCommentCountChanged($event)"
+                  (activityChanged)="onCommentActivityChanged()">
+                </app-comment-thread>
+              </div>
+            } @else {
+              <div class="section-skeleton" aria-label="Loading comments">
+                <div class="skeleton-line skeleton-title"></div>
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line"></div>
+                <div class="skeleton-line skeleton-short"></div>
+              </div>
+            }
+          </article>
+        </aside>
+      </div>
+    }
+  </div>
+</div>

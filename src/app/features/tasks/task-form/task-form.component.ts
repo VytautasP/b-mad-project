@@ -37,11 +37,13 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   @Input() mode: 'create' | 'edit' = 'create';
   @Input() taskToEdit: Task | null = null;
   @Input() initialFocusField: 'dueDate' | null = null;
+  @Input() embedded = false;
 
   @ViewChild('dueDateInput') dueDateInput?: ElementRef<HTMLInputElement>;
   
   @Output() taskCreated = new EventEmitter<void>();
   @Output() taskUpdated = new EventEmitter<Task>();
+  @Output() cancelled = new EventEmitter<void>();
   
   taskForm: FormGroup;
   isSubmitting = false;
@@ -93,6 +95,15 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     if (this.dialogRef) {
       this.dialogRef.close();
     }
+  }
+
+  onCancel(): void {
+    if (this.dialogRef) {
+      this.dialogRef.close();
+      return;
+    }
+
+    this.cancelled.emit();
   }
 
   onSubmit(): void {

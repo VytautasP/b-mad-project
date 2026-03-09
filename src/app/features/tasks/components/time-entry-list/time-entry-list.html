@@ -1,12 +1,14 @@
-<div class="time-entry-list">
-  <div class="time-entry-header">
-    <h3>Time Log</h3>
-    @if (!isLoading() && timeEntries().length > 0) {
-      <div class="total-time">
-        Total: <strong>{{ getTotalLoggedTime() }}</strong>
-      </div>
-    }
-  </div>
+<div class="time-entry-list" [class.time-entry-list-embedded]="!showHeader">
+  @if (showHeader) {
+    <div class="time-entry-header">
+      <h3>Time Log</h3>
+      @if (!isLoading() && timeEntries().length > 0) {
+        <div class="total-time">
+          Total: <strong>{{ getTotalLoggedTime() }}</strong>
+        </div>
+      }
+    </div>
+  }
 
   @if (isLoading()) {
     <div class="loading-state">

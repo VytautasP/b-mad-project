@@ -238,6 +238,15 @@ export class TaskService {
   }
 
   /**
+   * Get child tasks (subtasks) for a given parent task
+   */
+  getChildTasks(parentTaskId: string): Observable<Task[]> {
+    return this.http.get<Task[]>(`${this.apiUrl}/${parentTaskId}/children`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Get tasks for timeline view with date range filtering
    */
   getTimelineTasks(params: TimelineQueryParams): Observable<Task[]> {

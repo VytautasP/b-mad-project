@@ -1,6 +1,11 @@
 .task-form {
   padding: 24px;
   max-width: 600px;
+
+  &.embedded {
+    padding: 0;
+    max-width: none;
+  }
   
   h2 {
     margin: 0 0 24px 0;
@@ -42,6 +47,8 @@
   .form-actions {
     display: flex;
     justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
     margin-top: 16px;
     
     button {

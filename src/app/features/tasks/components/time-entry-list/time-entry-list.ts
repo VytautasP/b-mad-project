@@ -23,6 +23,7 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../..
 })
 export class TimeEntryList implements OnInit {
   @Input() taskId!: string;
+  @Input() showHeader = true;
   @Output() timeEntryDeleted = new EventEmitter<void>();
 
   private readonly timeTrackingService = inject(TimeTrackingService);

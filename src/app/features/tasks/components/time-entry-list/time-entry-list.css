@@ -2,6 +2,10 @@
   margin-top: 16px;
 }
 
+.time-entry-list.time-entry-list-embedded {
+  margin-top: 0;
+}
+
 .time-entry-header {
   display: flex;
   justify-content: space-between;

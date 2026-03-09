@@ -1,13 +1,15 @@
 <div class="comment-thread">
-  <div class="section-header">
-    <div class="section-title">
-      <mat-icon>comment</mat-icon>
-      <h3>Comments</h3>
-      @if (comments().length > 0) {
-        <span class="comment-count-badge">{{ comments().length }}</span>
-      }
+  @if (showHeader) {
+    <div class="section-header">
+      <div class="section-title">
+        <mat-icon>comment</mat-icon>
+        <h3>Comments</h3>
+        @if (comments().length > 0) {
+          <span class="comment-count-badge">{{ comments().length }}</span>
+        }
+      </div>
     </div>
-  </div>
+  }
 
   @if (isLoading()) {
     <div class="loading-state">

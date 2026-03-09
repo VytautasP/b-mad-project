@@ -29,6 +29,7 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../sh
 })
 export class CommentThreadComponent implements OnInit, OnDestroy {
   @Input({ required: true }) taskId!: string;
+  @Input() showHeader = true;
   @Output() commentCountChange = new EventEmitter<number>();
   @Output() activityChanged = new EventEmitter<void>();
 
