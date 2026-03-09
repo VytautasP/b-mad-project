@@ -1,57 +1,79 @@
-<div class="task-detail-dialog">
-  <div mat-dialog-title class="dialog-header">
-    <div class="header-left">
-      <mat-icon class="header-icon">assignment</mat-icon>
-      <h2>{{ task.name }}</h2>
+<div class="qi-modal" aria-labelledby="qi-title">
+  <!-- Header -->
+  <div class="qi-header">
+    <div class="qi-title-row">
+      <h2 id="qi-title" class="qi-title">{{ task.name }}</h2>
+      <button class="qi-close-btn"
+              (click)="onClose()"
+              aria-label="Close task quick view">
+        <mat-icon>close</mat-icon>
+      </button>
     </div>
-    <button mat-icon-button (click)="onClose()" class="close-button" aria-label="Close quick inspect">
-      <mat-icon>close</mat-icon>
-    </button>
+    <div class="qi-status-row">
+      <div class="qi-status-pill" [ngClass]="getStatusPillClass(task.status)">
+        <mat-icon class="qi-status-icon">{{ getStatusIcon(task.status) }}</mat-icon>
+        <span class="qi-status-text">{{ getStatusLabel(task.status) }}</span>
+      </div>
+      <div class="qi-task-id">
+        <span>{{ getTaskId() }}</span>
+      </div>
+    </div>
   </div>
 
-  <mat-dialog-content class="dialog-content">
-    <section class="task-properties">
-      <div class="property-grid">
-        <div class="property-item">
-          <span class="property-label">Status</span>
-          <mat-chip class="status-chip" [ngClass]="getStatusClass(task.status)">
-            <mat-icon>{{ getStatusIcon(task.status) }}</mat-icon>
-            <span>{{ getStatusLabel(task.status) }}</span>
-          </mat-chip>
-        </div>
-        <div class="property-item">
-          <span class="property-label">Priority</span>
-          <mat-chip class="priority-chip">{{ getPriorityLabel(task.priority) }}</mat-chip>
-        </div>
-        <div class="property-item">
-          <span class="property-label">Due Date</span>
-          <span class="property-value">
-            <mat-icon class="inline-icon">event</mat-icon>
-            {{ formatDate(task.dueDate) }}
-          </span>
-        </div>
-        <div class="property-item">
-          <span class="property-label">Assignees</span>
-          <app-assignee-list
-            [assignees]="task.assignees || []"
-            [maxVisible]="4"
-            [showActions]="false">
-          </app-assignee-list>
+  <!-- Body -->
+  <div class="qi-body">
+    <div class="qi-description">
+      <p class="qi-description-text">{{ task.description || 'No description provided.' }}</p>
+    </div>
+
+    <div class="qi-metadata">
+      <div class="qi-meta-col">
+        <span class="qi-meta-label">PRIORITY</span>
+        <div class="qi-meta-value">
+          <mat-icon class="qi-meta-icon" [ngClass]="getPriorityIconClass(task.priority)">{{ getPriorityIcon(task.priority) }}</mat-icon>
+          <span>{{ getPriorityLabel(task.priority) }}</span>
         </div>
       </div>
-
-      @if (task.description) {
-        <div class="description-block">
-          <span class="property-label">Description</span>
-          <p class="description-text">{{ getShortDescription() }}</p>
+      <div class="qi-meta-col">
+        <span class="qi-meta-label">DUE DATE</span>
+        <div class="qi-meta-value">
+          <mat-icon class="qi-meta-icon qi-date-icon">calendar_today</mat-icon>
+          <span>{{ formatDate(task.dueDate) }}</span>
         </div>
-      }
-    </section>
-  </mat-dialog-content>
+      </div>
+    </div>
 
-  <mat-dialog-actions class="dialog-actions">
-    <button mat-raised-button color="primary" (click)="onOpenFullDetails()">
-      Open full details
+    <div class="qi-assignees">
+      <span class="qi-meta-label">ASSIGNEES</span>
+      <app-assignee-list
+        [assignees]="task.assignees || []"
+        [maxVisible]="4"
+        [showActions]="false"
+        [avatarSize]="36">
+      </app-assignee-list>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="qi-footer">
+    <button class="qi-archive-btn"
+            (click)="onArchiveTask()"
+            aria-label="Archive task">
+      <mat-icon class="qi-archive-icon">archive</mat-icon>
+      <span>Archive</span>
     </button>
-  </mat-dialog-actions>
+    <div class="qi-btn-group">
+      <button class="qi-edit-btn"
+              (click)="onEditDetails()"
+              aria-label="Edit task details">
+        Edit Details
+      </button>
+      <button class="qi-primary-btn"
+              (click)="onOpenFullDetails()"
+              aria-label="Open full task details">
+        <span>Open Full Details</span>
+        <mat-icon class="qi-arrow-icon">arrow_forward</mat-icon>
+      </button>
+    </div>
+  </div>
 </div>

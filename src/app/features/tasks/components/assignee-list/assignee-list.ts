@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, computed, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, computed, signal, HostBinding } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
@@ -25,6 +25,13 @@ export class AssigneeList {
   }
   @Input() maxVisible: number = 3;
   @Input() showActions: boolean = false;
+  @Input() avatarSize: number = 32;
+
+  @HostBinding('style.--avatar-size')
+  get avatarSizeVar(): string { return `${this.avatarSize}px`; }
+
+  @HostBinding('style.--avatar-font-size')
+  get avatarFontSizeVar(): string { return `${Math.round(this.avatarSize * 0.375)}px`; }
   
   @Output() removeAssignee = new EventEmitter<string>();
   

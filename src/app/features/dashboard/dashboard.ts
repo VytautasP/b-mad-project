@@ -107,11 +107,12 @@ export class DashboardComponent implements OnInit {
 
   onTaskSelected(task: Task): void {
     this.dialog.open(TaskDetailDialog, {
-      width: '700px',
-      maxWidth: '90vw',
+      width: '100%',
+      maxWidth: '512px',
       disableClose: true,
       autoFocus: false,
       panelClass: 'quick-inspect-dialog-panel',
+      backdropClass: 'quick-inspect-backdrop',
       ...getDialogAnimationDurations(),
       data: { task }
     });

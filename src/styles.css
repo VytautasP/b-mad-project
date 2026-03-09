@@ -60,6 +60,22 @@ html, body {
   animation: quick-inspect-enter var(--motion-duration-dialog-enter) var(--motion-ease-emphasized);
 }
 
+.quick-inspect-dialog-panel .mdc-dialog__surface {
+  border-radius: 12px !important;
+  border: 1px solid #F1F5F9 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  overflow: hidden !important;
+}
+
+.quick-inspect-dialog-panel .mat-mdc-dialog-container .mdc-dialog__surface {
+  padding: 0 !important;
+}
+
+.quick-inspect-backdrop {
+  background: rgba(15, 23, 42, 0.6) !important;
+  backdrop-filter: blur(4px);
+}
+
 @keyframes quick-inspect-enter {
   from {
     opacity: 0;
