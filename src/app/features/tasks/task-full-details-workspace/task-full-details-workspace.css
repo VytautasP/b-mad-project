@@ -956,8 +956,29 @@
   border-top: 1px solid #e2e8f0;
 }
 
-.view-all-button {
-  color: #137fec;
+.view-all-link {
+  color: #617589;
+  font-size: 12px;
+  font-weight: 400;
+  min-width: auto;
+  padding: 0;
+  line-height: 16px;
+}
+
+.activity-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.activity-card-title {
+  margin: 0;
+  font-family: 'Manrope', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 28px;
+  color: #111418;
 }
 
 .activity-feed-shell,
@@ -1046,7 +1067,7 @@
 }
 
 .activity-card ::ng-deep .activity-log .feed {
-  max-height: 220px;
+  max-height: 280px;
 }
 
 .activity-card ::ng-deep .comment-thread .comment-list {

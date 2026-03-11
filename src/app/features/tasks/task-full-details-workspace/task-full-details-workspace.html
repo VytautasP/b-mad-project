@@ -386,13 +386,9 @@
           </article>
 
           <article class="workspace-card activity-card" [class.expanded]="activityExpanded()">
-            <div class="card-header compact-header">
-              <div>
-                <h2>Activity</h2>
-                <p>Recent changes, comments, and collaboration notes.</p>
-              </div>
-
-              <button mat-button type="button" class="view-all-button" (click)="toggleActivityExpanded()">
+            <div class="activity-card-header">
+              <h2 class="activity-card-title">Activity</h2>
+              <button mat-button type="button" class="view-all-link" (click)="toggleActivityExpanded()">
                 {{ activityExpanded() ? 'Collapse' : 'View all' }}
               </button>
             </div>
