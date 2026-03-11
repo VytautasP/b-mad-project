@@ -5,6 +5,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { ActivityLog, ActivityType } from '../../../../../shared/models/activity-log.model';
 import { RelativeTimePipe } from '../../../../../shared/pipes/relative-time.pipe';
 
+const STATUS_PILL_TYPES = new Set([
+  ActivityType.StatusChanged,
+  ActivityType.Assigned,
+  ActivityType.Unassigned
+]);
+
 @Component({
   selector: 'app-activity-item',
   standalone: true,
@@ -16,7 +22,12 @@ import { RelativeTimePipe } from '../../../../../shared/pipes/relative-time.pipe
 export class ActivityItemComponent {
   @Input({ required: true }) activity!: ActivityLog;
 
+  protected readonly ActivityType = ActivityType;
   protected isExpanded = false;
+
+  get isStatusChange(): boolean {
+    return STATUS_PILL_TYPES.has(this.activity.activityType);
+  }
 
   getActivityIcon(type: ActivityType): string {
     switch (type) {

@@ -1,45 +1,39 @@
-<article class="activity-item" [ngClass]="getActivityClass(activity.activityType)">
-  <div class="icon-wrapper" aria-hidden="true">
-    <mat-icon>{{ getActivityIcon(activity.activityType) }}</mat-icon>
+@if (isStatusChange) {
+  <div class="activity-status-pill-wrapper">
+    <div class="activity-status-pill">
+      <mat-icon class="status-pill-icon">{{ getActivityIcon(activity.activityType) }}</mat-icon>
+      <span class="status-pill-text">
+        <strong>{{ activity.userName }}</strong>
+        <span>{{ activity.description }}</span>
+      </span>
+    </div>
   </div>
-
-  <div class="content">
-    <div class="main-row">
-      <div class="actor-avatar" [attr.aria-label]="activity.userName">{{ actorInitials }}</div>
-
-      <div class="text-content">
-        <div class="description-row">
-          <span class="actor-name">{{ activity.userName }}</span>
-          <span class="description">{{ activity.description }}</span>
-        </div>
-        <time class="timestamp" [attr.title]="formattedTimestamp">{{ activity.timestamp | relativeTime }}</time>
-      </div>
+} @else {
+  <article class="activity-bubble-item">
+    <div class="bubble-avatar-col">
+      <div class="bubble-avatar" [attr.aria-label]="activity.userName">{{ actorInitials }}</div>
     </div>
 
-    @if (hasFieldChangeDetails) {
-      <button type="button" mat-button class="details-toggle" (click)="toggleDetails()">
-        <span>{{ isExpanded ? 'Hide details' : 'Show details' }}</span>
-        <mat-icon>{{ isExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
-      </button>
+    <div class="bubble-content-col">
+      <div class="bubble-body">
+        <div class="bubble-header">
+          <span class="bubble-author">{{ activity.userName }}</span>
+          <time class="bubble-time" [attr.title]="formattedTimestamp">{{ activity.timestamp | relativeTime }}</time>
+        </div>
+        <div class="bubble-text">{{ activity.description }}</div>
+      </div>
 
-      @if (isExpanded) {
-        <div class="change-details">
-          @if (activity.changedField) {
-            <div class="detail-row">
-              <span class="label">Field</span>
-              <span class="value">{{ activity.changedField }}</span>
-            </div>
-          }
-          <div class="detail-row">
-            <span class="label">From</span>
-            <span class="value">{{ activity.oldValue || '—' }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="label">To</span>
-            <span class="value">{{ activity.newValue || '—' }}</span>
-          </div>
+      @if (hasFieldChangeDetails) {
+        <div class="bubble-change-alert" [class.is-status]="activity.activityType === ActivityType.StatusChanged">
+          <mat-icon class="change-alert-icon">{{ getActivityIcon(activity.activityType) }}</mat-icon>
+          <span class="change-alert-text">
+            @if (activity.changedField) {
+              {{ activity.changedField }}:
+            }
+            {{ activity.oldValue || '—' }} → {{ activity.newValue || '—' }}
+          </span>
         </div>
       }
-    }
-  </div>
-</article>
+    </div>
+  </article>
+}

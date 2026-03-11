@@ -41,11 +41,11 @@ describe('ActivityItemComponent', () => {
   });
 
   it('should render relative timestamp text', () => {
-    const timestampEl = fixture.nativeElement.querySelector('.timestamp') as HTMLElement;
+    const timestampEl = fixture.nativeElement.querySelector('.bubble-time') as HTMLElement;
     expect(timestampEl.textContent?.trim().length).toBeGreaterThan(0);
   });
 
-  it('should show field change details when expanded', () => {
+  it('should show field change details when present', () => {
     component.activity = {
       ...baseActivity,
       changedField: 'Status',
@@ -54,18 +54,12 @@ describe('ActivityItemComponent', () => {
     };
     fixture.detectChanges();
 
-    // Need to trigger change detection again to render the toggle button
-    fixture.detectChanges();
-
-    component.toggleDetails();
-    fixture.detectChanges();
-
-    const details = fixture.nativeElement.querySelector('.change-details') as HTMLElement;
-    expect(details).toBeTruthy();
-    const detailsText = details.textContent ?? '';
-    expect(detailsText).toContain('Status');
-    expect(detailsText).toContain('InProgress');
-    expect(detailsText).toContain('Done');
+    const alert = fixture.nativeElement.querySelector('.bubble-change-alert') as HTMLElement;
+    expect(alert).toBeTruthy();
+    const alertText = alert.textContent ?? '';
+    expect(alertText).toContain('Status');
+    expect(alertText).toContain('InProgress');
+    expect(alertText).toContain('Done');
   });
 
   it('should render initials avatar fallback', () => {

@@ -1,7 +1,6 @@
 .activity-log {
   display: flex;
   flex-direction: column;
-  gap: 12px;
 
   .loading-state,
   .empty-state {
@@ -9,8 +8,9 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    color: rgba(0, 0, 0, 0.6);
+    color: #617589;
     padding: 16px 8px;
+    font-size: 14px;
   }
 
   .error-state {
@@ -27,12 +27,25 @@
   }
 
   .feed {
-    max-height: 320px;
+    max-height: 400px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding-right: 4px;
+    gap: 24px;
+    padding-right: 8px;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 2px;
+    }
   }
 
   .load-more-row {
@@ -40,6 +53,7 @@
     align-items: center;
     justify-content: center;
     gap: 10px;
+    padding-top: 16px;
 
     button {
       display: inline-flex;
@@ -55,6 +69,7 @@
     gap: 6px;
     color: #8e1b1b;
     font-size: 13px;
+    padding-top: 8px;
   }
 }
 
@@ -62,6 +77,7 @@
   .activity-log {
     .feed {
       max-height: 260px;
+      gap: 16px;
     }
 
     .load-more-row {
