@@ -674,14 +674,32 @@ public class TaskService : ITaskService
             .GroupBy(t => t.ParentTaskId!.Value)
             .ToDictionary(g => g.Key, g => g.ToList());
 
+        // Helper: walk up parent chain to find root ancestor name (for grouping)
+        string? GetRootAncestorName(TaskEntity task)
+        {
+            var current = task;
+            while (current.ParentTaskId.HasValue && taskDict.ContainsKey(current.ParentTaskId.Value))
+            {
+                current = taskDict[current.ParentTaskId.Value];
+            }
+            // current is now the root ancestor
+            // If the task itself IS the root (no parent in dataset), return its name only if it has children
+            if (current.Id == task.Id)
+            {
+                return childTasksByParent.ContainsKey(task.Id) ? task.Name : null;
+            }
+            return current.Name;
+        }
+
         foreach (var task in tasks)
         {
             DateTime startDate;
             DateTime endDate;
             int duration;
+            bool isGroup = childTasksByParent.ContainsKey(task.Id);
 
             // Check if this is a parent task with children in the result set
-            if (childTasksByParent.ContainsKey(task.Id))
+            if (isGroup)
             {
                 var children = childTasksByParent[task.Id];
                 
@@ -699,10 +717,13 @@ public class TaskService : ITaskService
             {
                 // Regular task or parent without children in result set
                 startDate = task.CreatedDate;
-                endDate = task.DueDate ?? task.CreatedDate; // Should always have DueDate due to query filter
+                endDate = task.DueDate ?? task.CreatedDate;
             }
 
             duration = (int)(endDate - startDate).TotalDays;
+
+            // Group name: resolve to root ancestor so entire tree is grouped together
+            string? groupName = GetRootAncestorName(task);
 
             var timelineTask = new TimelineTaskDto
             {
@@ -716,6 +737,8 @@ public class TaskService : ITaskService
                 Type = task.Type,
                 Progress = task.Progress,
                 ParentTaskId = task.ParentTaskId,
+                GroupName = groupName,
+                IsGroup = isGroup,
                 Assignees = task.TaskAssignments?.Select(ta => new TimelineTaskDto.TaskAssigneeDto
                 {
                     UserId = ta.UserId,

@@ -1,344 +1,596 @@
-﻿.timeline-container {
-  padding: 24px;
-  height: 100%;
+﻿/* ======================================================
+   Timeline View — Figma-aligned (node 7:1109)
+   ====================================================== */
+
+/* === Page container === */
+.timeline-page {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  background: #fff;
+  font-family: 'Manrope', sans-serif;
 }
 
-.timeline-header {
+/* ======================================================
+   Toolbar (7:1110)
+   ====================================================== */
+.toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  height: 61px;
+  padding: 12px 24px;
+  background: #fff;
+  border-bottom: 1px solid #E2E8F0;
+  flex-shrink: 0;
 }
 
-.timeline-header h1 {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 500;
-}
-
-.view-controls {
+.toolbar-left {
   display: flex;
-  gap: 12px;
   align-items: center;
-}
-
-.view-controls .mat-button-toggle {
-  min-height: 44px;
-  transition: transform var(--motion-duration-feedback) var(--motion-ease-standard),
-    opacity var(--motion-duration-feedback) var(--motion-ease-standard);
-}
-
-:host ::ng-deep .view-controls .mat-button-toggle.view-toggle-active {
-  font-weight: 700;
-}
-
-:host ::ng-deep .view-controls .mat-button-toggle.view-toggle-active .mat-button-toggle-label-content {
-  text-decoration: underline;
-}
-
-:host ::ng-deep .view-controls .mat-button-toggle.mat-button-toggle-checked {
-  box-shadow: inset 0 0 0 2px currentColor;
-}
-
-:host ::ng-deep .view-controls .mat-button-toggle-focus-overlay,
-:host ::ng-deep .view-controls .mat-button-toggle:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
-}
-
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px;
   gap: 16px;
 }
 
-.loading-container p {
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 16px;
-}
-
-.timeline-skeleton {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background: #fff;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.skeleton-header {
+.toolbar-right {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.skeleton-lanes {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.skeleton-lane {
-  display: grid;
-  grid-template-columns: 140px 1fr;
-  gap: 10px;
-  align-items: center;
-}
-
-.skeleton-line,
-.skeleton-bar {
-  display: block;
-  height: 12px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #eceff1 25%, #f5f7f8 50%, #eceff1 75%);
-  background-size: 200% 100%;
-  animation: timelineSkeletonPulse 900ms ease-in-out infinite;
-}
-
-.skeleton-title {
-  width: 180px;
-  height: 14px;
-}
-
-.skeleton-short {
-  width: 96px;
-}
-
-.skeleton-bar {
-  width: 100%;
-}
-
-@keyframes timelineSkeletonPulse {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-
-.timeline-wrapper {
-  flex: 1;
-  overflow: hidden;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 16px;
-  position: relative;
-  min-height: 600px;
-}
-
-.timeline-chart {
-  width: 100%;
-  height: 500px;
-  position: relative;
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-.timeline-touch-controls {
-  margin-top: 16px;
-  border-top: 1px solid #e0e0e0;
-  padding-top: 16px;
-}
-
-.timeline-touch-controls h2 {
-  margin: 0 0 12px;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.touch-task-list {
-  display: flex;
-  flex-direction: column;
   gap: 12px;
 }
 
-.touch-task-item {
+/* View-mode toggle (7:1112) */
+.view-toggle-group {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px;
-  border: 1px solid #e0e0e0;
+  background: #F1F5F9;
   border-radius: 8px;
-  background: #fafafa;
-  transition: transform var(--motion-duration-feedback) var(--motion-ease-standard),
-    box-shadow var(--motion-duration-feedback) var(--motion-ease-standard);
+  padding: 4px;
+  gap: 2px;
 }
 
-.touch-task-item:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-.touch-task-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.touch-task-meta strong {
-  font-size: 14px;
-}
-
-.touch-task-meta span {
+.toggle-pill {
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.65);
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.4;
 }
 
-.touch-actions {
+.toggle-pill.active {
+  background: #fff;
+  color: #0F1729;
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.toggle-pill:hover:not(.active) {
+  color: #334155;
+}
+
+/* Vertical divider (7:1119) */
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: #E2E8F0;
+}
+
+/* Date navigation (7:1120) */
+.date-nav {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.touch-actions button {
-  min-height: 44px;
-}
-
-@import 'vis-timeline/styles/vis-timeline-graph2d.css';
-
-:host ::ng-deep .vis-item.status-todo {
-  background-color: #808080;
-  border-color: #666666;
-  color: #fff;
-}
-
-:host ::ng-deep .vis-item.status-in-progress {
-  background-color: #3b82f6;
-  border-color: #2563eb;
-  color: #fff;
-}
-
-:host ::ng-deep .vis-item.status-blocked {
-  background-color: #ef4444;
-  border-color: #dc2626;
-  color: #fff;
-}
-
-:host ::ng-deep .vis-item.status-waiting {
-  background-color: #eab308;
-  border-color: #ca8a04;
-  color: #fff;
-}
-
-:host ::ng-deep .vis-item.status-done {
-  background-color: #22c55e;
-  border-color: #16a34a;
-  color: #fff;
-}
-
-:host ::ng-deep .vis-timeline {
-  border: 1px solid #e0e0e0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  font-size: 12px;
-}
-
-:host ::ng-deep .vis-time-axis .vis-text {
-  color: #333;
-  padding-top: 4px;
-}
-
-:host ::ng-deep .vis-current-time {
-  background-color: #ef4444;
-  width: 2px;
-}
-
-:host ::ng-deep .vis-item {
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
   border-radius: 4px;
-  font-size: 12px;
+  padding: 6px;
+  cursor: pointer;
+  color: #475569;
+  transition: background 0.15s ease;
+}
+
+.icon-btn:hover {
+  background: #F1F5F9;
+}
+
+.icon-btn mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.date-label {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: #111418;
+  white-space: nowrap;
+}
+
+.today-btn {
+  border: none;
+  background: transparent;
+  font-family: 'Manrope', sans-serif;
   font-weight: 500;
-  transition: opacity var(--motion-duration-feedback) var(--motion-ease-standard),
-    transform var(--motion-duration-feedback) var(--motion-ease-standard);
+  font-size: 12px;
+  color: #475569;
+  cursor: pointer;
+  padding-left: 8px;
 }
 
-:host ::ng-deep .vis-item .vis-item-content {
-  padding: 4px 8px;
+.today-btn:hover {
+  color: #137FEC;
 }
 
-/* Locked task styling */
-:host ::ng-deep .vis-item.locked {
-  opacity: 0.7;
-  cursor: not-allowed !important;
+/* Toolbar action buttons */
+.outlined-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #E2E8F0;
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: #475569;
+  transition: background 0.15s ease;
 }
 
-:host ::ng-deep .vis-item.locked:hover {
-  cursor: not-allowed !important;
+.outlined-btn:hover {
+  background: #F8FAFC;
 }
 
-/* Dragging state styling */
-:host ::ng-deep .vis-item.dragging {
-  opacity: 0.6;
-  cursor: grabbing !important;
+.outlined-btn.icon-only mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
 }
 
-:host ::ng-deep .vis-item:not(.locked) {
-  cursor: grab;
+.add-task-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: #137FEC;
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(19, 127, 236, 0.3);
+  transition: background 0.15s ease;
 }
 
-:host ::ng-deep .vis-item:not(.locked):active {
-  cursor: grabbing;
+.add-task-btn:hover {
+  background: #1171D4;
 }
 
+.add-task-btn mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+/* ======================================================
+   Content area — split panel (7:1152)
+   ====================================================== */
+.content-area {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Left panel — Task list (7:1153) */
+.task-list-panel {
+  width: 300px;
+  min-width: 300px;
+  background: #fff;
+  border-right: 1px solid #E2E8F0;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+
+/* Panel header (7:1154) */
+.panel-header {
+  height: 40px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background: rgba(248, 250, 252, 0.5);
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.column-label {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: #647589;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+/* Scrollable task list body */
+.task-list-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Hide scrollbar on task list for clean look (scroll synced from chart) */
+.task-list-body::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+/* Group section header */
+.group-header {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #F8FAFC;
+  border-bottom: 1px solid #F1F5F9;
+  cursor: pointer;
+  user-select: none;
+}
+
+.group-header:hover {
+  background: #F1F5F9;
+}
+
+.group-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.chevron {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: #647589;
+  transition: transform 0.2s ease;
+}
+
+.chevron.collapsed {
+  transform: rotate(-90deg);
+}
+
+.group-name {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: #111418;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.group-count {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  color: #647589;
+  flex-shrink: 0;
+}
+
+/* Task row */
+.task-row {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 24px;
+  border-bottom: 1px solid #F1F5F9;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.task-row:hover {
+  background: #F8FAFC;
+}
+
+/* Parent task row — blue-tinted background (Figma 7:1194) */
+.task-row-parent {
+  background: rgba(19, 127, 236, 0.05);
+}
+
+.task-row-parent:hover {
+  background: rgba(19, 127, 236, 0.08);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-todo { background: #94A3B8; }
+.dot-in-progress { background: #3B82F6; }
+.dot-blocked { background: #EF4444; }
+.dot-waiting { background: #F59E0B; }
+.dot-done { background: #22C55E; }
+
+.task-name {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: #334155;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Parent task name — semibold for hierarchy emphasis */
+.task-name-parent {
+  font-weight: 600;
+  color: #111418;
+}
+
+/* ======================================================
+   Right panel — Chart (7:1244)
+   ====================================================== */
+.chart-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(248, 250, 252, 0.3);
+}
+
+/* Date header (7:1246) */
+.date-header {
+  height: 40px;
+  min-height: 40px;
+  background: #fff;
+  border-bottom: 1px solid #E2E8F0;
+  overflow: hidden;
+}
+
+.date-header-inner {
+  display: flex;
+  height: 100%;
+}
+
+.date-col-header {
+  display: flex;
+  align-items: center;
+  padding: 2px 12px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  color: #647589;
+  border-right: 1px solid #E2E8F0;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Chart body (scrollable grid) */
+.chart-body {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.chart-inner {
+  position: relative;
+  min-height: 100%;
+}
+
+/* Vertical grid lines */
+.grid-line-v {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #E2E8F0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Today indicator line */
+.today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #EF4444;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* Chart row */
+.chart-row {
+  height: 48px;
+  position: relative;
+  border-bottom: 1px solid #F1F5F9;
+  box-sizing: border-box;
+}
+
+/* Group header row — subtle gray overlay (Figma 7:1341) */
+.chart-row-group {
+  background: rgba(248, 250, 252, 0.2);
+}
+
+/* Parent task row — blue-tinted background (Figma 7:1364) */
+.chart-row-parent {
+  background: rgba(19, 127, 236, 0.05);
+}
+
+/* Gantt bar */
+.gantt-bar {
+  position: absolute;
+  top: 10px;
+  height: 28px;
+  border-radius: 6px;
+  background: #DBEAFE;
+  border: 1px solid #BFDBFE;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  cursor: pointer;
+  overflow: hidden;
+  z-index: 1;
+  transition: box-shadow 0.15s ease;
+}
+
+.gantt-bar:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.bar-label {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  color: #1E40AF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Parent task bar — solid brand blue (Figma 7:1365) */
+.gantt-bar-parent {
+  background: #137FEC;
+  border: none;
+}
+
+.gantt-bar-parent:hover {
+  box-shadow: 0 2px 6px rgba(19, 127, 236, 0.3);
+}
+
+.bar-label-parent {
+  color: #fff;
+}
+
+/* Group summary bar — thin line spanning aggregate child date range */
+.gantt-bar-summary {
+  position: absolute;
+  top: 21px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid #E2E8F0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ======================================================
+   Loading skeleton
+   ====================================================== */
+.skeleton-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.skeleton-left {
+  width: 300px;
+  border-right: 1px solid #E2E8F0;
+}
+
+.skeleton-right {
+  flex: 1;
+}
+
+.skeleton-header-row {
+  height: 40px;
+  background: #F8FAFC;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.skeleton-row {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 10px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.skeleton-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #E2E8F0;
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+
+.skeleton-text {
+  width: 60%;
+  height: 12px;
+  border-radius: 4px;
+  background: #E2E8F0;
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+
+.skeleton-bar {
+  width: 50%;
+  height: 28px;
+  border-radius: 6px;
+  background: #E2E8F0;
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ======================================================
+   Responsive
+   ====================================================== */
 @media (max-width: 767px) {
-  .timeline-header {
+  .toolbar {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-  
-  .timeline-container {
-    padding: 16px;
-  }
-  
-  .timeline-chart {
-    height: 400px;
+    height: auto;
+    gap: 12px;
+    padding: 12px 16px;
   }
 
-  .touch-task-item {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .touch-actions {
+  .toolbar-left,
+  .toolbar-right {
     width: 100%;
+    justify-content: center;
   }
 
-  .touch-actions button {
-    flex: 1;
+  .task-list-panel {
+    width: 200px;
+    min-width: 200px;
   }
-  
-  /* Reduce task bar height on mobile */
-  :host ::ng-deep .vis-item {
-    font-size: 11px;
+
+  .task-row {
+    padding: 0 12px;
   }
-  
-  :host ::ng-deep .vis-item .vis-item-content {
-    padding: 2px 6px;
-  }
-  
-  /* Disable drag cursor on mobile */
-  :host ::ng-deep .vis-item:not(.locked) {
-    cursor: default;
+
+  .task-name {
+    font-size: 12px;
   }
 }
 
-@media (min-width: 768px) and (max-width: 1199px) {
-  .timeline-container {
-    padding: 20px;
-  }
-
-  .timeline-header h1 {
-    font-size: 24px;
-  }
-
-  .timeline-wrapper {
-    min-height: 520px;
+@media (max-width: 480px) {
+  .task-list-panel {
+    width: 150px;
+    min-width: 150px;
   }
 }

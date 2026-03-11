@@ -6,27 +6,48 @@
   padding: 64px 24px;
   text-align: center;
   gap: 12px;
+  flex: 1;
 }
 
 .empty-state mat-icon {
   font-size: 64px;
   width: 64px;
   height: 64px;
-  color: rgba(0, 0, 0, 0.3);
+  color: #94A3B8;
 }
 
 .empty-state h2 {
   margin: 0;
-  font-size: 24px;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.87);
+  font-family: 'Manrope', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111418;
 }
 
 .empty-state p {
   margin: 0;
-  font-size: 16px;
-  color: rgba(0, 0, 0, 0.6);
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  color: #647589;
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.empty-state button {
+  margin-top: 8px;
+  background: #137FEC;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(19, 127, 236, 0.3);
+}
+
+.empty-state button:hover {
+  background: #1171D4;
 }

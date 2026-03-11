@@ -1,614 +1,468 @@
-import { Component, inject, OnInit, AfterViewInit, ViewChild, ElementRef, signal, ChangeDetectionStrategy, OnDestroy, HostListener } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, ElementRef, signal, computed, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { Timeline } from 'vis-timeline/standalone';
-import { DataSet } from 'vis-data';
-import { TaskService } from '../services/task.service';
-import { Task, TaskStatus } from '../../../shared/models/task.model';
+import { TaskService, TimelineTask } from '../services/task.service';
+import { TaskStatus } from '../../../shared/models/task.model';
 import { TaskDetailDialog, TaskDetailDialogData } from '../task-detail-dialog/task-detail-dialog';
 import { getDialogAnimationDurations } from '../../../shared/utils/motion.utils';
 import { TimelineEmptyStateComponent } from './timeline-empty-state/timeline-empty-state';
+
+export interface TaskGroup {
+  name: string;
+  expanded: boolean;
+  tasks: TimelineTask[];
+}
 
 @Component({
   selector: 'app-timeline',
   standalone: true,
   imports: [
     CommonModule,
-    MatProgressSpinnerModule,
-    MatProgressBarModule,
-    MatButtonModule,
-    MatButtonToggleModule,
     MatIconModule,
-    MatCardModule,
     TimelineEmptyStateComponent
   ],
   templateUrl: './timeline.html',
   styleUrl: './timeline.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TimelineComponent implements OnInit, AfterViewInit, OnDestroy {
+export class TimelineComponent implements OnInit, OnDestroy {
   private readonly taskService = inject(TaskService);
   private readonly dialog = inject(MatDialog);
-  private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
-  
-  @ViewChild('timelineContainer', { static: false }) timelineContainer?: ElementRef<HTMLDivElement>;
-  
-  tasks = signal<Task[]>([]);
+
+  @ViewChild('taskListBody', { static: false }) taskListBody?: ElementRef<HTMLDivElement>;
+  @ViewChild('chartBody', { static: false }) chartBody?: ElementRef<HTMLDivElement>;
+  @ViewChild('chartDateHeader', { static: false }) chartDateHeader?: ElementRef<HTMLDivElement>;
+
+  allTasks = signal<TimelineTask[]>([]);
   isLoading = signal(false);
-  isUpdating = signal(false);
   viewMode = signal<'day' | 'week' | 'month'>('week');
-  isMobile = signal(false);
   noDueDateCount = signal(0);
-  invalidDueDateCount = signal(0);
-  
-  private timelineInstance?: Timeline;
-  private timelineDataSet = new DataSet<any>([]);
-  private startDate: Date = new Date();
-  private endDate: Date = new Date();
+
+  // Date navigation state
+  currentDate = signal(new Date());
+
+  // Groups computed from tasks
+  groups = signal<TaskGroup[]>([]);
+
+  // Visible rows (respecting collapsed groups)
+  visibleRows = computed(() => {
+    const rows: { type: 'group' | 'task'; group: TaskGroup; task?: TimelineTask; isParent?: boolean }[] = [];
+    for (const group of this.groups()) {
+      rows.push({ type: 'group', group });
+      if (group.expanded) {
+        for (const task of group.tasks) {
+          rows.push({ type: 'task', group, task, isParent: task.isGroup });
+        }
+      }
+    }
+    return rows;
+  });
+
+  // Date columns
+  dateColumns = computed(() => this.buildDateColumns(this.viewMode(), this.currentDate()));
+
+  // Chart total width
+  chartWidth = computed(() => {
+    const cols = this.dateColumns();
+    return cols.reduce((sum, c) => sum + c.width, 0);
+  });
+
+  // Current date label for toolbar
+  currentDateLabel = computed(() => {
+    const d = this.currentDate();
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'];
+    return `${months[d.getMonth()]} ${d.getFullYear()}`;
+  });
+
+  // Range boundaries for bar positioning
+  rangeStart = computed(() => {
+    const cols = this.dateColumns();
+    return cols.length > 0 ? cols[0].start : new Date();
+  });
+
+  rangeEnd = computed(() => {
+    const cols = this.dateColumns();
+    return cols.length > 0 ? cols[cols.length - 1].end : new Date();
+  });
+
+  // Query range — extend well beyond visible to ensure API returns all relevant tasks
+  private queryStartDate = new Date();
+  private queryEndDate = new Date();
 
   ngOnInit(): void {
-    // Detect mobile device
-    this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.Tablet])
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(result => {
-        this.isMobile.set(result.matches);
-      });
-    
-    // Restore zoom level from session storage
     const savedZoom = sessionStorage.getItem('timeline-zoom');
     if (savedZoom && (savedZoom === 'day' || savedZoom === 'week' || savedZoom === 'month')) {
       this.viewMode.set(savedZoom as 'day' | 'week' | 'month');
     }
-    
-    // Calculate default date range (current month)
-    const now = new Date();
-    this.startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    this.endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    
-    // Load timeline data
-    this.loadTimelineData(this.startDate, this.endDate);
-  }
 
-  ngAfterViewInit(): void {
-    // Gantt will be initialized after data loads
+    this.updateQueryRange();
+    this.loadTimelineData();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-
-    if (this.timelineInstance) {
-      this.timelineInstance.destroy();
-      this.timelineInstance = undefined;
-    }
   }
 
-  /**
-   * Load timeline data from API
-   */
-  loadTimelineData(start: Date, end: Date): void {
+  private updateQueryRange(): void {
+    const d = this.currentDate();
+    // Query 6 months around current date to have plenty of data
+    this.queryStartDate = new Date(d.getFullYear(), d.getMonth() - 6, 1);
+    this.queryEndDate = new Date(d.getFullYear(), d.getMonth() + 6, 0);
+  }
+
+  loadTimelineData(): void {
     this.isLoading.set(true);
-    
-    const params = {
-      startDate: start.toISOString(),
-      endDate: end.toISOString()
-    };
-    
-    this.taskService.getTimelineTasks(params)
-      .pipe(takeUntil(this.destroy$))
+
+    this.taskService.getTimelineTasks({
+      startDate: this.queryStartDate.toISOString(),
+      endDate: this.queryEndDate.toISOString()
+    }).pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (tasks) => {
-          const { validTimelineTasks, noDueDateCount, invalidDueDateCount } = this.validateDueDateCoverage(tasks);
-          this.noDueDateCount.set(noDueDateCount);
-          this.invalidDueDateCount.set(invalidDueDateCount);
-          this.tasks.set(validTimelineTasks);
-          this.isLoading.set(false);
-          
-          if (validTimelineTasks.length > 0) {
-            this.initializeTimeline();
-          } else if (this.timelineInstance) {
-            this.timelineDataSet.clear();
-            this.timelineInstance.redraw();
+          let noDueCount = 0;
+          const valid: TimelineTask[] = [];
+          for (const t of tasks) {
+            if (!t.endDate || new Date(t.endDate).getTime() === new Date(t.startDate).getTime()) {
+              noDueCount++;
+            }
+            valid.push(t);
           }
+          this.noDueDateCount.set(noDueCount);
+          this.allTasks.set(valid);
+          this.buildGroups(valid);
+          this.isLoading.set(false);
         },
-        error: (error) => {
-          console.error('Failed to load timeline data:', error);
+        error: () => {
           this.isLoading.set(false);
         }
       });
+  }
+
+  private buildGroups(tasks: TimelineTask[]): void {
+    const groupMap = new Map<string, TaskGroup>();
+    const ungrouped: TimelineTask[] = [];
+    const existingGroups = this.groups();
+    const rootParents: TimelineTask[] = [];
+
+    for (const task of tasks) {
+      // Root parent: isGroup=true AND no parentTaskId → will be unshifted to group front
+      if (task.isGroup && !task.parentTaskId) {
+        rootParents.push(task);
+        continue;
+      }
+
+      const gName = task.groupName;
+      if (gName) {
+        let group = groupMap.get(gName);
+        if (!group) {
+          const existingExpanded = existingGroups.find(g => g.name === gName)?.expanded ?? true;
+          group = { name: gName, expanded: existingExpanded, tasks: [] };
+          groupMap.set(gName, group);
+        }
+        group.tasks.push(task);
+      } else {
+        ungrouped.push(task);
+      }
+    }
+
+    // Insert root parent tasks at the beginning of their corresponding groups
+    for (const parent of rootParents) {
+      let group = groupMap.get(parent.name);
+      if (!group) {
+        const existingExpanded = existingGroups.find(g => g.name === parent.name)?.expanded ?? true;
+        group = { name: parent.name, expanded: existingExpanded, tasks: [] };
+        groupMap.set(parent.name, group);
+      }
+      group.tasks.unshift(parent);
+    }
+
+    const result: TaskGroup[] = [];
+    for (const [, group] of groupMap) {
+      result.push(group);
+    }
+    if (ungrouped.length > 0) {
+      const existingExpanded = existingGroups.find(g => g.name === 'Ungrouped')?.expanded ?? true;
+      result.push({ name: 'Ungrouped', expanded: existingExpanded, tasks: ungrouped });
+    }
+
+    this.groups.set(result);
+  }
+
+  // --- Toolbar actions ---
+
+  changeViewMode(mode: 'day' | 'week' | 'month'): void {
+    this.viewMode.set(mode);
+    sessionStorage.setItem('timeline-zoom', mode);
+  }
+
+  navigatePrev(): void {
+    const d = this.currentDate();
+    const mode = this.viewMode();
+    if (mode === 'day') {
+      this.currentDate.set(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 10));
+    } else if (mode === 'week') {
+      this.currentDate.set(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 28));
+    } else {
+      this.currentDate.set(new Date(d.getFullYear(), d.getMonth() - 3, 1));
+    }
+    this.checkAndReload();
+  }
+
+  navigateNext(): void {
+    const d = this.currentDate();
+    const mode = this.viewMode();
+    if (mode === 'day') {
+      this.currentDate.set(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 10));
+    } else if (mode === 'week') {
+      this.currentDate.set(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 28));
+    } else {
+      this.currentDate.set(new Date(d.getFullYear(), d.getMonth() + 3, 1));
+    }
+    this.checkAndReload();
+  }
+
+  goToToday(): void {
+    this.currentDate.set(new Date());
+    this.checkAndReload();
+  }
+
+  private checkAndReload(): void {
+    const d = this.currentDate();
+    if (d < this.queryStartDate || d > this.queryEndDate) {
+      this.updateQueryRange();
+      this.loadTimelineData();
+    }
+  }
+
+  toggleGroup(group: TaskGroup): void {
+    const updated = this.groups().map(g =>
+      g.name === group.name ? { ...g, expanded: !g.expanded } : g
+    );
+    this.groups.set(updated);
+  }
+
+  onAddTask(): void {
+    this.router.navigate(['/dashboard'], {
+      queryParams: { openTaskForm: 'true', focusField: 'dueDate', returnTo: 'timeline' }
+    });
   }
 
   onAddDueDateCta(): void {
-    this.router.navigate(['/dashboard'], {
-      queryParams: {
-        openTaskForm: 'true',
-        focusField: 'dueDate',
-        returnTo: 'timeline'
-      }
-    });
+    this.onAddTask();
   }
 
-  private validateDueDateCoverage(tasks: Task[]): {
-    validTimelineTasks: Task[];
-    noDueDateCount: number;
-    invalidDueDateCount: number;
-  } {
-    let noDueDateCount = 0;
-    let invalidDueDateCount = 0;
-    const validTimelineTasks: Task[] = [];
+  onTaskClick(task: TimelineTask): void {
+    // Fetch full task data before opening dialog
+    this.taskService.getTaskById(task.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (fullTask) => {
+          const dialogRef = this.dialog.open(TaskDetailDialog, {
+            width: '100%',
+            maxWidth: '512px',
+            data: { task: fullTask, openerElement: null } as TaskDetailDialogData,
+            disableClose: true,
+            autoFocus: false,
+            panelClass: 'quick-inspect-dialog-panel',
+            backdropClass: 'quick-inspect-backdrop',
+            ...getDialogAnimationDurations()
+          });
 
-    tasks.forEach((task) => {
-      if (!task.dueDate) {
-        noDueDateCount += 1;
-        return;
-      }
-
-      const dueDate = new Date(task.dueDate);
-      if (Number.isNaN(dueDate.getTime())) {
-        invalidDueDateCount += 1;
-        return;
-      }
-
-      validTimelineTasks.push(task);
-    });
-
-    return { validTimelineTasks, noDueDateCount, invalidDueDateCount };
-  }
-
-  /**
-   * Initialize Timeline chart with task data
-   */
-  private initializeTimeline(): void {
-    if (!this.timelineContainer) {
-      console.error('Timeline container not found');
-      return;
-    }
-
-    const container = this.timelineContainer.nativeElement;
-    
-    // Transform tasks to vis-timeline format
-    const timelineItems = this.transformTasksToTimelineFormat(this.tasks());
-    
-    if (timelineItems.length === 0) {
-      console.warn('No tasks to display');
-      return;
-    }
-
-    this.timelineDataSet.clear();
-    this.timelineDataSet.add(timelineItems);
-
-    if (this.timelineInstance) {
-      this.timelineInstance.redraw();
-      return;
-    }
-
-    // Timeline options
-    const options: any = {
-      start: this.startDate,
-      end: this.endDate,
-      orientation: 'top',
-      showCurrentTime: true,
-      zoomMin: 1000 * 60 * 60 * 24, // 1 day
-      zoomMax: 1000 * 60 * 60 * 24 * 365, // 1 year
-      editable: {
-        updateTime: !this.isMobile(), // Disable drag on mobile
-        updateGroup: false,
-        add: false,
-        remove: false,
-        overrideItems: false
-      },
-      snap: (date: Date) => {
-        // Snap to day boundaries
-        const snapped = new Date(date);
-        snapped.setHours(0, 0, 0, 0);
-        return snapped;
-      },
-      margin: {
-        item: this.isMobile() ? 5 : 10,
-        axis: this.isMobile() ? 3 : 5
-      },
-      onMoving: (item: any, callback: (item: any) => void) => {
-        // Check if task is draggable before allowing move
-        const task = this.tasks().find(t => t.id === item.id);
-        if (!task || !this.isTaskDraggable(task)) {
-          callback(null); // Cancel the move
-          return;
-        }
-        
-        // Apply visual feedback (semi-transparent)
-        item.className = item.className + ' dragging';
-        callback(item);
-      },
-      onMove: (item: any, callback: (item: any) => void) => {
-        // Validate and update task via API
-        this.onTaskDragEnd(item.id, new Date(item.start), new Date(item.end))
-          .then((success: boolean) => {
-            if (success) {
-              callback(item); // Accept the change
-            } else {
-              callback(null); // Revert the change
+          dialogRef.afterClosed().subscribe((result) => {
+            if (result) {
+              this.loadTimelineData();
             }
           });
-      }
-    };
-
-    try {
-      this.timelineInstance = new Timeline(container, this.timelineDataSet, options);
-      
-      // Register click event handler
-      this.timelineInstance.on('click', (properties) => {
-        if (properties.item) {
-          this.onTaskClick(properties.item);
+        },
+        error: () => {
+          // Silently fail — task may have been deleted
         }
       });
-      
-      this.fitTimelineToView(false);
-    } catch (error) {
-      console.error('Failed to initialize Timeline:', error);
+  }
+
+  // --- Synchronized scrolling ---
+
+  onChartBodyScroll(event: Event): void {
+    const el = event.target as HTMLElement;
+    // Sync vertical scroll with task list
+    if (this.taskListBody) {
+      this.taskListBody.nativeElement.scrollTop = el.scrollTop;
+    }
+    // Sync horizontal scroll with date header
+    if (this.chartDateHeader) {
+      this.chartDateHeader.nativeElement.scrollLeft = el.scrollLeft;
     }
   }
 
-  /**
-   * Handle task bar click - open detail dialog
-   */
-  onTaskClick(taskId: string): void {
-    const task = this.tasks().find(t => t.id === taskId);
-    if (!task) {
-      console.error('Task not found:', taskId);
-      return;
+  onTaskListScroll(event: Event): void {
+    const el = event.target as HTMLElement;
+    if (this.chartBody) {
+      this.chartBody.nativeElement.scrollTop = el.scrollTop;
     }
-
-    // Open task detail dialog
-    const dialogRef = this.dialog.open(TaskDetailDialog, {
-      width: '100%',
-      maxWidth: '512px',
-      data: {
-        task,
-        openerElement: this.timelineContainer?.nativeElement ?? null
-      } as TaskDetailDialogData,
-      disableClose: true,
-      autoFocus: false,
-      panelClass: 'quick-inspect-dialog-panel',
-      backdropClass: 'quick-inspect-backdrop',
-      ...getDialogAnimationDurations()
-    });
-
-    // Refresh timeline when dialog closes (in case task was updated)
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        // Reload timeline data to reflect any changes
-        this.loadTimelineData(this.startDate, this.endDate);
-      }
-    });
   }
 
-  /**
-   * Handle task drag end - update task due date via API
-   */
-  private async onTaskDragEnd(taskId: string, newStartDate: Date, newEndDate: Date): Promise<boolean> {
-    const task = this.tasks().find(t => t.id === taskId);
-    if (!task) {
-      console.error('Task not found:', taskId);
-      return false;
-    }
+  // --- Date column generation ---
 
-    // Validate: newEndDate >= CreatedDate
-    const createdDate = new Date(task.createdDate);
-    if (newEndDate < createdDate) {
-      this.showError('Due date cannot be before creation date');
-      return false;
-    }
+  private buildDateColumns(mode: 'day' | 'week' | 'month', anchor: Date): { label: string; start: Date; end: Date; width: number }[] {
+    const columns: { label: string; start: Date; end: Date; width: number }[] = [];
 
-    // Check parent task constraint
-    if (task.parentTaskId) {
-      const parentTask = this.tasks().find(t => t.id === task.parentTaskId);
-      if (parentTask && parentTask.dueDate) {
-        const parentDueDate = new Date(parentTask.dueDate);
-        if (newEndDate > parentDueDate) {
-          const confirmed = await this.showParentWarning();
-          if (!confirmed) {
-            return false;
-          }
-        }
-      }
-    }
-
-    // Save scroll position
-    const container = this.timelineContainer?.nativeElement;
-    const scrollLeft = container ? container.scrollLeft : 0;
-
-    // Update task via API
-    this.isUpdating.set(true);
-    
-    return new Promise<boolean>((resolve) => {
-      this.taskService.updateTask(taskId, { dueDate: newEndDate })
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (updatedTask) => {
-            // Update local tasks array
-            const currentTasks = this.tasks();
-            const index = currentTasks.findIndex(t => t.id === taskId);
-            if (index !== -1) {
-              const newTasks = [...currentTasks];
-              newTasks[index] = updatedTask;
-              this.tasks.set(newTasks);
-            }
-            
-            this.isUpdating.set(false);
-            
-            // Restore scroll position
-            setTimeout(() => {
-              if (container) {
-                container.scrollLeft = scrollLeft;
-              }
-            }, 0);
-            
-            resolve(true);
-          },
-          error: (error) => {
-            console.error('Failed to update task:', error);
-            this.showError('Failed to update task date');
-            this.isUpdating.set(false);
-            resolve(false);
-          }
+    if (mode === 'day') {
+      // Show ~20 days centered on anchor
+      const startDay = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() - 10);
+      for (let i = 0; i < 20; i++) {
+        const d = new Date(startDay.getFullYear(), startDay.getMonth(), startDay.getDate() + i);
+        const dEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        columns.push({
+          label: `${monthNames[d.getMonth()]} ${String(d.getDate()).padStart(2, '0')}`,
+          start: d,
+          end: dEnd,
+          width: 60
         });
-    });
-  }
-
-  /**
-   * Check if task is draggable (not completed)
-   */
-  private isTaskDraggable(task: Task): boolean {
-    return task.status !== TaskStatus.Done;
-  }
-
-  canAdjustTaskDate(task: Task): boolean {
-    if (!task.dueDate) {
-      return false;
-    }
-
-    return this.isTaskDraggable(task);
-  }
-
-  async moveTaskByDays(task: Task, dayDelta: number): Promise<void> {
-    if (!this.canAdjustTaskDate(task) || this.isUpdating()) {
-      return;
-    }
-
-    const currentDueDate = new Date(task.dueDate as Date | string);
-    if (Number.isNaN(currentDueDate.getTime())) {
-      this.showError('Task due date is invalid and cannot be adjusted');
-      return;
-    }
-
-    const nextDueDate = new Date(currentDueDate);
-    nextDueDate.setDate(nextDueDate.getDate() + dayDelta);
-
-    const success = await this.onTaskDragEnd(task.id, new Date(task.createdDate), nextDueDate);
-    if (success) {
-      this.loadTimelineData(this.startDate, this.endDate);
-    }
-  }
-
-  /**
-   * Show error message
-   */
-  private showError(message: string): void {
-    // TODO: Use notification service when available
-    alert(message);
-  }
-
-  /**
-   * Show warning dialog for parent task constraint
-   */
-  private async showParentWarning(): Promise<boolean> {
-    return confirm('This task exceeds parent deadline. Continue anyway?');
-  }
-
-  /**
-   * Transform Task[] to vis-timeline format
-   */
-  private transformTasksToTimelineFormat(tasks: Task[]): any[] {
-    return tasks.map(task => {
-      // Use createdDate as start, dueDate as end
-      const start = new Date(task.createdDate);
-      const end = task.dueDate ? new Date(task.dueDate) : new Date(start);
-      
-      // Ensure end date is at least 1 day after start
-      if (end <= start) {
-        end.setDate(start.getDate() + 1);
       }
-      
-      // Add 'locked' class for completed tasks
-      const statusClass = this.getStatusClass(task.status);
-      const lockedClass = task.status === TaskStatus.Done ? 'locked' : '';
-      const className = `${statusClass} ${lockedClass}`.trim();
-      
-      return {
-        id: task.id,
-        content: task.status === TaskStatus.Done ? `🔒 ${task.name}` : task.name,
-        start: start,
-        end: end,
-        type: 'range',
-        className: className,
-        title: `${task.name} - ${this.getStatusLabel(task.status)}${task.status === TaskStatus.Done ? ' (Locked)' : ''}`,
-        editable: this.isTaskDraggable(task)
-      };
-    });
-  }
-
-  /**
-   * Get CSS class based on task status for color coding
-   */
-  getStatusClass(status: TaskStatus): string {
-    switch (status) {
-      case TaskStatus.ToDo:
-        return 'status-todo';
-      case TaskStatus.InProgress:
-        return 'status-in-progress';
-      case TaskStatus.Blocked:
-        return 'status-blocked';
-      case TaskStatus.Waiting:
-        return 'status-waiting';
-      case TaskStatus.Done:
-        return 'status-done';
-      default:
-        return 'status-todo';
-    }
-  }
-
-  /**
-   * Get status label for display
-   */
-  getStatusLabel(status: TaskStatus): string {
-    switch (status) {
-      case TaskStatus.ToDo:
-        return 'To Do';
-      case TaskStatus.InProgress:
-        return 'In Progress';
-      case TaskStatus.Blocked:
-        return 'Blocked';
-      case TaskStatus.Waiting:
-        return 'Waiting';
-      case TaskStatus.Done:
-        return 'Done';
-      default:
-        return 'Unknown';
-    }
-  }
-
-
-
-  /**
-   * Change view mode and refresh timeline
-   */
-  changeViewMode(mode: 'day' | 'week' | 'month'): void {
-    this.viewMode.set(mode);
-    
-    // Persist zoom level in session storage
-    sessionStorage.setItem('timeline-zoom', mode);
-    
-    this.fitTimelineToView(true);
-  }
-
-  /**
-   * Fit timeline to appropriate view range
-   */
-  private fitTimelineToView(animate: boolean): void {
-    if (!this.timelineInstance) {
-      return;
-    }
-
-    const now = new Date();
-    let start: Date;
-    let end: Date;
-
-    switch (this.viewMode()) {
-      case 'day':
-        start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 3);
-        end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7);
-        break;
-      case 'week':
-        start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
-        end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 21);
-        break;
-      case 'month':
-        start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        end = new Date(now.getFullYear(), now.getMonth() + 2, 0);
-        break;
-      default:
-        start = this.startDate;
-        end = this.endDate;
-    }
-
-    this.timelineInstance.setWindow(start, end, { animation: animate });
-  }
-
-  /**
-   * Handle keyboard shortcuts for zoom and scroll
-   */
-  @HostListener('document:keydown', ['$event'])
-  handleKeyboardEvent(event: KeyboardEvent): void {
-    // Only handle if timeline is visible and focused
-    if (!this.timelineInstance || this.tasks().length === 0) {
-      return;
-    }
-
-    // Zoom in: '+' or '='
-    if (event.key === '+' || event.key === '=') {
-      event.preventDefault();
-      this.zoomIn();
-    }
-    // Zoom out: '-'
-    else if (event.key === '-') {
-      event.preventDefault();
-      this.zoomOut();
-    }
-    // Scroll left: ArrowLeft
-    else if (event.key === 'ArrowLeft' && !event.ctrlKey && !event.shiftKey) {
-      event.preventDefault();
-      this.scrollTimeline('left');
-    }
-    // Scroll right: ArrowRight
-    else if (event.key === 'ArrowRight' && !event.ctrlKey && !event.shiftKey) {
-      event.preventDefault();
-      this.scrollTimeline('right');
-    }
-  }
-
-  /**
-   * Zoom in (more detail)
-   */
-  private zoomIn(): void {
-    const current = this.viewMode();
-    if (current === 'month') {
-      this.changeViewMode('week');
-    } else if (current === 'week') {
-      this.changeViewMode('day');
-    }
-    // Already at day level (most detailed)
-  }
-
-  /**
-   * Zoom out (less detail)
-   */
-  private zoomOut(): void {
-    const current = this.viewMode();
-    if (current === 'day') {
-      this.changeViewMode('week');
-    } else if (current === 'week') {
-      this.changeViewMode('month');
-    }
-    // Already at month level (least detailed)
-  }
-
-  /**
-   * Scroll timeline horizontally
-   */
-  private scrollTimeline(direction: 'left' | 'right'): void {
-    const container = this.timelineContainer?.nativeElement;
-    if (!container) {
-      return;
-    }
-
-    const scrollAmount = 100;
-    if (direction === 'left') {
-      container.scrollLeft -= scrollAmount;
+    } else if (mode === 'week') {
+      // Show ~8 weeks centered on anchor
+      const startWeek = new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate() - anchor.getDay() - 21);
+      for (let i = 0; i < 8; i++) {
+        const wStart = new Date(startWeek.getFullYear(), startWeek.getMonth(), startWeek.getDate() + i * 7);
+        const wEnd = new Date(wStart.getFullYear(), wStart.getMonth(), wStart.getDate() + 7);
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        columns.push({
+          label: `${monthNames[wStart.getMonth()]} ${String(wStart.getDate()).padStart(2, '0')} - ${String(wEnd.getDate() - 1).padStart(2, '0')}`,
+          start: wStart,
+          end: wEnd,
+          width: 240
+        });
+      }
     } else {
-      container.scrollLeft += scrollAmount;
+      // Show ~6 months centered on anchor
+      for (let i = -2; i < 4; i++) {
+        const mStart = new Date(anchor.getFullYear(), anchor.getMonth() + i, 1);
+        const mEnd = new Date(anchor.getFullYear(), anchor.getMonth() + i + 1, 1);
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December'];
+        columns.push({
+          label: `${monthNames[mStart.getMonth()]} ${mStart.getFullYear()}`,
+          start: mStart,
+          end: mEnd,
+          width: 200
+        });
+      }
     }
+
+    return columns;
+  }
+
+  // --- Bar positioning ---
+
+  getBarStyle(task: TimelineTask): { [key: string]: string } {
+    const totalWidth = this.chartWidth();
+    const rangeStartMs = this.rangeStart().getTime();
+    const rangeDuration = this.rangeEnd().getTime() - rangeStartMs;
+
+    if (rangeDuration <= 0) return { display: 'none' };
+
+    const taskStart = new Date(task.startDate).getTime();
+    const taskEnd = new Date(task.endDate).getTime();
+
+    // Clamp to visible range
+    const clampedStart = Math.max(taskStart, rangeStartMs);
+    const clampedEnd = Math.min(taskEnd, rangeStartMs + rangeDuration);
+
+    if (clampedEnd <= clampedStart) return { display: 'none' };
+
+    const leftPct = ((clampedStart - rangeStartMs) / rangeDuration) * 100;
+    const widthPct = ((clampedEnd - clampedStart) / rangeDuration) * 100;
+    const leftPx = (leftPct / 100) * totalWidth;
+    const widthPx = Math.max((widthPct / 100) * totalWidth, 20); // minimum 20px width
+
+    return {
+      left: `${leftPx}px`,
+      width: `${widthPx}px`
+    };
+  }
+
+  // --- Today line position ---
+
+  getTodayLinePosition(): string | null {
+    const now = new Date();
+    const rangeStartMs = this.rangeStart().getTime();
+    const rangeDuration = this.rangeEnd().getTime() - rangeStartMs;
+    if (rangeDuration <= 0) return null;
+
+    const nowMs = now.getTime();
+    if (nowMs < rangeStartMs || nowMs > rangeStartMs + rangeDuration) return null;
+
+    const leftPct = ((nowMs - rangeStartMs) / rangeDuration) * 100;
+    const leftPx = (leftPct / 100) * this.chartWidth();
+    return `${leftPx}px`;
+  }
+
+  // --- Status helpers ---
+
+  getStatusDotClass(status: TaskStatus | number): string {
+    switch (status) {
+      case TaskStatus.ToDo: return 'dot-todo';
+      case TaskStatus.InProgress: return 'dot-in-progress';
+      case TaskStatus.Blocked: return 'dot-blocked';
+      case TaskStatus.Waiting: return 'dot-waiting';
+      case TaskStatus.Done: return 'dot-done';
+      default: return 'dot-todo';
+    }
+  }
+
+  // Column offset helper for grid lines
+  getColumnOffset(index: number): number {
+    const cols = this.dateColumns();
+    let offset = 0;
+    for (let i = 0; i < index; i++) {
+      offset += cols[i].width;
+    }
+    return offset;
+  }
+
+  // --- Group summary bar (aggregate date range of child tasks) ---
+
+  getGroupBarStyle(group: TaskGroup): { [key: string]: string } {
+    const totalWidth = this.chartWidth();
+    const rangeStartMs = this.rangeStart().getTime();
+    const rangeDuration = this.rangeEnd().getTime() - rangeStartMs;
+
+    if (rangeDuration <= 0 || group.tasks.length === 0) return { display: 'none' };
+
+    let earliest = Infinity;
+    let latest = -Infinity;
+    for (const task of group.tasks) {
+      const s = new Date(task.startDate).getTime();
+      const e = new Date(task.endDate).getTime();
+      if (s < earliest) earliest = s;
+      if (e > latest) latest = e;
+    }
+
+    if (earliest === Infinity || latest === -Infinity || latest <= earliest) return { display: 'none' };
+
+    const clampedStart = Math.max(earliest, rangeStartMs);
+    const clampedEnd = Math.min(latest, rangeStartMs + rangeDuration);
+
+    if (clampedEnd <= clampedStart) return { display: 'none' };
+
+    const leftPct = ((clampedStart - rangeStartMs) / rangeDuration) * 100;
+    const widthPct = ((clampedEnd - clampedStart) / rangeDuration) * 100;
+    const leftPx = (leftPct / 100) * totalWidth;
+    const widthPx = Math.max((widthPct / 100) * totalWidth, 20);
+
+    return {
+      left: `${leftPx}px`,
+      width: `${widthPx}px`
+    };
   }
 }
 

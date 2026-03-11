@@ -18,6 +18,8 @@ public class TimelineTaskDto
     public Constants.TaskType Type { get; set; }
     public int Progress { get; set; }
     public Guid? ParentTaskId { get; set; }
+    public string? GroupName { get; set; }
+    public bool IsGroup { get; set; }
     public List<TaskAssigneeDto> Assignees { get; set; } = new List<TaskAssigneeDto>();
 
     /// <summary>

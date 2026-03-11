@@ -1,59 +1,77 @@
-<div class="timeline-container">
-  <!-- Header -->
-  <div class="timeline-header">
-    <h1>Task Timeline</h1>
-    
-    <!-- View Mode Controls -->
-    <div class="view-controls">
-      <mat-button-toggle-group
-        [value]="viewMode()"
-        (change)="changeViewMode($event.value)"
-        aria-label="Timeline granularity"
-      >
-        <mat-button-toggle
-          value="day"
-          [class.view-toggle-active]="viewMode() === 'day'"
-          aria-label="Day view"
-        >
-          <mat-icon>today</mat-icon>
-          Day
-        </mat-button-toggle>
-        <mat-button-toggle
-          value="week"
-          [class.view-toggle-active]="viewMode() === 'week'"
-          aria-label="Week view"
-        >
-          <mat-icon>view_week</mat-icon>
-          Week
-        </mat-button-toggle>
-        <mat-button-toggle
-          value="month"
-          [class.view-toggle-active]="viewMode() === 'month'"
-          aria-label="Month view"
-        >
-          <mat-icon>calendar_month</mat-icon>
-          Month
-        </mat-button-toggle>
-      </mat-button-toggle-group>
+<!-- Timeline View — Figma node 7:1109 -->
+<div class="timeline-page">
+
+  <!-- Toolbar (7:1110) -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <!-- View-mode toggle group (7:1112) -->
+      <div class="view-toggle-group" role="group" aria-label="View mode">
+        <button
+          class="toggle-pill"
+          [class.active]="viewMode() === 'day'"
+          (click)="changeViewMode('day')"
+          type="button">Day</button>
+        <button
+          class="toggle-pill"
+          [class.active]="viewMode() === 'week'"
+          (click)="changeViewMode('week')"
+          type="button">Week</button>
+        <button
+          class="toggle-pill"
+          [class.active]="viewMode() === 'month'"
+          (click)="changeViewMode('month')"
+          type="button">Month</button>
+      </div>
+
+      <!-- Vertical divider (7:1119) -->
+      <div class="toolbar-divider"></div>
+
+      <!-- Date navigation (7:1120) -->
+      <div class="date-nav">
+        <button class="icon-btn" (click)="navigatePrev()" type="button" aria-label="Previous">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span class="date-label">{{ currentDateLabel() }}</span>
+        <button class="icon-btn" (click)="navigateNext()" type="button" aria-label="Next">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+        <button class="today-btn" (click)="goToToday()" type="button">Today</button>
+      </div>
+    </div>
+
+    <div class="toolbar-right">
+      <!-- Filter/zoom button (7:1134) -->
+      <button class="outlined-btn icon-only" type="button" aria-label="Filter">
+        <mat-icon>filter_list</mat-icon>
+      </button>
+      <!-- Export button (7:1144) -->
+      <button class="outlined-btn icon-only" type="button" aria-label="Export">
+        <mat-icon>ios_share</mat-icon>
+      </button>
+      <!-- Add Task button (7:1147) -->
+      <button class="add-task-btn" (click)="onAddTask()" type="button">
+        <mat-icon>add</mat-icon>
+        Add Task
+      </button>
     </div>
   </div>
 
-  <!-- Loading Bar -->
-  @if (isLoading()) {
-    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-  }
-
-  <!-- Loading State -->
-  @if (isLoading() && tasks().length === 0) {
-    <div class="timeline-skeleton" aria-label="Loading timeline">
-      <div class="skeleton-header">
-        <span class="skeleton-line skeleton-title"></span>
-        <span class="skeleton-line skeleton-short"></span>
+  <!-- Loading skeleton -->
+  @if (isLoading() && allTasks().length === 0) {
+    <div class="skeleton-container">
+      <div class="skeleton-left">
+        <div class="skeleton-header-row"></div>
+        @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+          <div class="skeleton-row">
+            <span class="skeleton-dot"></span>
+            <span class="skeleton-text"></span>
+          </div>
+        }
       </div>
-      <div class="skeleton-lanes">
-        @for (lane of [1, 2, 3, 4, 5, 6]; track lane) {
-          <div class="skeleton-lane">
-            <span class="skeleton-line"></span>
+      <div class="skeleton-right">
+        <div class="skeleton-header-row"></div>
+        @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+          <div class="skeleton-row">
             <span class="skeleton-bar"></span>
           </div>
         }
@@ -61,55 +79,97 @@
     </div>
   }
 
-  <!-- Empty State -->
-  @if (!isLoading() && tasks().length === 0) {
+  <!-- Empty state -->
+  @if (!isLoading() && allTasks().length === 0) {
     <app-timeline-empty-state
       [noDueDateCount]="noDueDateCount()"
-      [invalidDueDateCount]="invalidDueDateCount()"
+      [invalidDueDateCount]="0"
       (ctaClick)="onAddDueDateCta()"
     ></app-timeline-empty-state>
   }
 
-  <!-- Timeline Chart Container -->
-  @if (!isLoading() && tasks().length > 0) {
-    <div class="timeline-wrapper">
-      <div #timelineContainer class="timeline-chart"></div>
+  <!-- Content area (7:1152) — split panel -->
+  @if (!isLoading() && allTasks().length > 0) {
+    <div class="content-area">
+      <!-- Left panel — Task List (7:1153) -->
+      <div class="task-list-panel">
+        <!-- Panel header (7:1154) -->
+        <div class="panel-header">
+          <span class="column-label">TASK NAME</span>
+        </div>
 
-      @if (isMobile()) {
-        <section class="timeline-touch-controls" aria-label="Timeline date controls">
-          <h2>Adjust dates without drag</h2>
-          <div class="touch-task-list">
-            @for (task of tasks(); track task.id) {
-              <article class="touch-task-item">
-                <div class="touch-task-meta">
-                  <strong>{{ task.name }}</strong>
-                  <span>{{ getStatusLabel(task.status) }} • {{ task.dueDate | date:'mediumDate' }}</span>
+        <!-- Scrollable task list body -->
+        <div class="task-list-body" #taskListBody (scroll)="onTaskListScroll($event)">
+          @for (row of visibleRows(); track row.type === 'group' ? row.group.name : row.task!.id) {
+            @if (row.type === 'group') {
+              <!-- Group section header -->
+              <div class="group-header" (click)="toggleGroup(row.group)">
+                <div class="group-header-left">
+                  <mat-icon class="chevron" [class.collapsed]="!row.group.expanded">expand_more</mat-icon>
+                  <span class="group-name">{{ row.group.name }}</span>
                 </div>
-                <div class="touch-actions">
-                  <button
-                    mat-stroked-button
-                    type="button"
-                    (click)="moveTaskByDays(task, -1)"
-                    [disabled]="!canAdjustTaskDate(task) || isUpdating()"
-                    aria-label="Move due date one day earlier">
-                    <mat-icon>remove</mat-icon>
-                    1 day
-                  </button>
-                  <button
-                    mat-stroked-button
-                    type="button"
-                    (click)="moveTaskByDays(task, 1)"
-                    [disabled]="!canAdjustTaskDate(task) || isUpdating()"
-                    aria-label="Move due date one day later">
-                    <mat-icon>add</mat-icon>
-                    1 day
-                  </button>
-                </div>
-              </article>
+                <span class="group-count">{{ row.group.tasks.length }}</span>
+              </div>
+            } @else {
+              <!-- Task row -->
+              <div class="task-row" [class.task-row-parent]="row.isParent" (click)="onTaskClick(row.task!)">
+                <span class="status-dot" [ngClass]="getStatusDotClass(row.task!.status)"></span>
+                <span class="task-name" [class.task-name-parent]="row.isParent">{{ row.task!.name }}</span>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Right panel — Timeline Chart (7:1244) -->
+      <div class="chart-panel">
+        <!-- Date header (7:1246) -->
+        <div class="date-header" #chartDateHeader>
+          <div class="date-header-inner" [style.width.px]="chartWidth()">
+            @for (col of dateColumns(); track col.label) {
+              <div class="date-col-header" [style.width.px]="col.width">
+                {{ col.label }}
+              </div>
             }
           </div>
-        </section>
-      }
+        </div>
+
+        <!-- Chart grid (7:1340) -->
+        <div class="chart-body" #chartBody (scroll)="onChartBodyScroll($event)">
+          <div class="chart-inner" [style.width.px]="chartWidth()">
+            <!-- Vertical grid lines -->
+            @for (col of dateColumns(); let i = $index; track col.label) {
+              @if (i > 0) {
+                <div class="grid-line-v" [style.left.px]="getColumnOffset(i)"></div>
+              }
+            }
+
+            <!-- Today indicator line -->
+            @if (getTodayLinePosition(); as todayPos) {
+              <div class="today-line" [style.left]="todayPos"></div>
+            }
+
+            <!-- Row lanes -->
+            @for (row of visibleRows(); track row.type === 'group' ? row.group.name : row.task!.id; let i = $index) {
+              <div class="chart-row" [class.chart-row-group]="row.type === 'group'" [class.chart-row-parent]="row.isParent">
+                @if (row.type === 'group') {
+                  <!-- Group summary bar spanning aggregate date range -->
+                  <div class="gantt-bar-summary" [ngStyle]="getGroupBarStyle(row.group)"></div>
+                } @else if (row.isParent) {
+                  <!-- Parent task bar — solid blue -->
+                  <div class="gantt-bar gantt-bar-parent" [ngStyle]="getBarStyle(row.task!)" (click)="onTaskClick(row.task!)">
+                    <span class="bar-label bar-label-parent">{{ row.task!.name }}</span>
+                  </div>
+                } @else {
+                  <div class="gantt-bar" [ngStyle]="getBarStyle(row.task!)" (click)="onTaskClick(row.task!)">
+                    <span class="bar-label">{{ row.task!.name }}</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
     </div>
   }
 </div>

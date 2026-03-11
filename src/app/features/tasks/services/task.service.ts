@@ -22,8 +22,12 @@ export interface TimelineTask {
   duration: number;
   status: TaskStatus;
   priority: number;
+  type: number;
+  progress: number;
   parentTaskId?: string | null;
-  assignees: TaskAssignmentDto[];
+  groupName?: string | null;
+  isGroup: boolean;
+  assignees: { userId: string; userName: string }[];
 }
 
 @Injectable({
@@ -249,7 +253,7 @@ export class TaskService {
   /**
    * Get tasks for timeline view with date range filtering
    */
-  getTimelineTasks(params: TimelineQueryParams): Observable<Task[]> {
+  getTimelineTasks(params: TimelineQueryParams): Observable<TimelineTask[]> {
     let httpParams = new HttpParams()
       .set('view', 'timeline')
       .set('startDate', params.startDate)
@@ -267,8 +271,7 @@ export class TaskService {
       httpParams = httpParams.set('priority', params.priority);
     }
 
-    return this.http.get<PaginatedResult<Task>>(this.apiUrl, { params: httpParams }).pipe(
-      map(result => result.items),
+    return this.http.get<TimelineTask[]>(`${this.apiUrl}/timeline`, { params: httpParams }).pipe(
       catchError(this.handleError)
     );
   }
