@@ -1,0 +1,360 @@
+<!-- Project View — Figma node 7:699 (Main) -->
+<div class="project-view">
+  <!-- Page Heading Area — Figma 7:1001 -->
+  <div class="page-heading">
+    <div class="heading-left">
+      <h1 class="page-title">Project</h1>
+      <span class="heading-subtitle">Manage all project tasks</span>
+    </div>
+    <div class="heading-right">
+      <div class="heading-search">
+        <mat-icon class="search-icon" aria-hidden="true">search</mat-icon>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search tasks..."
+          aria-label="Search tasks"
+          [value]="searchTerm()"
+          (input)="onSearchInput($event)" />
+      </div>
+      <div class="heading-divider" aria-hidden="true"></div>
+      <button class="btn-filter" [class.active]="isFilterPanelVisible()" (click)="toggleFilterPanel()">
+        <mat-icon>filter_list</mat-icon>
+        Filter
+      </button>
+      <button class="btn-primary" (click)="onCreateTask()">
+        <mat-icon>add</mat-icon>
+        New Task
+      </button>
+    </div>
+  </div>
+
+  <!-- Sub-Header / Filter Bar — Figma 7:700 -->
+  <div class="sub-header">
+    <div class="sub-header-left">
+      <button class="filter-tab" [class.active]="quickFilter() === 'all'" (click)="onQuickFilterChange('all')">
+        All Tasks
+        <span class="tab-badge" [class.active]="quickFilter() === 'all'">{{ totalCount() }}</span>
+      </button>
+      <button class="filter-tab" [class.active]="quickFilter() === 'pending'" (click)="onQuickFilterChange('pending')">
+        Pending
+        <span class="tab-badge" [class.active]="quickFilter() === 'pending'">{{ pendingCount() }}</span>
+      </button>
+      <button class="filter-tab" [class.active]="quickFilter() === 'done'" (click)="onQuickFilterChange('done')">
+        Done
+        <span class="tab-badge" [class.active]="quickFilter() === 'done'">{{ doneCount() }}</span>
+      </button>
+    </div>
+    <div class="sub-header-right">
+      <button class="btn-outlined" [matMenuTriggerFor]="sortMenu">
+        <mat-icon>swap_vert</mat-icon>
+        Sort
+      </button>
+      <mat-menu #sortMenu="matMenu">
+        <button mat-menu-item (click)="onSortChange('createdDate', 'desc')">
+          <mat-icon>schedule</mat-icon>
+          <span>Newest First</span>
+        </button>
+        <button mat-menu-item (click)="onSortChange('createdDate', 'asc')">
+          <mat-icon>history</mat-icon>
+          <span>Oldest First</span>
+        </button>
+        <button mat-menu-item (click)="onSortChange('name', 'asc')">
+          <mat-icon>sort_by_alpha</mat-icon>
+          <span>Name A–Z</span>
+        </button>
+        <button mat-menu-item (click)="onSortChange('dueDate', 'asc')">
+          <mat-icon>event</mat-icon>
+          <span>Due Date</span>
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+
+  <!-- Content Area — Figma 7:732 -->
+  <div class="content-area">
+    <!-- Loading state -->
+    @if (isLoading() && displayRows().length === 0) {
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Loading tasks...</p>
+      </div>
+    } @else if (displayRows().length === 0) {
+      <div class="empty-state">
+        <mat-icon>inbox</mat-icon>
+        <h2>No tasks found</h2>
+        <p>Create a new task to get started</p>
+      </div>
+    } @else {
+      <!-- Table Card — Figma 7:733 -->
+      <div class="table-card">
+        <!-- Sticky / Overlay Header — Figma 7:991 -->
+        <div class="sticky-header">
+          <div class="sticky-col col-task-name">TASK NAME</div>
+          <div class="sticky-col col-status">STATUS</div>
+          <div class="sticky-col col-due-date">DUE DATE</div>
+        </div>
+
+        <!-- Table Header Row — Figma 7:736 -->
+        <div class="table-header-row">
+          <div class="header-cell col-checkbox">
+            <input
+              type="checkbox"
+              class="row-checkbox"
+              [checked]="isAllSelected()"
+              [indeterminate]="isIndeterminate()"
+              (change)="toggleAllSelection()"
+              aria-label="Select all tasks" />
+          </div>
+          <div class="header-cell col-task-name">Task Name</div>
+          <div class="header-cell col-status">Status</div>
+          <div class="header-cell col-due-date">Due Date</div>
+          <div class="header-cell col-avatars">Assignees</div>
+          <div class="header-cell col-actions"></div>
+        </div>
+
+        <!-- Data Rows -->
+        @for (row of displayRows(); track row.task.id) {
+          <!-- Parent / top-level / child row -->
+          <div
+            class="data-row"
+            [class.expanded-parent]="isExpanded(row.task.id)"
+            [class.child-row]="row.depth > 0"
+            (mouseenter)="hoveredRowId.set(row.task.id)"
+            (mouseleave)="hoveredRowId.set(null)">
+            <div class="data-cell col-checkbox">
+              <input
+                type="checkbox"
+                class="row-checkbox"
+                [checked]="isSelected(row.task.id)"
+                (change)="toggleSelection(row.task.id)"
+                (click)="$event.stopPropagation()"
+                [attr.aria-label]="'Select ' + row.task.name" />
+            </div>
+            <div class="data-cell col-task-name" [style.padding-left.px]="28 + row.depth * 24">
+              <!-- Expand toggle for tasks with children -->
+              @if (row.hasLoadedChildren) {
+                <button class="expand-toggle" (click)="toggleExpand(row.task.id)" [attr.aria-label]="isExpanded(row.task.id) ? 'Collapse' : 'Expand'">
+                  <mat-icon class="expand-icon" [class.rotated]="isExpanded(row.task.id)">chevron_right</mat-icon>
+                </button>
+              } @else {
+                <span class="expand-spacer"></span>
+              }
+              <mat-icon class="task-type-icon">{{ getTaskTypeIcon(row.task.type) }}</mat-icon>
+              <div class="task-name-content">
+                <span class="task-title" (click)="onViewDetails(row.task)" (keydown.enter)="onViewDetails(row.task)" role="button" tabindex="0">{{ row.task.name }}</span>
+                @if (row.breadcrumb) {
+                  <span class="task-breadcrumb">{{ row.breadcrumb }}</span>
+                }
+              </div>
+            </div>
+            <div class="data-cell col-status">
+              <div [class]="getStatusBadgeClass(row.task.status)">
+                <span class="status-dot"></span>
+                <span>{{ getStatusLabel(row.task.status) }}</span>
+              </div>
+            </div>
+            <div class="data-cell col-due-date">
+              <span class="due-date-text">{{ formatDate(row.task.dueDate) }}</span>
+            </div>
+            <div class="data-cell col-avatars">
+              @if (row.task.assignees && row.task.assignees.length > 0) {
+                <div class="avatar-stack">
+                  @for (assignee of row.task.assignees | slice:0:3; track assignee.userId) {
+                    <div class="avatar-circle" [attr.title]="assignee.userName">
+                      {{ getInitials(assignee.userName) }}
+                    </div>
+                  }
+                  @if (row.task.assignees.length > 3) {
+                    <div class="avatar-circle avatar-overflow">+{{ row.task.assignees.length - 3 }}</div>
+                  }
+                </div>
+              }
+            </div>
+            <div class="data-cell col-actions" [class.visible]="hoveredRowId() === row.task.id">
+              <button class="actions-btn" [matMenuTriggerFor]="rowMenu" (click)="$event.stopPropagation()" aria-label="Task actions">
+                <mat-icon>more_horiz</mat-icon>
+              </button>
+              <mat-menu #rowMenu="matMenu">
+                <button mat-menu-item (click)="onViewDetails(row.task)">
+                  <mat-icon>visibility</mat-icon>
+                  <span>View Details</span>
+                </button>
+                <button mat-menu-item (click)="onEdit(row.task)">
+                  <mat-icon>edit</mat-icon>
+                  <span>Edit</span>
+                </button>
+                <button mat-menu-item (click)="onDelete(row.task)">
+                  <mat-icon>delete</mat-icon>
+                  <span>Delete</span>
+                </button>
+              </mat-menu>
+            </div>
+          </div>
+
+          <!-- Expandable child rows section — Figma 7:833 -->
+          @if (row.hasLoadedChildren && isExpanded(row.task.id)) {
+            @for (child of getChildRows(row.task.id, row.depth); track child.task.id) {
+              <div
+                class="data-row child-row"
+                [class.expanded-parent]="isExpanded(child.task.id)"
+                [class.nested-child]="child.depth > 1"
+                (mouseenter)="hoveredRowId.set(child.task.id)"
+                (mouseleave)="hoveredRowId.set(null)">
+                <div class="data-cell col-checkbox">
+                  <input
+                    type="checkbox"
+                    class="row-checkbox"
+                    [checked]="isSelected(child.task.id)"
+                    (change)="toggleSelection(child.task.id)"
+                    (click)="$event.stopPropagation()"
+                    [attr.aria-label]="'Select ' + child.task.name" />
+                </div>
+                <div class="data-cell col-task-name" [style.padding-left.px]="28 + child.depth * 24">
+                  @if (child.hasLoadedChildren) {
+                    <button class="expand-toggle" (click)="toggleExpand(child.task.id)" [attr.aria-label]="isExpanded(child.task.id) ? 'Collapse' : 'Expand'">
+                      <mat-icon class="expand-icon" [class.rotated]="isExpanded(child.task.id)">chevron_right</mat-icon>
+                    </button>
+                  } @else {
+                    <span class="expand-spacer"></span>
+                  }
+                  <mat-icon class="task-type-icon">{{ getTaskTypeIcon(child.task.type) }}</mat-icon>
+                  <div class="task-name-content">
+                    <span class="task-title" (click)="onViewDetails(child.task)" (keydown.enter)="onViewDetails(child.task)" role="button" tabindex="0">{{ child.task.name }}</span>
+                    @if (child.breadcrumb) {
+                      <span class="task-breadcrumb">{{ child.breadcrumb }}</span>
+                    }
+                  </div>
+                </div>
+                <div class="data-cell col-status">
+                  <div [class]="getStatusBadgeClass(child.task.status)">
+                    <span class="status-dot"></span>
+                    <span>{{ getStatusLabel(child.task.status) }}</span>
+                  </div>
+                </div>
+                <div class="data-cell col-due-date">
+                  <span class="due-date-text">{{ formatDate(child.task.dueDate) }}</span>
+                </div>
+                <div class="data-cell col-avatars">
+                  @if (child.task.assignees && child.task.assignees.length > 0) {
+                    <div class="avatar-stack">
+                      @for (assignee of child.task.assignees | slice:0:3; track assignee.userId) {
+                        <div class="avatar-circle" [attr.title]="assignee.userName">
+                          {{ getInitials(assignee.userName) }}
+                        </div>
+                      }
+                      @if (child.task.assignees.length > 3) {
+                        <div class="avatar-circle avatar-overflow">+{{ child.task.assignees.length - 3 }}</div>
+                      }
+                    </div>
+                  }
+                </div>
+                <div class="data-cell col-actions" [class.visible]="hoveredRowId() === child.task.id">
+                  <button class="actions-btn" [matMenuTriggerFor]="childMenu" (click)="$event.stopPropagation()" aria-label="Task actions">
+                    <mat-icon>more_horiz</mat-icon>
+                  </button>
+                  <mat-menu #childMenu="matMenu">
+                    <button mat-menu-item (click)="onViewDetails(child.task)">
+                      <mat-icon>visibility</mat-icon>
+                      <span>View Details</span>
+                    </button>
+                    <button mat-menu-item (click)="onEdit(child.task)">
+                      <mat-icon>edit</mat-icon>
+                      <span>Edit</span>
+                    </button>
+                    <button mat-menu-item (click)="onDelete(child.task)">
+                      <mat-icon>delete</mat-icon>
+                      <span>Delete</span>
+                    </button>
+                  </mat-menu>
+                </div>
+              </div>
+              <!-- Recursive grandchild expansion -->
+              @if (child.hasLoadedChildren && isExpanded(child.task.id)) {
+                @for (grandchild of getChildRows(child.task.id, child.depth); track grandchild.task.id) {
+                  <div
+                    class="data-row child-row nested-child"
+                    (mouseenter)="hoveredRowId.set(grandchild.task.id)"
+                    (mouseleave)="hoveredRowId.set(null)">
+                    <div class="data-cell col-checkbox">
+                      <input
+                        type="checkbox"
+                        class="row-checkbox"
+                        [checked]="isSelected(grandchild.task.id)"
+                        (change)="toggleSelection(grandchild.task.id)"
+                        (click)="$event.stopPropagation()"
+                        [attr.aria-label]="'Select ' + grandchild.task.name" />
+                    </div>
+                    <div class="data-cell col-task-name" [style.padding-left.px]="28 + grandchild.depth * 24">
+                      <span class="expand-spacer"></span>
+                      <mat-icon class="task-type-icon">{{ getTaskTypeIcon(grandchild.task.type) }}</mat-icon>
+                      <div class="task-name-content">
+                        <span class="task-title" (click)="onViewDetails(grandchild.task)" (keydown.enter)="onViewDetails(grandchild.task)" role="button" tabindex="0">{{ grandchild.task.name }}</span>
+                        @if (grandchild.breadcrumb) {
+                          <span class="task-breadcrumb">{{ grandchild.breadcrumb }}</span>
+                        }
+                      </div>
+                    </div>
+                    <div class="data-cell col-status">
+                      <div [class]="getStatusBadgeClass(grandchild.task.status)">
+                        <span class="status-dot"></span>
+                        <span>{{ getStatusLabel(grandchild.task.status) }}</span>
+                      </div>
+                    </div>
+                    <div class="data-cell col-due-date">
+                      <span class="due-date-text">{{ formatDate(grandchild.task.dueDate) }}</span>
+                    </div>
+                    <div class="data-cell col-avatars">
+                      @if (grandchild.task.assignees && grandchild.task.assignees.length > 0) {
+                        <div class="avatar-stack">
+                          @for (assignee of grandchild.task.assignees | slice:0:3; track assignee.userId) {
+                            <div class="avatar-circle" [attr.title]="assignee.userName">
+                              {{ getInitials(assignee.userName) }}
+                            </div>
+                          }
+                          @if (grandchild.task.assignees.length > 3) {
+                            <div class="avatar-circle avatar-overflow">+{{ grandchild.task.assignees.length - 3 }}</div>
+                          }
+                        </div>
+                      }
+                    </div>
+                    <div class="data-cell col-actions" [class.visible]="hoveredRowId() === grandchild.task.id">
+                      <button class="actions-btn" [matMenuTriggerFor]="grandchildMenu" (click)="$event.stopPropagation()" aria-label="Task actions">
+                        <mat-icon>more_horiz</mat-icon>
+                      </button>
+                      <mat-menu #grandchildMenu="matMenu">
+                        <button mat-menu-item (click)="onViewDetails(grandchild.task)">
+                          <mat-icon>visibility</mat-icon>
+                          <span>View Details</span>
+                        </button>
+                        <button mat-menu-item (click)="onEdit(grandchild.task)">
+                          <mat-icon>edit</mat-icon>
+                          <span>Edit</span>
+                        </button>
+                        <button mat-menu-item (click)="onDelete(grandchild.task)">
+                          <mat-icon>delete</mat-icon>
+                          <span>Delete</span>
+                        </button>
+                      </mat-menu>
+                    </div>
+                  </div>
+                }
+              }
+            }
+          }
+        }
+
+        <!-- Pagination Footer — Figma 7:985 -->
+        <div class="pagination-footer">
+          <span class="pagination-info">
+            Showing {{ paginationStart() }}–{{ paginationEnd() }} of {{ totalCount() }} tasks
+          </span>
+          <div class="pagination-buttons">
+            <button class="pagination-btn" [disabled]="page() <= 1" (click)="onPreviousPage()">Previous</button>
+            <button class="pagination-btn" [disabled]="paginationEnd() >= totalCount()" (click)="onNextPage()">Next</button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

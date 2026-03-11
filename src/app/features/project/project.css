@@ -1,0 +1,830 @@
+/* ===== Project View Styles ===== */
+/* Design tokens from Figma node 7:699 (Main) */
+
+/* === Project View Container === */
+.project-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f6f7f8;
+  overflow-y: auto;
+}
+
+/* === Page Heading — Figma 7:1001 === */
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  min-height: 109px;
+  padding: 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  box-sizing: border-box;
+}
+
+.heading-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.page-title {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 32px;
+  color: #111418;
+  margin: 0;
+}
+
+.heading-subtitle {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: #64748b;
+}
+
+.heading-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.heading-search {
+  position: relative;
+  width: 240px;
+  height: 36px;
+}
+
+.heading-search .search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #637587;
+  pointer-events: none;
+}
+
+.heading-search .search-input {
+  width: 100%;
+  height: 100%;
+  background: #f6f7f8;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 12px 6px 36px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: #111418;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.heading-search .search-input::placeholder {
+  color: #637587;
+}
+
+.heading-search .search-input:focus {
+  border-color: #137fec;
+  box-shadow: 0 0 0 2px rgba(19, 127, 236, 0.15);
+}
+
+.heading-divider {
+  width: 1px;
+  height: 24px;
+  background: #e2e8f0;
+}
+
+.btn-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  color: #64748b;
+  cursor: pointer;
+  transition: background-color 150ms ease-out, border-color 150ms ease-out;
+}
+
+.btn-filter mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.btn-filter:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.btn-filter.active {
+  background: rgba(19, 127, 236, 0.1);
+  border-color: #137fec;
+  color: #137fec;
+}
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  background: #137fec;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: background-color 150ms ease-out;
+  white-space: nowrap;
+}
+
+.btn-primary mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.btn-primary:hover {
+  background: #1172d3;
+}
+
+.btn-primary:active {
+  background: #0f65be;
+}
+
+/* === Sub-Header / Filter Bar — Figma 7:700 === */
+.sub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 59px;
+  padding: 12px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  box-sizing: border-box;
+}
+
+.sub-header-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sub-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Quick filter tabs */
+.filter-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  color: #64748b;
+  cursor: pointer;
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+
+.filter-tab:hover {
+  background: rgba(100, 116, 139, 0.08);
+}
+
+.filter-tab.active {
+  background: rgba(19, 127, 236, 0.1);
+  color: #137fec;
+}
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.tab-badge.active {
+  background: rgba(19, 127, 236, 0.15);
+  color: #137fec;
+}
+
+.btn-outlined {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  color: #64748b;
+  cursor: pointer;
+  transition: background-color 150ms ease-out;
+}
+
+.btn-outlined mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.btn-outlined:hover {
+  background: #f8fafc;
+}
+
+/* === Content Area — Figma 7:732 === */
+.content-area {
+  flex: 1;
+  padding: 24px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  gap: 16px;
+  color: #64748b;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #137fec;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  gap: 8px;
+  text-align: center;
+}
+
+.empty-state mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: #cbd5e1;
+}
+
+.empty-state h2 {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  color: #111418;
+  margin: 8px 0 0;
+}
+
+.empty-state p {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: #64748b;
+  margin: 4px 0 0;
+}
+
+/* === Table Card — Figma 7:733 === */
+.table-card {
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* === Sticky Header — Figma 7:991 === */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  height: 41px;
+  padding: 12px 24px;
+  background: rgba(246, 247, 248, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-bottom: 1px solid #e2e8f0;
+  box-sizing: border-box;
+  gap: 16px;
+}
+
+.sticky-col {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 17px;
+  color: #617589;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.sticky-col.col-task-name {
+  flex: 1;
+  min-width: 200px;
+  padding-left: 32px;
+}
+
+.sticky-col.col-status {
+  width: 120px;
+  text-align: center;
+}
+
+.sticky-col.col-due-date {
+  width: 140px;
+}
+
+/* === Table Header Row — Figma 7:736 === */
+.table-header-row {
+  display: flex;
+  align-items: center;
+  height: 56px;
+  padding: 12px 16px;
+  gap: 16px;
+  box-sizing: border-box;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.header-cell {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 18px;
+  color: #617589;
+}
+
+/* === Column Widths (shared) === */
+.col-checkbox {
+  width: 24px;
+  min-width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.col-task-name {
+  flex: 1;
+  min-width: 200px;
+}
+
+.header-cell.col-task-name {
+  padding-left: 24px;
+}
+
+.col-status {
+  width: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.col-due-date {
+  width: 140px;
+}
+
+.col-avatars {
+  width: 100px;
+}
+
+.col-actions {
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+
+.col-actions.visible {
+  opacity: 1;
+}
+
+/* === Data Rows — Figma 7:767 === */
+.data-row {
+  display: flex;
+  align-items: center;
+  min-height: 47px;
+  padding: 10px 16px;
+  gap: 16px;
+  box-sizing: border-box;
+  border-top: 1px solid #e2e8f0;
+  transition: background-color 100ms ease-out;
+}
+
+.data-row:first-of-type {
+  border-top: none;
+}
+
+.data-row:hover {
+  background: #f8fafc;
+}
+
+.data-row.child-row {
+  background: #fafbfc;
+}
+
+.data-row.child-row:hover {
+  background: #f1f5f9;
+}
+
+/* Expanded parent row — Figma 7:834 overlay */
+.data-row.expanded-parent {
+  background: rgba(19, 127, 236, 0.05);
+}
+
+.data-row.expanded-parent:hover {
+  background: rgba(19, 127, 236, 0.08);
+}
+
+/* Nested child row (depth > 1) — Figma 7:912 Overlay+Border */
+.data-row.nested-child {
+  background: rgba(239, 246, 255, 0.5);
+  border-left: 4px solid #137fec;
+}
+
+.data-row.nested-child:hover {
+  background: rgba(219, 234, 254, 0.6);
+}
+
+.data-cell {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: #111418;
+}
+
+/* Checkbox */
+.row-checkbox {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  accent-color: #137fec;
+}
+
+/* Task name cell */
+.data-cell.col-task-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 52px;
+  min-width: 0;
+}
+
+.expand-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 4px;
+  color: #64748b;
+  flex-shrink: 0;
+  transition: background-color 100ms ease-out;
+}
+
+.expand-toggle:hover {
+  background: rgba(100, 116, 139, 0.12);
+}
+
+.expand-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  transition: transform 200ms ease-out;
+}
+
+.expand-icon.rotated {
+  transform: rotate(90deg);
+}
+
+.expand-spacer {
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.task-type-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.task-name-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.task-title {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  color: #111418;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-title:hover {
+  color: #137fec;
+}
+
+.task-title:focus-visible {
+  outline: 2px solid #137fec;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.task-breadcrumb {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 16px;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Status badge styles — reuse from Story 4.10 */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-todo {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.status-todo .status-dot {
+  background: #6b7280;
+}
+
+.status-in-progress {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-in-progress .status-dot {
+  background: #3b82f6;
+}
+
+.status-blocked {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-blocked .status-dot {
+  background: #ef4444;
+}
+
+.status-waiting {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-waiting .status-dot {
+  background: #f59e0b;
+}
+
+.status-done {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-done .status-dot {
+  background: #22c55e;
+}
+
+/* Due date */
+.due-date-text {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: #64748b;
+}
+
+/* Avatar stack */
+.avatar-stack {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: 2px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  color: #475569;
+  margin-left: -8px;
+}
+
+.avatar-circle:first-child {
+  margin-left: 0;
+}
+
+.avatar-overflow {
+  background: #cbd5e1;
+  color: #334155;
+  font-size: 9px;
+}
+
+/* Actions button */
+.actions-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #64748b;
+  padding: 0;
+  transition: background-color 100ms ease-out;
+}
+
+.actions-btn:hover {
+  background: rgba(100, 116, 139, 0.12);
+}
+
+.actions-btn mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+/* === Pagination Footer — Figma 7:985 === */
+.pagination-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 57px;
+  padding: 12px 24px;
+  border-top: 1px solid #e2e8f0;
+  box-sizing: border-box;
+}
+
+.pagination-info {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  color: #64748b;
+}
+
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pagination-btn {
+  padding: 6px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #ffffff;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  color: #111418;
+  cursor: pointer;
+  transition: background-color 100ms ease-out;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+  .page-heading {
+    padding: 16px;
+    min-height: auto;
+  }
+
+  .heading-search {
+    width: 180px;
+  }
+
+  .heading-divider {
+    display: none;
+  }
+
+  .sub-header {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .content-area {
+    padding: 16px;
+  }
+
+  .sticky-header {
+    padding: 12px 16px;
+  }
+
+  .table-header-row,
+  .data-row {
+    padding: 10px 12px;
+  }
+
+  .col-avatars {
+    display: none;
+  }
+
+  .col-due-date {
+    display: none;
+  }
+}
