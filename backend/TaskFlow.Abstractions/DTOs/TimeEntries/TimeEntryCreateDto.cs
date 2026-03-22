@@ -31,4 +31,9 @@ public class TimeEntryCreateDto
     /// </summary>
     [Required]
     public EntryType EntryType { get; set; }
+
+    /// <summary>
+    /// Whether this time entry is billable (default false).
+    /// </summary>
+    public bool IsBillable { get; set; }
 }

@@ -1,5 +1,7 @@
+using System.Text;
 using Microsoft.Extensions.Logging;
 using TaskFlow.Abstractions.Constants;
+using TaskFlow.Abstractions.DTOs.Shared;
 using TaskFlow.Abstractions.DTOs.TimeEntries;
 using TaskFlow.Abstractions.Entities;
 using TaskFlow.Abstractions.Exceptions;
@@ -47,8 +49,9 @@ public class TimeEntryService : ITimeEntryService
             UserId = userId,
             Minutes = dto.Minutes,
             Note = dto.Note,
-            EntryDate = dto.EntryDate ?? DateTime.UtcNow,
+            EntryDate = dto.EntryDate.HasValue ? EnsureUtc(dto.EntryDate.Value) : DateTime.UtcNow,
             EntryType = dto.EntryType,
+            IsBillable = dto.IsBillable,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -112,6 +115,118 @@ public class TimeEntryService : ITimeEntryService
         _logger.LogInformation("User {UserId} deleted time entry {EntryId}", requestingUserId, entryId);
     }
 
+    public async System.Threading.Tasks.Task<PaginatedResultDto<TimeEntryResponseDto>> GetPaginatedTimeEntriesAsync(TimeEntryFilterDto filter, Guid currentUserId, CancellationToken cancellationToken)
+    {
+        // Default to current user if no userId specified
+        if (!filter.UserId.HasValue)
+            filter.UserId = currentUserId;
+
+        // Authorization: users can only view their own entries
+        if (filter.UserId.Value != currentUserId)
+            throw new UnauthorizedException("You can only view your own time entries.");
+
+        var result = await _unitOfWork.TimeEntries.GetPaginatedAsync(filter, cancellationToken);
+
+        return new PaginatedResultDto<TimeEntryResponseDto>
+        {
+            Items = result.Items.Select(MapToResponseDto).ToList(),
+            TotalCount = result.TotalCount,
+            Page = result.Page,
+            PageSize = result.PageSize,
+            TotalPages = result.TotalPages
+        };
+    }
+
+    public async System.Threading.Tasks.Task<TimeEntryResponseDto> GetTimeEntryByIdAsync(Guid entryId, Guid requestingUserId, CancellationToken cancellationToken)
+    {
+        var timeEntry = await _unitOfWork.TimeEntries.GetByIdAsync(entryId, cancellationToken);
+        if (timeEntry == null)
+            throw new NotFoundException($"Time entry with ID {entryId} not found.");
+
+        if (timeEntry.UserId != requestingUserId)
+            throw new UnauthorizedException("You can only view your own time entries.");
+
+        return MapToResponseDto(timeEntry);
+    }
+
+    public async System.Threading.Tasks.Task<TimeEntryResponseDto> UpdateTimeEntryAsync(Guid entryId, Guid requestingUserId, TimeEntryCreateDto dto, CancellationToken cancellationToken)
+    {
+        var timeEntry = await _unitOfWork.TimeEntries.GetByIdAsync(entryId, cancellationToken);
+        if (timeEntry == null)
+            throw new NotFoundException($"Time entry with ID {entryId} not found.");
+
+        if (timeEntry.UserId != requestingUserId)
+            throw new UnauthorizedException("You can only update your own time entries.");
+
+        if (dto.Minutes <= 0 || dto.Minutes > 1440)
+            throw new ValidationException("Minutes must be between 1 and 1440 (24 hours).");
+
+        timeEntry.Minutes = dto.Minutes;
+        timeEntry.Note = dto.Note;
+        timeEntry.EntryType = dto.EntryType;
+        timeEntry.IsBillable = dto.IsBillable;
+        if (dto.EntryDate.HasValue)
+            timeEntry.EntryDate = EnsureUtc(dto.EntryDate.Value);
+
+        await _unitOfWork.TimeEntries.UpdateAsync(timeEntry, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Re-fetch with includes
+        var updated = await _unitOfWork.TimeEntries.GetByIdAsync(entryId, cancellationToken);
+        _logger.LogInformation("User {UserId} updated time entry {EntryId}", requestingUserId, entryId);
+
+        return MapToResponseDto(updated!);
+    }
+
+    public async System.Threading.Tasks.Task<TimeEntrySummaryDto> GetSummaryAsync(Guid userId, DateTime? startDate, DateTime? endDate, CancellationToken cancellationToken)
+    {
+        return await _unitOfWork.TimeEntries.GetSummaryAsync(userId, startDate, endDate, cancellationToken);
+    }
+
+    public async System.Threading.Tasks.Task<string> ExportTimeEntriesAsync(TimeEntryFilterDto filter, Guid currentUserId, CancellationToken cancellationToken)
+    {
+        if (!filter.UserId.HasValue)
+            filter.UserId = currentUserId;
+
+        if (filter.UserId.Value != currentUserId)
+            throw new UnauthorizedException("You can only export your own time entries.");
+
+        var entries = await _unitOfWork.TimeEntries.GetForExportAsync(filter, cancellationToken);
+
+        var sb = new StringBuilder();
+        sb.AppendLine("Date,Task,Project,Description,Duration,Billable");
+
+        foreach (var entry in entries)
+        {
+            var taskName = EscapeCsvField(entry.Task?.Name ?? string.Empty);
+            var projectName = EscapeCsvField(ResolveProjectName(entry.Task));
+            var description = EscapeCsvField(entry.Note ?? string.Empty);
+            var duration = FormatDurationCompact(entry.Minutes);
+            var billable = entry.IsBillable ? "Yes" : "No";
+
+            sb.AppendLine($"{entry.EntryDate:yyyy-MM-dd},{taskName},{projectName},{description},{duration},{billable}");
+        }
+
+        return sb.ToString();
+    }
+
+    private static DateTime EnsureUtc(DateTime dt) =>
+        dt.Kind == DateTimeKind.Utc ? dt : DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+
+    private static string EscapeCsvField(string field)
+    {
+        if (field.Contains(',') || field.Contains('"') || field.Contains('\n'))
+            return $"\"{field.Replace("\"", "\"\"")}\"";
+        return field;
+    }
+
+    private static string FormatDurationCompact(int minutes)
+    {
+        var hours = minutes / 60;
+        var remainingMinutes = minutes % 60;
+        return hours > 0 ? $"{hours}h {remainingMinutes:D2}m" : $"{remainingMinutes}m";
+    }
+
     private TimeEntryResponseDto MapToResponseDto(TimeEntry timeEntry)
     {
         return new TimeEntryResponseDto
@@ -124,8 +239,31 @@ public class TimeEntryService : ITimeEntryService
             EntryDate = timeEntry.EntryDate,
             Note = timeEntry.Note,
             EntryType = timeEntry.EntryType.ToString(),
+            IsBillable = timeEntry.IsBillable,
+            TaskName = timeEntry.Task?.Name ?? string.Empty,
+            ProjectName = ResolveProjectName(timeEntry.Task),
             CreatedAt = timeEntry.CreatedAt
         };
+    }
+
+    private static string ResolveProjectName(Abstractions.Entities.Task? task)
+    {
+        if (task == null) return string.Empty;
+
+        // If the task itself is a project, return its name
+        if (task.Type == Abstractions.Constants.TaskType.Project)
+            return task.Name;
+
+        // Walk up the parent chain to find the nearest project ancestor
+        var current = task.ParentTask;
+        while (current != null)
+        {
+            if (current.Type == Abstractions.Constants.TaskType.Project)
+                return current.Name;
+            current = current.ParentTask;
+        }
+
+        return string.Empty;
     }
 
     private static string FormatDuration(int minutes)

@@ -45,6 +45,11 @@ public class TimeEntryConfiguration : IEntityTypeConfiguration<TimeEntry>
             .IsRequired()
             .HasConversion<int>();
 
+        builder.Property(te => te.IsBillable)
+            .HasColumnName("is_billable")
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(te => te.CreatedAt)
             .HasColumnName("created_at")
             .IsRequired();

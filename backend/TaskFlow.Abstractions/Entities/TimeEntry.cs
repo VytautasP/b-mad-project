@@ -43,6 +43,11 @@ public class TimeEntry
     public EntryType EntryType { get; set; }
 
     /// <summary>
+    /// Whether this time entry is billable.
+    /// </summary>
+    public bool IsBillable { get; set; }
+
+    /// <summary>
     /// Date and time when this record was created (UTC).
     /// </summary>
     public DateTime CreatedAt { get; set; }

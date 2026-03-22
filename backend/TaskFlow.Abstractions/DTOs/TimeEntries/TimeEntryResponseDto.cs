@@ -46,6 +46,21 @@ public class TimeEntryResponseDto
     public string EntryType { get; set; } = string.Empty;
 
     /// <summary>
+    /// Whether this time entry is billable.
+    /// </summary>
+    public bool IsBillable { get; set; }
+
+    /// <summary>
+    /// Name of the task this entry is logged against.
+    /// </summary>
+    public string TaskName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Name of the parent project (nearest ancestor with TaskType.Project).
+    /// </summary>
+    public string ProjectName { get; set; } = string.Empty;
+
+    /// <summary>
     /// Date and time when this record was created.
     /// </summary>
     public DateTime CreatedAt { get; set; }
