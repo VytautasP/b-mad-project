@@ -4,7 +4,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, of, throwError } from 'rxjs';
+import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { TaskListComponent } from './task-list.component';
 import { TaskService } from '../services/task.service';
 import { Task, TaskPriority, TaskStatus, TaskType, TaskFilters, PaginatedResult } from '../../../shared/models/task.model';
@@ -30,6 +30,7 @@ describe('TaskListComponent', () => {
   };
   let mockRouter: { navigate: any };
   let mockActivatedRoute: { queryParams: BehaviorSubject<any> };
+  let taskRefreshRequests$: Subject<void>;
 
   const mockTask: Task = {
     id: '123',
@@ -80,9 +81,11 @@ describe('TaskListComponent', () => {
       pauseTimer: vi.fn(),
       resumeTimer: vi.fn()
     };
+    taskRefreshRequests$ = new Subject<void>();
     
     taskService = {
       tasks$: tasksSubject.asObservable(),
+      taskRefreshRequests$: taskRefreshRequests$.asObservable(),
       getTasksPaginated: getTasksPaginatedSpy,
       deleteTask: deleteTaskSpy
     };
@@ -262,7 +265,21 @@ describe('TaskListComponent', () => {
 
       component.onCreateTask();
 
-      expect(mockDialog.open).toHaveBeenCalled();
+      expect(mockDialog.open).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          width: '672px',
+          maxWidth: 'calc(100vw - 32px)',
+          autoFocus: false,
+          restoreFocus: true,
+          panelClass: 'create-task-dialog-panel',
+          backdropClass: 'create-task-dialog-backdrop',
+          data: {
+            mode: 'create',
+            initialFocusField: null
+          }
+        })
+      );
       expect(mockDialogRef.componentInstance.mode).toBe('create');
     });
 
@@ -296,7 +313,16 @@ describe('TaskListComponent', () => {
 
       component.ngOnInit();
 
-      expect(mockDialog.open).toHaveBeenCalled();
+      expect(mockDialog.open).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          width: '672px',
+          data: {
+            mode: 'create',
+            initialFocusField: 'dueDate'
+          }
+        })
+      );
       expect(mockDialogRef.componentInstance.mode).toBe('create');
       expect(mockDialogRef.componentInstance.initialFocusField).toBe('dueDate');
       expect(mockRouter.navigate).toHaveBeenCalledWith([], {
@@ -309,6 +335,21 @@ describe('TaskListComponent', () => {
         queryParamsHandling: 'merge',
         replaceUrl: true
       });
+    });
+
+    it('should refresh task surfaces when an external task refresh is requested', () => {
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+      const loadTasksSpy = vi.spyOn(component, 'loadTasks');
+      const refreshCountsSpy = vi.spyOn(component, 'refreshTaskCounts');
+
+      fixture.detectChanges();
+      loadTasksSpy.mockClear();
+      refreshCountsSpy.mockClear();
+
+      taskRefreshRequests$.next();
+
+      expect(loadTasksSpy).toHaveBeenCalled();
+      expect(refreshCountsSpy).toHaveBeenCalled();
     });
   });
 

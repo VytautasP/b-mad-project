@@ -32,6 +32,7 @@ import { TaskFiltersComponent, User } from './components/task-filters/task-filte
 import { TimerStateService, TimerState } from '../../../core/services/state/timer-state.service';
 import { formatDuration, formatDurationWithTotal } from '../../../shared/utils/time.utils';
 import { getDialogAnimationDurations } from '../../../shared/utils/motion.utils';
+import { getCreateTaskDialogConfig } from '../../../shared/utils/task-form-dialog.utils';
 
 interface CreateTaskDialogOptions {
   focusField: 'dueDate' | null;
@@ -126,6 +127,13 @@ export class TaskListComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe(state => {
       this.currentTimerState = state;
+    });
+
+    this.taskService.taskRefreshRequests$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.loadTasks();
+      this.refreshTaskCounts();
     });
 
     // Parse query parameters to restore state
@@ -554,12 +562,7 @@ export class TaskListComponent implements OnInit, OnDestroy {
   }
 
   private openCreateTaskDialog(options?: CreateTaskDialogOptions): void {
-    const dialogRef = this.dialog.open(TaskFormComponent, {
-      width: '600px',
-      maxWidth: '90vw',
-      ...getDialogAnimationDurations(),
-      data: { mode: 'create' }
-    });
+    const dialogRef = this.dialog.open(TaskFormComponent, getCreateTaskDialogConfig(options?.focusField ?? null));
 
     dialogRef.componentInstance.mode = 'create';
     if (options?.focusField) {

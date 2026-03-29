@@ -1,16 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ShellbarComponent } from './shellbar';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../../core/services/auth.service';
 import { BehaviorSubject, of } from 'rxjs';
 import { User } from '../../../core/models/user.model';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { TaskService } from '../../../features/tasks/services/task.service';
 
 describe('ShellbarComponent', () => {
   let component: ShellbarComponent;
   let fixture: ComponentFixture<ShellbarComponent>;
   let mockAuthService: { logout: ReturnType<typeof vi.fn>; currentUser$: BehaviorSubject<User | null> };
   let mockDialog: { open: ReturnType<typeof vi.fn> };
+  let mockSnackBar: { open: ReturnType<typeof vi.fn> };
+  let mockTaskService: { requestTaskRefresh: ReturnType<typeof vi.fn> };
   let currentUserSubject: BehaviorSubject<User | null>;
 
   const mockUser: User = {
@@ -26,12 +30,16 @@ describe('ShellbarComponent', () => {
       currentUser$: currentUserSubject
     };
     mockDialog = { open: vi.fn() };
+    mockSnackBar = { open: vi.fn() };
+    mockTaskService = { requestTaskRefresh: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [ShellbarComponent, NoopAnimationsModule],
       providers: [
         { provide: AuthService, useValue: mockAuthService },
-        { provide: MatDialog, useValue: mockDialog }
+        { provide: MatDialog, useValue: mockDialog },
+        { provide: MatSnackBar, useValue: mockSnackBar },
+        { provide: TaskService, useValue: mockTaskService }
       ]
     }).compileComponents();
 
@@ -87,7 +95,31 @@ describe('ShellbarComponent', () => {
   it('should open task form dialog when Create Task is clicked', () => {
     mockDialog.open.mockReturnValue({ componentInstance: { mode: '' }, afterClosed: () => of(null) } as any);
     component.onCreateTask();
-    expect(mockDialog.open).toHaveBeenCalled();
+    expect(mockDialog.open).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        width: '672px',
+        maxWidth: 'calc(100vw - 32px)',
+        panelClass: 'create-task-dialog-panel',
+        backdropClass: 'create-task-dialog-backdrop',
+        data: {
+          mode: 'create',
+          initialFocusField: null
+        }
+      })
+    );
+  });
+
+  it('should request task refresh and show feedback after successful create', () => {
+    mockDialog.open.mockReturnValue({
+      componentInstance: { mode: '' },
+      afterClosed: () => of({ created: true })
+    } as any);
+
+    component.onCreateTask();
+
+    expect(mockTaskService.requestTaskRefresh).toHaveBeenCalled();
+    expect(mockSnackBar.open).toHaveBeenCalledWith('Task created successfully', 'Close', expect.any(Object));
   });
 
   it('should render notification bell button with aria-label', () => {

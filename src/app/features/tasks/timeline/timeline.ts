@@ -102,6 +102,10 @@ export class TimelineComponent implements OnInit, OnDestroy {
       this.viewMode.set(savedZoom as 'day' | 'week' | 'month');
     }
 
+    this.taskService.taskRefreshRequests$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.loadTimelineData();
+    });
+
     this.updateQueryRange();
     this.loadTimelineData();
   }

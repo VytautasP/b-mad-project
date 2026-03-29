@@ -14,6 +14,7 @@ import { TaskFormComponent } from '../tasks/task-form/task-form.component';
 import { TaskDetailDialog } from '../tasks/task-detail-dialog/task-detail-dialog';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { getDialogAnimationDurations } from '../../shared/utils/motion.utils';
+import { getCreateTaskDialogConfig } from '../../shared/utils/task-form-dialog.utils';
 
 /** Flat row model for the project table view */
 export interface ProjectTableRow {
@@ -118,6 +119,10 @@ export class ProjectComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    this.taskService.taskRefreshRequests$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.loadTasks();
+    });
+
     this.loadTasks();
   }
 
@@ -292,11 +297,7 @@ export class ProjectComponent implements OnInit, OnDestroy {
 
   // Task actions
   onCreateTask(): void {
-    const dialogRef = this.dialog.open(TaskFormComponent, {
-      width: '600px',
-      ...getDialogAnimationDurations(),
-      data: { mode: 'create' }
-    });
+    const dialogRef = this.dialog.open(TaskFormComponent, getCreateTaskDialogConfig());
     dialogRef.componentInstance.mode = 'create';
     dialogRef.afterClosed().subscribe(result => {
       if (result) {

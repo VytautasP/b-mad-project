@@ -1,4 +1,5 @@
-import { Component, inject, Output, EventEmitter, Input, OnInit, HostListener, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -7,10 +8,13 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { filter } from 'rxjs/operators';
 import { TaskService } from '../services/task.service';
 import { Task, TaskCreateDto, TaskUpdateDto, TaskPriority, TaskStatus, TaskType } from '../../../shared/models/task.model';
+import { TaskFormDialogData, TaskFormInitialFocusField, TaskFormMode } from '../../../shared/utils/task-form-dialog.utils';
 
 @Component({
   selector: 'app-task-form',
@@ -24,6 +28,7 @@ import { Task, TaskCreateDto, TaskUpdateDto, TaskPriority, TaskStatus, TaskType 
     MatDatepickerModule,
     MatNativeDateModule,
     MatButtonModule,
+    MatIconModule,
     MatProgressSpinnerModule
   ],
   templateUrl: './task-form.component.html',
@@ -33,27 +38,32 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   private readonly fb = inject(FormBuilder);
   private readonly taskService = inject(TaskService);
   private readonly dialogRef = inject(MatDialogRef<TaskFormComponent>, { optional: true });
-  
-  @Input() mode: 'create' | 'edit' = 'create';
-  @Input() taskToEdit: Task | null = null;
-  @Input() initialFocusField: 'dueDate' | null = null;
-  @Input() embedded = false;
+  private readonly dialogData = inject<TaskFormDialogData | null>(MAT_DIALOG_DATA, { optional: true });
+  private readonly destroyRef = inject(DestroyRef);
 
+  @Input() mode: TaskFormMode = this.dialogData?.mode ?? 'create';
+  @Input() taskToEdit: Task | null = this.dialogData?.task ?? null;
+  @Input() initialFocusField: TaskFormInitialFocusField = this.dialogData?.initialFocusField ?? null;
+  @Input() embedded = this.dialogData?.embedded ?? false;
+
+  @ViewChild('taskNameInput') taskNameInput?: ElementRef<HTMLInputElement>;
   @ViewChild('dueDateInput') dueDateInput?: ElementRef<HTMLInputElement>;
-  
+
   @Output() taskCreated = new EventEmitter<void>();
   @Output() taskUpdated = new EventEmitter<Task>();
   @Output() cancelled = new EventEmitter<void>();
-  
+
+  readonly dialogTitleId = 'task-form-dialog-title';
   taskForm: FormGroup;
   isSubmitting = false;
   errorMessage: string | null = null;
-  
+  private dismissHandlersBound = false;
+
   // Expose enums to template
   priorities = Object.values(TaskPriority).filter(v => typeof v === 'number') as number[];
   statuses = Object.values(TaskStatus).filter(v => typeof v === 'number') as number[];
   types = Object.values(TaskType).filter(v => typeof v === 'number') as number[];
-  
+
   TaskPriority = TaskPriority;
   TaskStatus = TaskStatus;
   TaskType = TaskType;
@@ -70,6 +80,36 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    this.applyDialogDismissState();
+
+    if (this.mode === 'edit' && this.taskToEdit) {
+      this.populateEditForm();
+    }
+
+    if (this.dismissHandlersBound) {
+      return;
+    }
+
+    this.dismissHandlersBound = true;
+
+    this.dialogRef?.backdropClick()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.onDismissRequested();
+      });
+
+    this.dialogRef?.keydownEvents()
+      .pipe(
+        filter((event): event is KeyboardEvent => event.key === 'Escape'),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(event => {
+        event.preventDefault();
+        this.onDismissRequested();
+      });
+  }
+
+  private populateEditForm(): void {
     if (this.mode === 'edit' && this.taskToEdit) {
       this.taskForm.patchValue({
         name: this.taskToEdit.name,
@@ -83,21 +123,50 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    if (this.initialFocusField === 'dueDate' && this.dueDateInput?.nativeElement) {
-      setTimeout(() => {
-        this.dueDateInput?.nativeElement.focus();
-      }, 0);
-    }
+    const focusTarget = this.initialFocusField === 'dueDate'
+      ? this.dueDateInput?.nativeElement
+      : this.taskNameInput?.nativeElement;
+
+    setTimeout(() => {
+      focusTarget?.focus();
+    }, 0);
   }
 
-  @HostListener('document:keydown.escape')
+  get isDialogMode(): boolean {
+    return Boolean(this.dialogRef) && !this.embedded;
+  }
+
+  get dialogTitle(): string {
+    return this.mode === 'edit' ? 'Edit Task' : 'Create New Task';
+  }
+
+  get submitLabel(): string {
+    return this.mode === 'edit' ? 'Update Task' : 'Create Task';
+  }
+
+  get submittingLabel(): string {
+    return this.mode === 'edit' ? 'Updating...' : 'Creating...';
+  }
+
   onEscapeKey(): void {
+    this.onDismissRequested();
+  }
+
+  onClose(): void {
+    this.onDismissRequested();
+  }
+
+  private applyDialogDismissState(): void {
     if (this.dialogRef) {
-      this.dialogRef.close();
+      this.dialogRef.disableClose = this.isSubmitting;
     }
   }
 
-  onCancel(): void {
+  private onDismissRequested(): void {
+    if (this.isSubmitting) {
+      return;
+    }
+
     if (this.dialogRef) {
       this.dialogRef.close();
       return;
@@ -106,14 +175,20 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     this.cancelled.emit();
   }
 
+  onCancel(): void {
+    this.onDismissRequested();
+  }
+
   onSubmit(): void {
     if (this.taskForm.invalid) {
       this.taskForm.markAllAsTouched();
+      this.taskNameInput?.nativeElement.focus();
       return;
     }
 
     this.isSubmitting = true;
     this.errorMessage = null;
+    this.applyDialogDismissState();
 
     if (this.mode === 'edit' && this.taskToEdit) {
       const dto: TaskUpdateDto = {
@@ -127,9 +202,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
 
       this.taskService.updateTask(this.taskToEdit.id, dto).subscribe({
         next: (updatedTask) => {
-          setTimeout(() => {
-            this.isSubmitting = false;
-          });
+          this.isSubmitting = false;
+          this.applyDialogDismissState();
           this.taskUpdated.emit(updatedTask);
           if (this.dialogRef) {
             this.dialogRef.close(updatedTask);
@@ -137,9 +211,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
         },
         error: (error) => {
           this.errorMessage = error.error?.message || 'Failed to update task. Please try again.';
-          setTimeout(() => {
-            this.isSubmitting = false;
-          });
+          this.isSubmitting = false;
+          this.applyDialogDismissState();
         }
       });
     } else {
@@ -159,9 +232,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
             status: TaskStatus.ToDo,
             type: TaskType.Task
           });
-          setTimeout(() => {
-            this.isSubmitting = false;
-          });
+          this.isSubmitting = false;
+          this.applyDialogDismissState();
           this.taskCreated.emit();
           if (this.dialogRef) {
             this.dialogRef.close({ created: true });
@@ -169,9 +241,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
         },
         error: (error) => {
           this.errorMessage = error.error?.message || 'Failed to create task. Please try again.';
-          setTimeout(() => {
-            this.isSubmitting = false;
-          });
+          this.isSubmitting = false;
+          this.applyDialogDismissState();
         }
       });
     }
@@ -198,5 +269,14 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
 
   getTypeLabel(type: number): string {
     return TaskType[type];
+  }
+
+  getTypeIcon(type: number): string {
+    switch (type) {
+      case TaskType.Project: return 'folder';
+      case TaskType.Milestone: return 'flag_circle';
+      case TaskType.Task: return 'task_alt';
+      default: return 'task_alt';
+    }
   }
 }

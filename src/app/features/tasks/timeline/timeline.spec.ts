@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { TimelineComponent } from './timeline';
 import { TaskService, TimelineTask } from '../services/task.service';
 import { Task, TaskPriority, TaskStatus, TaskType } from '../../../shared/models/task.model';
@@ -12,6 +12,7 @@ describe('TimelineComponent', () => {
   let mockTaskService: {
     getTimelineTasks: ReturnType<typeof vi.fn>;
     getTaskById: ReturnType<typeof vi.fn>;
+    taskRefreshRequests$: Subject<void>;
   };
   let mockDialog: { open: ReturnType<typeof vi.fn> };
   let mockRouter: { navigate: ReturnType<typeof vi.fn> };
@@ -68,7 +69,8 @@ describe('TimelineComponent', () => {
 
     mockTaskService = {
       getTimelineTasks: vi.fn().mockReturnValue(of([mockParentTask, mockTimelineTask])),
-      getTaskById: vi.fn().mockReturnValue(of(mockTaskDetails))
+      getTaskById: vi.fn().mockReturnValue(of(mockTaskDetails)),
+      taskRefreshRequests$: new Subject<void>()
     };
     mockDialog = {
       open: vi.fn().mockReturnValue({ afterClosed: () => of(null) })
@@ -157,5 +159,16 @@ describe('TimelineComponent', () => {
 
     expect(component.allTasks().length).toBe(3);
     expect(component.noDueDateCount()).toBe(2);
+  });
+
+  it('should reload timeline data when a shared task refresh is requested', () => {
+    const loadTimelineDataSpy = vi.spyOn(component, 'loadTimelineData');
+
+    fixture.detectChanges();
+    loadTimelineDataSpy.mockClear();
+
+    mockTaskService.taskRefreshRequests$.next();
+
+    expect(loadTimelineDataSpy).toHaveBeenCalled();
   });
 });

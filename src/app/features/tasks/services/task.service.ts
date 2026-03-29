@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, BehaviorSubject, throwError } from 'rxjs';
+import { Observable, BehaviorSubject, Subject, throwError } from 'rxjs';
 import { catchError, tap, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { Task, TaskCreateDto, TaskUpdateDto, TaskStatus, TaskAssignmentDto, TaskFilters, PaginatedResult } from '../../../shared/models/task.model';
@@ -40,6 +40,12 @@ export class TaskService {
   // State management for task list
   private tasksSubject = new BehaviorSubject<Task[]>([]);
   public tasks$ = this.tasksSubject.asObservable();
+  private readonly taskRefreshRequestSubject = new Subject<void>();
+  public readonly taskRefreshRequests$ = this.taskRefreshRequestSubject.asObservable();
+
+  requestTaskRefresh(): void {
+    this.taskRefreshRequestSubject.next();
+  }
 
   /**
    * Fetch all tasks for the current user with optional search, status filters, and myTasks flag

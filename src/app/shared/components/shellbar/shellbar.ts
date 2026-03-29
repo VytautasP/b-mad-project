@@ -4,9 +4,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../../core/services/auth.service';
 import { TaskFormComponent } from '../../../features/tasks/task-form/task-form.component';
-import { getDialogAnimationDurations } from '../../utils/motion.utils';
+import { TaskService } from '../../../features/tasks/services/task.service';
+import { getCreateTaskDialogConfig } from '../../utils/task-form-dialog.utils';
 
 @Component({
   selector: 'app-shellbar',
@@ -22,6 +24,8 @@ import { getDialogAnimationDurations } from '../../utils/motion.utils';
 export class ShellbarComponent {
   private readonly authService = inject(AuthService);
   private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly taskService = inject(TaskService);
 
   currentUser$ = this.authService.currentUser$;
   searchValue = signal('');
@@ -36,12 +40,20 @@ export class ShellbarComponent {
   }
 
   onCreateTask(): void {
-    const dialogRef = this.dialog.open(TaskFormComponent, {
-      width: '600px',
-      ...getDialogAnimationDurations(),
-      data: { mode: 'create' }
-    });
+    const dialogRef = this.dialog.open(TaskFormComponent, getCreateTaskDialogConfig());
     dialogRef.componentInstance.mode = 'create';
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) {
+        return;
+      }
+
+      this.taskService.requestTaskRefresh();
+      this.snackBar.open('Task created successfully', 'Close', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+    });
   }
 
   onNotificationsClick(): void {

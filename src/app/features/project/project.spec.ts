@@ -3,7 +3,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { ProjectComponent, ProjectTableRow } from './project';
 import { TaskService } from '../tasks/services/task.service';
 import { Task, TaskPriority, TaskStatus, TaskType, PaginatedResult } from '../../shared/models/task.model';
@@ -16,6 +16,7 @@ describe('ProjectComponent', () => {
   let mockDialog: any;
   let mockSnackBar: any;
   let mockRouter: any;
+  let taskRefreshRequests$: Subject<void>;
 
   const createTask = (overrides: Partial<Task> = {}): Task => ({
     id: 'task-1',
@@ -56,11 +57,20 @@ describe('ProjectComponent', () => {
     mockDialog = { open: vi.fn() };
     mockSnackBar = { open: vi.fn() };
     mockRouter = { navigate: vi.fn().mockReturnValue(Promise.resolve(true)) };
+    taskRefreshRequests$ = new Subject<void>();
 
     await TestBed.configureTestingModule({
       imports: [ProjectComponent, NoopAnimationsModule],
       providers: [
-        { provide: TaskService, useValue: { getTasksPaginated: getTasksPaginatedSpy, deleteTask: deleteTaskSpy, tasks$: of([]) } },
+        {
+          provide: TaskService,
+          useValue: {
+            getTasksPaginated: getTasksPaginatedSpy,
+            deleteTask: deleteTaskSpy,
+            tasks$: of([]),
+            taskRefreshRequests$: taskRefreshRequests$.asObservable()
+          }
+        },
         { provide: MatDialog, useValue: mockDialog },
         { provide: MatSnackBar, useValue: mockSnackBar },
         { provide: Router, useValue: mockRouter }
@@ -93,6 +103,50 @@ describe('ProjectComponent', () => {
       getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult([])));
       fixture.detectChanges();
       expect(component.isLoading()).toBe(false);
+    });
+
+    it('should reload when a shared task refresh is requested', () => {
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult([])));
+      const loadTasksSpy = vi.spyOn(component, 'loadTasks');
+
+      fixture.detectChanges();
+      loadTasksSpy.mockClear();
+
+      taskRefreshRequests$.next();
+
+      expect(loadTasksSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Task actions', () => {
+    it('should open the shared create-task dialog config', () => {
+      mockDialog.open.mockReturnValue({ componentInstance: { mode: '' }, afterClosed: () => of(null) });
+
+      component.onCreateTask();
+
+      expect(mockDialog.open).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          width: '672px',
+          maxWidth: 'calc(100vw - 32px)',
+          panelClass: 'create-task-dialog-panel',
+          backdropClass: 'create-task-dialog-backdrop',
+          data: {
+            mode: 'create',
+            initialFocusField: null
+          }
+        })
+      );
+    });
+
+    it('should reload tasks and show feedback after successful create', () => {
+      mockDialog.open.mockReturnValue({ componentInstance: { mode: '' }, afterClosed: () => of({ created: true }) });
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult([createTask()])));
+
+      component.onCreateTask();
+
+      expect(mockSnackBar.open).toHaveBeenCalledWith('Task created successfully!', 'Close', { duration: 3000 });
+      expect(getTasksPaginatedSpy).toHaveBeenCalled();
     });
   });
 

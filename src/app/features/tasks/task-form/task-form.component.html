@@ -1,74 +1,159 @@
-<form [formGroup]="taskForm" (ngSubmit)="onSubmit()" class="task-form" [class.embedded]="embedded">
-  @if (!embedded) {
-    <h2>{{ mode === 'edit' ? 'Edit Task' : 'Create New Task' }}</h2>
-  }
-
-  @if (errorMessage) {
-    <div class="error-message">
-      {{ errorMessage }}
+<form
+  [formGroup]="taskForm"
+  (ngSubmit)="onSubmit()"
+  class="task-form"
+  [class.task-form--dialog]="isDialogMode"
+  [class.task-form--embedded]="embedded"
+  [attr.aria-labelledby]="isDialogMode ? dialogTitleId : null"
+>
+  @if (isDialogMode) {
+    <header class="task-form__header">
+      <div class="task-form__header-left">
+        <div class="task-form__header-icon" aria-hidden="true">
+          <mat-icon>edit_note</mat-icon>
+        </div>
+        <h2 [id]="dialogTitleId" class="task-form__title">{{ dialogTitle }}</h2>
+      </div>
+      <button
+        mat-icon-button
+        type="button"
+        class="task-form__close"
+        aria-label="Close task dialog"
+        [disabled]="isSubmitting"
+        (click)="onClose()"
+      >
+        <mat-icon>close</mat-icon>
+      </button>
+    </header>
+  } @else if (!embedded) {
+    <div class="task-form__standalone-heading">
+      <h2 class="task-form__title">{{ dialogTitle }}</h2>
     </div>
   }
 
-  <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Task Name</mat-label>
-    <input matInput formControlName="name" placeholder="Enter task name" required>
-    @if (taskForm.get('name')?.invalid && taskForm.get('name')?.touched) {
-      <mat-error>{{ getErrorMessage('name') }}</mat-error>
+  <div class="task-form__body">
+    @if (errorMessage) {
+      <div class="task-form__error" role="alert" aria-live="assertive">
+        {{ errorMessage }}
+      </div>
     }
-  </mat-form-field>
 
-  <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Description</mat-label>
-    <textarea matInput formControlName="description" placeholder="Enter task description" rows="4"></textarea>
-  </mat-form-field>
+    <div class="task-form__field-group task-form__field-group--name">
+      <label class="task-form__label" for="task-form-name">
+        Task Name <span class="task-form__required" aria-hidden="true">*</span>
+      </label>
+      <mat-form-field appearance="outline" class="task-form__field">
+        <input
+          #taskNameInput
+          id="task-form-name"
+          matInput
+          formControlName="name"
+          placeholder="e.g., Finalize Q3 Marketing Report"
+          required
+        >
+        @if (taskForm.get('name')?.invalid && taskForm.get('name')?.touched) {
+          <mat-error>{{ getErrorMessage('name') }}</mat-error>
+        }
+      </mat-form-field>
+    </div>
 
-  <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Due Date</mat-label>
-    <input #dueDateInput matInput [matDatepicker]="picker" formControlName="dueDate">
-    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-    <mat-datepicker #picker></mat-datepicker>
-  </mat-form-field>
+    <div class="task-form__field-group task-form__field-group--textarea">
+      <label class="task-form__label" for="task-form-description">Description</label>
+      <mat-form-field appearance="outline" class="task-form__field task-form__field--textarea">
+        <textarea
+          id="task-form-description"
+          matInput
+          formControlName="description"
+          placeholder="Add more details about this task..."
+          rows="4"
+        ></textarea>
+      </mat-form-field>
+    </div>
 
-  <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Priority</mat-label>
-    <mat-select formControlName="priority" required>
-      @for (priority of priorities; track priority) {
-        <mat-option [value]="priority">{{ getPriorityLabel(priority) }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
+    <div class="task-form__planning-grid" role="group" aria-label="Planning details">
+      <div class="task-form__field-group">
+        <label class="task-form__label" for="task-form-due-date">
+          <mat-icon class="task-form__label-icon">calendar_today</mat-icon> Due Date
+        </label>
+        <mat-form-field appearance="outline" class="task-form__field">
+          <input #dueDateInput id="task-form-due-date" matInput [matDatepicker]="picker" formControlName="dueDate" (click)="picker.open()" readonly>
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+      </div>
 
-  <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Status</mat-label>
-    <mat-select formControlName="status" required>
-      @for (status of statuses; track status) {
-        <mat-option [value]="status">{{ getStatusLabel(status) }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
+      <div class="task-form__field-group">
+        <label class="task-form__label" id="task-form-priority-label">
+          <mat-icon class="task-form__label-icon">flag</mat-icon> Priority
+        </label>
+        <mat-form-field appearance="outline" class="task-form__field">
+          <mat-select formControlName="priority" aria-labelledby="task-form-priority-label" required>
+            @for (priority of priorities; track priority) {
+              <mat-option [value]="priority">{{ getPriorityLabel(priority) }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
 
-  <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Type</mat-label>
-    <mat-select formControlName="type" required>
-      @for (type of types; track type) {
-        <mat-option [value]="type">{{ getTypeLabel(type) }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
+      <div class="task-form__field-group">
+        <label class="task-form__label" id="task-form-status-label">
+          <mat-icon class="task-form__label-icon">radio_button_checked</mat-icon> Status
+        </label>
+        <mat-form-field appearance="outline" class="task-form__field">
+          <mat-select formControlName="status" aria-labelledby="task-form-status-label" required>
+            @for (status of statuses; track status) {
+              <mat-option [value]="status">{{ getStatusLabel(status) }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
 
-  <div class="form-actions">
-    @if (embedded) {
-      <button mat-button type="button" (click)="onCancel()" [disabled]="isSubmitting">
-        Cancel
-      </button>
-    }
-    <button mat-raised-button color="primary" type="submit" [disabled]="isSubmitting">
+    <div class="task-form__field-group">
+      <label class="task-form__label" id="task-form-type-label">
+        <mat-icon class="task-form__label-icon">settings</mat-icon> Type
+      </label>
+      <div class="task-form__type-buttons" role="radiogroup" aria-labelledby="task-form-type-label">
+        @for (type of types; track type) {
+          <button
+            type="button"
+            class="task-form__type-btn"
+            [class.task-form__type-btn--active]="taskForm.get('type')?.value === type"
+            (click)="taskForm.get('type')?.setValue(type)"
+            [attr.aria-checked]="taskForm.get('type')?.value === type"
+            role="radio"
+          >
+            <mat-icon class="task-form__type-btn-icon">{{ getTypeIcon(type) }}</mat-icon>
+            <span>{{ getTypeLabel(type) }}</span>
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <footer class="task-form__footer" [class.task-form__footer--embedded]="embedded">
+    <button
+      mat-button
+      type="button"
+      class="task-form__cancel"
+      (click)="onCancel()"
+      [disabled]="isSubmitting"
+    >
+      Cancel
+    </button>
+
+    <button
+      mat-flat-button
+      type="submit"
+      class="task-form__submit"
+      [disabled]="isSubmitting"
+    >
       @if (isSubmitting) {
-        <mat-spinner diameter="20"></mat-spinner>
-        <span>{{ mode === 'edit' ? 'Updating...' : 'Creating...' }}</span>
+        <mat-spinner diameter="16"></mat-spinner>
+        <span>{{ submittingLabel }}</span>
       } @else {
-        <span>{{ mode === 'edit' ? 'Update Task' : 'Create Task' }}</span>
+        <span>{{ submitLabel }}</span>
       }
     </button>
-  </div>
+  </footer>
 </form>
