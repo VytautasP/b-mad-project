@@ -298,9 +298,6 @@ export class ProjectComponent implements OnInit, OnDestroy {
       data: { mode: 'create' }
     });
     dialogRef.componentInstance.mode = 'create';
-    dialogRef.componentInstance.taskCreated.subscribe(() => {
-      dialogRef.close({ created: true });
-    });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.snackBar.open('Task created successfully!', 'Close', { duration: 3000 });

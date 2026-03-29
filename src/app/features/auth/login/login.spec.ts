@@ -28,7 +28,7 @@ describe('LoginComponent', () => {
       imports: [LoginComponent, ReactiveFormsModule, MatIconModule, MatProgressSpinnerModule],
       providers: [
         provideRouter([
-          { path: 'dashboard', component: LoginComponent },
+          { path: 'tasks', component: LoginComponent },
           { path: 'register', component: LoginComponent },
         ]),
         { provide: AuthService, useValue: mockAuthService },
@@ -169,10 +169,10 @@ describe('LoginComponent', () => {
       });
     });
 
-    it('should navigate to dashboard on successful login', () => {
+    it('should navigate to tasks on successful login', () => {
       mockAuthService.login.mockReturnValue(of({ token: 'abc', userId: '1', email: 'user@test.com', name: 'User', expiresAt: '' }));
       component.onSubmit();
-      expect(router.navigate).toHaveBeenCalledWith(['/dashboard']);
+      expect(router.navigate).toHaveBeenCalledWith(['/tasks']);
     });
 
     it('should set isLoading false after successful login', () => {

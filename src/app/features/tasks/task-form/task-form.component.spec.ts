@@ -136,6 +136,7 @@ describe('TaskFormComponent', () => {
       type: TaskType.Task
     }));
     expect(emitSpy).toHaveBeenCalled();
+    expect(mockDialogRef.close).toHaveBeenCalledWith({ created: true });
   });
 
   it('should reset form after successful submit', async () => {

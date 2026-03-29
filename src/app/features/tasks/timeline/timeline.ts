@@ -250,7 +250,7 @@ export class TimelineComponent implements OnInit, OnDestroy {
   }
 
   onAddTask(): void {
-    this.router.navigate(['/dashboard'], {
+    this.router.navigate(['/tasks'], {
       queryParams: { openTaskForm: 'true', focusField: 'dueDate', returnTo: 'timeline' }
     });
   }

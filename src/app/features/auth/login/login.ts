@@ -59,7 +59,7 @@ export class LoginComponent implements OnInit {
     this.authService.login(loginRequest).subscribe({
       next: () => {
         this.isLoading = false;
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/tasks';
         this.router.navigate([returnUrl]);
       },
       error: (error) => {

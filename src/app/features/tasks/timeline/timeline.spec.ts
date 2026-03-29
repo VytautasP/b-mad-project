@@ -221,10 +221,10 @@ describe('TimelineComponent', () => {
     expect(timelineItems[0].editable).toBe(true);
   });
 
-  it('should navigate to dashboard date-edit context from empty-state CTA', () => {
+  it('should navigate to task list date-edit context from empty-state CTA', () => {
     component.onAddDueDateCta();
 
-    expect(mockRouter.navigate).toHaveBeenCalledWith(['/dashboard'], {
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/tasks'], {
       queryParams: {
         openTaskForm: 'true',
         focusField: 'dueDate',

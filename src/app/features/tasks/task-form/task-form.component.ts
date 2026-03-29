@@ -163,6 +163,9 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
             this.isSubmitting = false;
           });
           this.taskCreated.emit();
+          if (this.dialogRef) {
+            this.dialogRef.close({ created: true });
+          }
         },
         error: (error) => {
           this.errorMessage = error.error?.message || 'Failed to create task. Please try again.';

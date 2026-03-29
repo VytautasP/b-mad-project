@@ -187,7 +187,7 @@ export class TaskFullDetailsWorkspaceComponent implements OnInit, AfterViewCheck
       .subscribe((params) => {
         const taskId = params.get('id');
         if (!taskId) {
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/tasks']);
           return;
         }
 
@@ -202,7 +202,7 @@ export class TaskFullDetailsWorkspaceComponent implements OnInit, AfterViewCheck
       return;
     }
 
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/tasks']);
   }
 
   onRetryTask(): void {

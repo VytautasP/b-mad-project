@@ -33,7 +33,7 @@ export class SidebarComponent {
   mobileOpen = signal(false);
 
   readonly navItems: NavItem[] = [
-    { label: 'Tasks', icon: 'task_alt', route: '/dashboard', exact: true },
+    { label: 'Tasks', icon: 'task_alt', route: '/tasks', exact: true },
     { label: 'Project', icon: 'folder', route: '/project', exact: false },
     { label: 'Timeline', icon: 'timeline', route: '/timeline', exact: false },
     { label: 'Logs', icon: 'schedule', route: '/logs', exact: false }

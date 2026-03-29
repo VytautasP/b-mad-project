@@ -33,6 +33,11 @@ import { TimerStateService, TimerState } from '../../../core/services/state/time
 import { formatDuration, formatDurationWithTotal } from '../../../shared/utils/time.utils';
 import { getDialogAnimationDurations } from '../../../shared/utils/motion.utils';
 
+interface CreateTaskDialogOptions {
+  focusField: 'dueDate' | null;
+  returnToTimeline: boolean;
+}
+
 @Component({
   selector: 'app-task-list',
   standalone: true,
@@ -128,6 +133,14 @@ export class TaskListComponent implements OnInit, OnDestroy {
       this.parseQueryParams(params);
       this.loadTasks();
       this.refreshTaskCounts();
+
+      const createTaskOptions = this.getCreateTaskDialogOptions(params);
+      if (!createTaskOptions) {
+        return;
+      }
+
+      this.clearCreateTaskQueryParams();
+      this.openCreateTaskDialog(createTaskOptions);
     });
 
     // Load users for filter dropdown (mock for now - would come from UserService)
@@ -164,6 +177,30 @@ export class TaskListComponent implements OnInit, OnDestroy {
   private parseEnumArray(value: any, enumType: any): number[] {
     const values = Array.isArray(value) ? value : [value];
     return values.map(v => parseInt(v, 10)).filter(v => !isNaN(v));
+  }
+
+  private getCreateTaskDialogOptions(params: Record<string, unknown>): CreateTaskDialogOptions | null {
+    if (params['openTaskForm'] !== 'true') {
+      return null;
+    }
+
+    return {
+      focusField: params['focusField'] === 'dueDate' ? 'dueDate' : null,
+      returnToTimeline: params['returnTo'] === 'timeline'
+    };
+  }
+
+  private clearCreateTaskQueryParams(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        openTaskForm: null,
+        focusField: null,
+        returnTo: null
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   private updateQueryParams(): void {
@@ -513,13 +550,21 @@ export class TaskListComponent implements OnInit, OnDestroy {
   }
 
   onCreateTask(): void {
+    this.openCreateTaskDialog();
+  }
+
+  private openCreateTaskDialog(options?: CreateTaskDialogOptions): void {
     const dialogRef = this.dialog.open(TaskFormComponent, {
       width: '600px',
+      maxWidth: '90vw',
       ...getDialogAnimationDurations(),
       data: { mode: 'create' }
     });
 
     dialogRef.componentInstance.mode = 'create';
+    if (options?.focusField) {
+      dialogRef.componentInstance.initialFocusField = options.focusField;
+    }
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
@@ -530,6 +575,10 @@ export class TaskListComponent implements OnInit, OnDestroy {
           horizontalPosition: 'end',
           verticalPosition: 'top'
         });
+
+        if (options?.returnToTimeline) {
+          this.router.navigate(['/timeline']);
+        }
       }
     });
   }

@@ -92,7 +92,7 @@ export class RegisterComponent implements OnInit {
     this.authService.register(registerRequest).subscribe({
       next: () => {
         this.isLoading = false;
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/tasks']);
       },
       error: (error) => {
         this.isLoading = false;

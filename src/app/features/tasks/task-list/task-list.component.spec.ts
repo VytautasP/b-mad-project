@@ -265,6 +265,37 @@ describe('TaskListComponent', () => {
       expect(mockSnackBar.open).toHaveBeenCalledWith('Task created successfully', 'Close', expect.any(Object));
       expect(getTasksPaginatedSpy).toHaveBeenCalled();
     });
+
+    it('should open create dialog from route query params', () => {
+      const mockDialogRef = {
+        componentInstance: { mode: '', initialFocusField: null },
+        afterClosed: () => of(null)
+      } as any;
+
+      mockDialog.open.mockReturnValue(mockDialogRef);
+      getTasksPaginatedSpy.mockReturnValue(of(mockPaginatedResult));
+      mockActivatedRoute.queryParams.next({
+        openTaskForm: 'true',
+        focusField: 'dueDate',
+        returnTo: 'timeline'
+      });
+
+      component.ngOnInit();
+
+      expect(mockDialog.open).toHaveBeenCalled();
+      expect(mockDialogRef.componentInstance.mode).toBe('create');
+      expect(mockDialogRef.componentInstance.initialFocusField).toBe('dueDate');
+      expect(mockRouter.navigate).toHaveBeenCalledWith([], {
+        relativeTo: mockActivatedRoute,
+        queryParams: {
+          openTaskForm: null,
+          focusField: null,
+          returnTo: null
+        },
+        queryParamsHandling: 'merge',
+        replaceUrl: true
+      });
+    });
   });
 
   // Edit functionality tests

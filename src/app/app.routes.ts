@@ -4,7 +4,7 @@ import { authGuard } from './core/guards/auth.guard';
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: '/dashboard',
+    redirectTo: '/tasks',
     pathMatch: 'full'
   },
   {
@@ -16,9 +16,14 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register/register').then(m => m.RegisterComponent)
   },
   {
-    path: 'dashboard',
-    loadComponent: () => import('./features/dashboard/dashboard').then(m => m.DashboardComponent),
+    path: 'tasks',
+    loadComponent: () => import('./features/tasks/task-list/task-list.component').then(m => m.TaskListComponent),
     canActivate: [authGuard]
+  },
+  {
+    path: 'dashboard',
+    redirectTo: '/tasks',
+    pathMatch: 'full'
   },
   {
     path: 'project',
