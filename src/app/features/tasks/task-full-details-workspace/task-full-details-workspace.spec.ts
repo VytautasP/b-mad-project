@@ -16,12 +16,12 @@ import { CommentThreadComponent } from '../../collaboration/comment-thread/comme
 import { AssigneeList } from '../components/assignee-list/assignee-list';
 import { TimeEntryList } from '../components/time-entry-list/time-entry-list';
 import { UserPicker } from '../components/user-picker/user-picker';
-import { TaskFormComponent } from '../task-form/task-form.component';
 
 @Component({ selector: 'app-assignee-list', standalone: true, template: '' })
 class AssigneeListStub {
   @Input() assignees: unknown[] = [];
   @Input() maxVisible = 0;
+  @Input() avatarSize = 0;
   @Input() showActions = false;
   @Output() removeAssignee = new EventEmitter<string>();
 }
@@ -57,15 +57,6 @@ class ActivityLogStub {
   @Input() refreshToken?: number | string;
 }
 
-@Component({ selector: 'app-task-form', standalone: true, template: '' })
-class TaskFormStub {
-  @Input() mode: 'create' | 'edit' = 'create';
-  @Input() taskToEdit: Task | null = null;
-  @Input() embedded = false;
-  @Output() taskUpdated = new EventEmitter<Task>();
-  @Output() cancelled = new EventEmitter<void>();
-}
-
 describe('TaskFullDetailsWorkspaceComponent', () => {
   let fixture: ComponentFixture<TaskFullDetailsWorkspaceComponent>;
   let component: TaskFullDetailsWorkspaceComponent;
@@ -73,6 +64,7 @@ describe('TaskFullDetailsWorkspaceComponent', () => {
   let timer$: BehaviorSubject<any>;
   let mockTaskService: {
     getTaskById: ReturnType<typeof vi.fn>;
+    getChildTasks: ReturnType<typeof vi.fn>;
     getTaskAssignees: ReturnType<typeof vi.fn>;
     assignUser: ReturnType<typeof vi.fn>;
     unassignUser: ReturnType<typeof vi.fn>;
@@ -113,6 +105,7 @@ describe('TaskFullDetailsWorkspaceComponent', () => {
 
     mockTaskService = {
       getTaskById: vi.fn().mockReturnValue(of(mockTask)),
+      getChildTasks: vi.fn().mockReturnValue(of([])),
       getTaskAssignees: vi.fn().mockReturnValue(of([])),
       assignUser: vi.fn().mockReturnValue(of(undefined)),
       unassignUser: vi.fn().mockReturnValue(of(undefined))
@@ -153,8 +146,7 @@ describe('TaskFullDetailsWorkspaceComponent', () => {
             UserPicker,
             TimeEntryList,
             CommentThreadComponent,
-            ActivityLogComponent,
-            TaskFormComponent
+            ActivityLogComponent
           ]
         },
         add: {
@@ -163,8 +155,7 @@ describe('TaskFullDetailsWorkspaceComponent', () => {
             UserPickerStub,
             TimeEntryListStub,
             CommentThreadStub,
-            ActivityLogStub,
-            TaskFormStub
+            ActivityLogStub
           ]
         }
       })
@@ -177,9 +168,11 @@ describe('TaskFullDetailsWorkspaceComponent', () => {
   it('should render the dedicated overview workspace for the route task', () => {
     fixture.detectChanges();
 
+    const element = fixture.nativeElement as HTMLElement;
+
     expect(mockTaskService.getTaskById).toHaveBeenCalledWith('task-1');
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Task workspace title');
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Edit details');
+    expect(element.textContent).toContain('Task workspace title');
+    expect(element.textContent).toContain('Back to tasks');
   });
 
   it('should show stop enabled when the current task timer is running', () => {
@@ -202,14 +195,14 @@ describe('TaskFullDetailsWorkspaceComponent', () => {
     expect(element.textContent).toContain('01:01:01');
   });
 
-  it('should enter inline edit mode when edit details is selected', () => {
+  it('should enter inline name edit mode when task title is selected', () => {
     fixture.detectChanges();
 
-    component.onOpenEditor();
+    component.onStartEditName();
     fixture.detectChanges();
 
-    expect(component.isEditingDetails()).toBe(true);
-    expect(fixture.nativeElement.querySelector('app-task-form')).toBeTruthy();
+    expect(component.isEditingName()).toBe(true);
+    expect(fixture.nativeElement.querySelector('.inline-edit-name')).toBeTruthy();
   });
 
   it('should show the attachment scaffold state', () => {

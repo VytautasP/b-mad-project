@@ -10,6 +10,12 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { AuthService } from '../../../../core/services/auth.service';
 import { TimeEntryResponseDto } from '../../../../shared/models/time-entry.model';
 
+const baseTimeEntryResponse = {
+  isBillable: false,
+  taskName: 'Task workspace title',
+  projectName: 'TaskFlow'
+};
+
 describe('TimeEntryList', () => {
   let component: TimeEntryList;
   let fixture: ComponentFixture<TimeEntryList>;
@@ -28,6 +34,7 @@ describe('TimeEntryList', () => {
       entryDate: '2026-02-03T10:00:00Z',
       note: 'Worked on feature',
       entryType: 'Manual',
+      ...baseTimeEntryResponse,
       createdAt: '2026-02-03T10:00:00Z'
     },
     {
@@ -39,6 +46,7 @@ describe('TimeEntryList', () => {
       entryDate: '2026-02-02T10:00:00Z',
       note: 'Code review',
       entryType: 'Timer',
+      ...baseTimeEntryResponse,
       createdAt: '2026-02-02T10:00:00Z'
     }
   ];

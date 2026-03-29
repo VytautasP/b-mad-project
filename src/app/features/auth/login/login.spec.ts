@@ -12,16 +12,12 @@ describe('LoginComponent', () => {
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
   let mockAuthService: { login: any };
-  let mockSnackBar: { open: any };
+  let mockSnackBar: MatSnackBar & { open: any };
   let router: Router;
 
   beforeEach(async () => {
     mockAuthService = {
       login: vi.fn(),
-    };
-
-    mockSnackBar = {
-      open: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
@@ -32,7 +28,6 @@ describe('LoginComponent', () => {
           { path: 'register', component: LoginComponent },
         ]),
         { provide: AuthService, useValue: mockAuthService },
-        { provide: MatSnackBar, useValue: mockSnackBar },
       ],
     }).compileComponents();
 
@@ -40,6 +35,8 @@ describe('LoginComponent', () => {
     vi.spyOn(router, 'navigate');
 
     fixture = TestBed.createComponent(LoginComponent);
+    mockSnackBar = fixture.componentRef.injector.get(MatSnackBar) as MatSnackBar & { open: any };
+    vi.spyOn(mockSnackBar, 'open').mockReturnValue(undefined as any);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

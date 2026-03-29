@@ -51,8 +51,12 @@ describe('ConfirmationDialogComponent', () => {
   });
 
   it('should display default button text when not provided', () => {
+    fixture.destroy();
     dialogData.confirmText = undefined;
     dialogData.cancelText = undefined;
+
+    fixture = TestBed.createComponent(ConfirmationDialogComponent);
+    component = fixture.componentInstance;
     fixture.detectChanges();
     
     const compiled = fixture.nativeElement as HTMLElement;

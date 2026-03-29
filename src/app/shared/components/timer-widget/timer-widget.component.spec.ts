@@ -1,22 +1,25 @@
-// @ts-nocheck
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MatDialogModule } from '@angular/material/dialog';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
 import { TimerWidgetComponent } from './timer-widget.component';
 import { TimerStateService, TimerState } from '../../../core/services/state/timer-state.service';
 import { TimeTrackingService } from '../../../core/services/time-tracking.service';
+import { TaskService } from '../../../features/tasks/services/task.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
 describe('TimerWidgetComponent', () => {
   let component: TimerWidgetComponent;
   let fixture: ComponentFixture<TimerWidgetComponent>;
-  let mockTimerService: jasmine.SpyObj<TimerStateService>;
-  let mockTimeTrackingService: jasmine.SpyObj<TimeTrackingService>;
-  let mockNotificationService: jasmine.SpyObj<NotificationService>;
+  let mockTimerService: {
+    timer$: BehaviorSubject<TimerState>;
+    pauseTimer: ReturnType<typeof vi.fn>;
+    resumeTimer: ReturnType<typeof vi.fn>;
+    stopTimer: ReturnType<typeof vi.fn>;
+  };
+  let mockTimeTrackingService: { logTime: ReturnType<typeof vi.fn> };
+  let mockTaskService: { getTasks: ReturnType<typeof vi.fn> };
+  let mockNotificationService: { showSuccess: ReturnType<typeof vi.fn>; showError: ReturnType<typeof vi.fn> };
+  let mockDialog: { open: ReturnType<typeof vi.fn> };
   let timerStateSubject: BehaviorSubject<TimerState>;
 
   const initialState: TimerState = {
@@ -31,33 +34,30 @@ describe('TimerWidgetComponent', () => {
   beforeEach(async () => {
     timerStateSubject = new BehaviorSubject<TimerState>(initialState);
 
-    mockTimerService = jasmine.createSpyObj('TimerStateService', 
-      ['pauseTimer', 'resumeTimer', 'stopTimer'],
-      { timer$: timerStateSubject.asObservable() }
-    );
-    
-    mockTimeTrackingService = jasmine.createSpyObj('TimeTrackingService', ['logTime']);
-    mockNotificationService = jasmine.createSpyObj('NotificationService', ['showSuccess', 'showError']);
+    mockTimerService = {
+      timer$: timerStateSubject,
+      pauseTimer: vi.fn(),
+      resumeTimer: vi.fn(),
+      stopTimer: vi.fn().mockReturnValue(30)
+    };
+    mockTimeTrackingService = { logTime: vi.fn().mockReturnValue(of(undefined)) };
+    mockTaskService = { getTasks: vi.fn().mockReturnValue(of([])) };
+    mockNotificationService = { showSuccess: vi.fn(), showError: vi.fn() };
+    mockDialog = { open: vi.fn().mockReturnValue({ afterClosed: () => of(null) }) };
 
     await TestBed.configureTestingModule({
-      imports: [
-        TimerWidgetComponent,
-        MatDialogModule,
-        MatCardModule,
-        MatButtonModule,
-        MatIconModule,
-        MatTooltipModule
-      ],
+      imports: [TimerWidgetComponent],
       providers: [
         { provide: TimerStateService, useValue: mockTimerService },
         { provide: TimeTrackingService, useValue: mockTimeTrackingService },
-        { provide: NotificationService, useValue: mockNotificationService }
+        { provide: TaskService, useValue: mockTaskService },
+        { provide: NotificationService, useValue: mockNotificationService },
+        { provide: MatDialog, useValue: mockDialog }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(TimerWidgetComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {
@@ -65,128 +65,89 @@ describe('TimerWidgetComponent', () => {
   });
 
   it('should display timer widget when timer is running', () => {
-    const runningState: TimerState = {
+    timerStateSubject.next({
       ...initialState,
       isRunning: true,
       taskId: 'task-123',
       taskName: 'Test Task',
       elapsedSeconds: 60
-    };
-    
-    timerStateSubject.next(runningState);
+    });
     fixture.detectChanges();
 
-    const widget = fixture.nativeElement.querySelector('.timer-widget');
-    expect(widget).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.timer-widget')).toBeTruthy();
   });
 
-  it('should hide timer widget when no timer active', () => {
+  it('should hide timer widget when no timer is active', () => {
     timerStateSubject.next(initialState);
     fixture.detectChanges();
 
-    const widget = fixture.nativeElement.querySelector('.timer-widget');
-    expect(widget).toBeFalsy();
+    expect(fixture.nativeElement.querySelector('.timer-widget')).toBeFalsy();
   });
 
   it('should display task name and formatted time', () => {
-    const runningState: TimerState = {
+    timerStateSubject.next({
       ...initialState,
       isRunning: true,
       taskId: 'task-123',
       taskName: 'Test Task',
-      elapsedSeconds: 125 // 2 minutes 5 seconds
-    };
-    
-    timerStateSubject.next(runningState);
+      elapsedSeconds: 125
+    });
     fixture.detectChanges();
 
     const taskName = fixture.nativeElement.querySelector('.task-name');
     const timerDisplay = fixture.nativeElement.querySelector('.timer-display');
-    
+
     expect(taskName?.textContent).toContain('Test Task');
     expect(timerDisplay?.textContent).toBe('00:02:05');
   });
 
   it('should show pause button when running', () => {
-    const runningState: TimerState = {
+    timerStateSubject.next({
       ...initialState,
       isRunning: true,
-      isPaused: false,
       taskId: 'task-123',
       taskName: 'Test Task'
-    };
-    
-    timerStateSubject.next(runningState);
+    });
     fixture.detectChanges();
 
-    const pauseButton = fixture.nativeElement.querySelector('[aria-label="Pause Timer"]');
-    expect(pauseButton).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[aria-label="Pause Timer"]')).toBeTruthy();
   });
 
   it('should show resume button when paused', () => {
-    const pausedState: TimerState = {
+    timerStateSubject.next({
       ...initialState,
       isRunning: true,
       isPaused: true,
       taskId: 'task-123',
       taskName: 'Test Task'
-    };
-    
-    timerStateSubject.next(pausedState);
+    });
     fixture.detectChanges();
 
-    const resumeButton = fixture.nativeElement.querySelector('[aria-label="Resume Timer"]');
-    expect(resumeButton).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[aria-label="Resume Timer"]')).toBeTruthy();
   });
 
-  it('should call timerState.pauseTimer() on pause click', () => {
-    const runningState: TimerState = {
-      ...initialState,
-      isRunning: true,
-      isPaused: false,
-      taskId: 'task-123',
-      taskName: 'Test Task'
-    };
-    
-    timerStateSubject.next(runningState);
-    fixture.detectChanges();
-
-    component.onPause();
+  it('should call timerState.pauseTimer on pause click', () => {
+    component['onPause']();
 
     expect(mockTimerService.pauseTimer).toHaveBeenCalled();
   });
 
-  it('should call timerState.resumeTimer() on resume click', () => {
-    const pausedState: TimerState = {
-      ...initialState,
-      isRunning: true,
-      isPaused: true,
-      taskId: 'task-123',
-      taskName: 'Test Task'
-    };
-    
-    timerStateSubject.next(pausedState);
-    fixture.detectChanges();
-
-    component.onResume();
+  it('should call timerState.resumeTimer on resume click', () => {
+    component['onResume']();
 
     expect(mockTimerService.resumeTimer).toHaveBeenCalled();
   });
 
-  it('should display pulsing indicator when active', () => {
-    const runningState: TimerState = {
+  it('should display pulsing indicator when timer is active', () => {
+    timerStateSubject.next({
       ...initialState,
       isRunning: true,
-      isPaused: false,
       taskId: 'task-123',
       taskName: 'Test Task'
-    };
-    
-    timerStateSubject.next(runningState);
+    });
     fixture.detectChanges();
 
-    const indicator = fixture.nativeElement.querySelector('.timer-indicator.active');
-    expect(indicator).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.timer-indicator.active')).toBeTruthy();
   });
 
   it('should format time correctly', () => {

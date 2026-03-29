@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TaskTreeComponent } from './task-tree.component';
 import { TaskService } from '../services/task.service';
-import { of, throwError } from 'rxjs';
+import { EMPTY, of, throwError } from 'rxjs';
 import { Task, TaskStatus, TaskPriority, TaskType } from '../../../shared/models/task.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CdkDragStart } from '@angular/cdk/drag-drop';
@@ -78,7 +78,7 @@ describe('TaskTreeComponent', () => {
       imports: [TaskTreeComponent],
       providers: [
         { provide: TaskService, useValue: mockTaskService },
-        { provide: MatSnackBar, useValue: { open: vi.fn().mockReturnValue({ onAction: () => of() }) } }
+        { provide: MatSnackBar, useValue: { open: vi.fn().mockReturnValue({ onAction: () => EMPTY }) } }
       ]
     }).compileComponents();
 
@@ -221,16 +221,19 @@ describe('TaskTreeComponent', () => {
     });
 
     it('should reset drag state on drag end', () => {
+      vi.useFakeTimers();
       const node = component.dataSource.data[0];
       component.draggedNode = node;
       component.draggedTaskId = '1';
       component.dropTargetNode = component.dataSource.data[1];
       
       component.onDragEnd();
+      vi.advanceTimersByTime(100);
       
       expect(component.draggedNode).toBeNull();
       expect(component.draggedTaskId).toBeNull();
       expect(component.dropTargetNode).toBeNull();
+      vi.useRealTimers();
     });
 
     it('should validate drop - cannot drop on itself', () => {
@@ -267,8 +270,8 @@ describe('TaskTreeComponent', () => {
       const targetNode = component.dataSource.data[0];
       component.draggedNode = draggedNode;
       
-      const event = {} as any;
-      component.onDrop(event, targetNode);
+      const event = { container: { data: targetNode } } as any;
+      component.onDrop(event);
       
       expect(mockTaskService.setParentTask).toHaveBeenCalledWith('3', '1');
     });
@@ -277,8 +280,8 @@ describe('TaskTreeComponent', () => {
       const childNode = component.dataSource.data[0].children[0];
       component.draggedNode = childNode;
       
-      const event = {} as any;
-      component.onDrop(event, null);
+      const event = { container: { data: null } } as any;
+      component.onDrop(event);
       
       expect(mockTaskService.removeParent).toHaveBeenCalledWith('2');
     });
@@ -288,21 +291,24 @@ describe('TaskTreeComponent', () => {
       component.draggedNode = node;
       const snackBar = TestBed.inject(MatSnackBar);
       
-      const event = {} as any;
-      component.onDrop(event, node);
+      const event = { container: { data: node } } as any;
+      component.onDrop(event);
       
       expect(snackBar.open).toHaveBeenCalledWith('Cannot move task: Invalid drop location', 'Close', { duration: 3000 });
     });
 
-    it('should update local state after successful reparenting', async () => {
+    it('should update local state after successful reparenting', () => {
       const draggedNode = component.dataSource.data[1];
       const targetNode = component.dataSource.data[0];
       component.draggedNode = draggedNode;
+      mockTaskService.getTasks = vi.fn().mockReturnValue(of([
+        mockTasks[0],
+        mockTasks[1],
+        { ...mockTasks[2], parentTaskId: '1' }
+      ]));
       
-      const event = {} as any;
-      component.onDrop(event, targetNode);
-      
-      await new Promise(resolve => setTimeout(resolve, 100));
+      const event = { container: { data: targetNode } } as any;
+      component.onDrop(event);
       
       const updatedTask = component.tasks().find(t => t.id === '3');
       expect(updatedTask?.parentTaskId).toBe('1');
@@ -314,8 +320,8 @@ describe('TaskTreeComponent', () => {
       component.draggedNode = draggedNode;
       const snackBar = TestBed.inject(MatSnackBar);
       
-      const event = {} as any;
-      component.onDrop(event, targetNode);
+      const event = { container: { data: targetNode } } as any;
+      component.onDrop(event);
       
       expect(snackBar.open).toHaveBeenCalledWith('Task moved successfully', 'Undo', { duration: 5000 });
     });
@@ -328,8 +334,8 @@ describe('TaskTreeComponent', () => {
       component.draggedNode = draggedNode;
       const snackBar = TestBed.inject(MatSnackBar);
       
-      const event = {} as any;
-      component.onDrop(event, targetNode);
+      const event = { container: { data: targetNode } } as any;
+      component.onDrop(event);
       
       expect(snackBar.open).toHaveBeenCalledWith('Circular reference detected', 'Close', { duration: 3000 });
     });

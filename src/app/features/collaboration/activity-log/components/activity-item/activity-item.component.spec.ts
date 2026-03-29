@@ -26,7 +26,7 @@ describe('ActivityItemComponent', () => {
 
     fixture = TestBed.createComponent(ActivityItemComponent);
     component = fixture.componentInstance;
-    component.activity = baseActivity;
+    fixture.componentRef.setInput('activity', baseActivity);
     fixture.detectChanges();
   });
 
@@ -46,12 +46,12 @@ describe('ActivityItemComponent', () => {
   });
 
   it('should show field change details when present', () => {
-    component.activity = {
+    fixture.componentRef.setInput('activity', {
       ...baseActivity,
       changedField: 'Status',
       oldValue: 'InProgress',
       newValue: 'Done'
-    };
+    });
     fixture.detectChanges();
 
     const alert = fixture.nativeElement.querySelector('.bubble-change-alert') as HTMLElement;
@@ -63,7 +63,7 @@ describe('ActivityItemComponent', () => {
   });
 
   it('should render initials avatar fallback', () => {
-    component.activity = { ...baseActivity, userName: '' };
+    fixture.componentRef.setInput('activity', { ...baseActivity, userName: '' });
     fixture.detectChanges();
     expect(component.actorInitials).toBe('?');
   });

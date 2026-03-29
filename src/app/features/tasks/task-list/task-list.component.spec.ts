@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, ActivatedRoute } from '@angular/router';
 import { BehaviorSubject, of, throwError } from 'rxjs';
@@ -10,6 +10,7 @@ import { TaskService } from '../services/task.service';
 import { Task, TaskPriority, TaskStatus, TaskType, TaskFilters, PaginatedResult } from '../../../shared/models/task.model';
 import { ConfirmationDialogComponent } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { Sort } from '@angular/material/sort';
+import { TimerStateService } from '../../../core/services/state/timer-state.service';
 
 describe('TaskListComponent', () => {
   let component: TaskListComponent;
@@ -18,8 +19,15 @@ describe('TaskListComponent', () => {
   let tasksSubject: BehaviorSubject<Task[]>;
   let getTasksPaginatedSpy: any;
   let deleteTaskSpy: any;
-  let mockDialog: { open: any };
-  let mockSnackBar: { open: any };
+  let mockDialog: MatDialog & { open: any };
+  let mockSnackBar: MatSnackBar & { open: any };
+  let mockTimerStateService: {
+    timer$: BehaviorSubject<any>;
+    startTimer: ReturnType<typeof vi.fn>;
+    stopTimer: ReturnType<typeof vi.fn>;
+    pauseTimer: ReturnType<typeof vi.fn>;
+    resumeTimer: ReturnType<typeof vi.fn>;
+  };
   let mockRouter: { navigate: any };
   let mockActivatedRoute: { queryParams: BehaviorSubject<any> };
 
@@ -59,18 +67,18 @@ describe('TaskListComponent', () => {
     tasksSubject = new BehaviorSubject<Task[]>([]);
     getTasksPaginatedSpy = vi.fn();
     deleteTaskSpy = vi.fn();
-    mockDialog = {
-      open: vi.fn(),
-      openDialogs: []
-    } as any;
-    mockSnackBar = {
-      open: vi.fn()
-    };
     mockRouter = {
       navigate: vi.fn().mockReturnValue(Promise.resolve(true))
     };
     mockActivatedRoute = {
       queryParams: new BehaviorSubject<any>({})
+    };
+    mockTimerStateService = {
+      timer$: new BehaviorSubject<any>(null),
+      startTimer: vi.fn(),
+      stopTimer: vi.fn(),
+      pauseTimer: vi.fn(),
+      resumeTimer: vi.fn()
     };
     
     taskService = {
@@ -87,14 +95,20 @@ describe('TaskListComponent', () => {
       ],
       providers: [
         { provide: TaskService, useValue: taskService },
-        { provide: MatDialog, useValue: mockDialog },
-        { provide: MatSnackBar, useValue: mockSnackBar },
+        { provide: TimerStateService, useValue: mockTimerStateService },
         { provide: Router, useValue: mockRouter },
         { provide: ActivatedRoute, useValue: mockActivatedRoute }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(TaskListComponent);
+    mockDialog = fixture.componentRef.injector.get(MatDialog) as MatDialog & { open: any };
+    vi.spyOn(mockDialog, 'open').mockReturnValue({
+      componentInstance: {},
+      afterClosed: () => of(null)
+    } as any);
+    mockSnackBar = fixture.componentRef.injector.get(MatSnackBar) as MatSnackBar & { open: any };
+    vi.spyOn(mockSnackBar, 'open').mockReturnValue(undefined as any);
     component = fixture.componentInstance;
   });
 

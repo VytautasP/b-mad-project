@@ -14,6 +14,12 @@ import { TimeTrackingService } from '../../../../core/services/time-tracking.ser
 import { NotificationService } from '../../../../core/services/notification.service';
 import { TimeEntryResponseDto, EntryType } from '../../../../shared/models/time-entry.model';
 
+const baseTimeEntryResponse = {
+  isBillable: false,
+  taskName: 'Test task',
+  projectName: 'TaskFlow'
+};
+
 describe('ManualTimeEntryForm', () => {
   let component: ManualTimeEntryForm;
   let fixture: ComponentFixture<ManualTimeEntryForm>;
@@ -144,7 +150,8 @@ describe('ManualTimeEntryForm', () => {
         minutes: 90,
         entryDate: new Date().toISOString(),
         note: 'Test note',
-        entryType: 'Manual',
+        entryType: EntryType.Manual,
+        ...baseTimeEntryResponse,
         createdAt: new Date().toISOString()
       };
 

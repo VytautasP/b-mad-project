@@ -75,12 +75,9 @@ describe('TaskFiltersComponent', () => {
   });
 
   describe('Apply Filters', () => {
-    it('should emit filtersChanged event with correct filter object', (done) => {
-      component.filtersChanged.subscribe((filters: TaskFilters) => {
-        expect(filters.status).toEqual([TaskStatus.InProgress]);
-        expect(filters.priority).toEqual([TaskPriority.High]);
-        done();
-      });
+    it('should emit filtersChanged event with correct filter object', () => {
+      const emitSpy = vi.fn();
+      component.filtersChanged.subscribe(emitSpy);
 
       component.filterForm.patchValue({
         status: [TaskStatus.InProgress],
@@ -88,6 +85,11 @@ describe('TaskFiltersComponent', () => {
       });
 
       component.onApplyFilters();
+
+      expect(emitSpy).toHaveBeenCalledTimes(1);
+      const filters = emitSpy.mock.calls[0][0] as TaskFilters;
+      expect(filters.status).toEqual([TaskStatus.InProgress]);
+      expect(filters.priority).toEqual([TaskPriority.High]);
     });
 
     it('should update active filter chips when filters applied', () => {
@@ -117,12 +119,13 @@ describe('TaskFiltersComponent', () => {
       expect(component.filterForm.get('searchTerm')?.value).toBe('');
     });
 
-    it('should emit filtersCleared event', (done) => {
-      component.filtersCleared.subscribe(() => {
-        done();
-      });
+    it('should emit filtersCleared event', () => {
+      const emitSpy = vi.fn();
+      component.filtersCleared.subscribe(emitSpy);
 
       component.onClearFilters();
+
+      expect(emitSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should clear active filter chips', () => {
@@ -164,10 +167,9 @@ describe('TaskFiltersComponent', () => {
       expect(component.filterForm.get('dueDateFrom')?.value).toBeNull();
     });
 
-    it('should emit filtersChanged after chip removal', (done) => {
-      component.filtersChanged.subscribe(() => {
-        done();
-      });
+    it('should emit filtersChanged after chip removal', () => {
+      const emitSpy = vi.fn();
+      component.filtersChanged.subscribe(emitSpy);
 
       component.filterForm.patchValue({
         status: [TaskStatus.InProgress]
@@ -175,6 +177,8 @@ describe('TaskFiltersComponent', () => {
 
       const chip = { key: 'status', value: TaskStatus.InProgress.toString() };
       component.removeFilter(chip);
+
+      expect(emitSpy).toHaveBeenCalledTimes(1);
     });
   });
 

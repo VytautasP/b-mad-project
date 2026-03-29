@@ -9,8 +9,8 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 describe('ShellbarComponent', () => {
   let component: ShellbarComponent;
   let fixture: ComponentFixture<ShellbarComponent>;
-  let mockAuthService: jasmine.SpyObj<AuthService>;
-  let mockDialog: jasmine.SpyObj<MatDialog>;
+  let mockAuthService: { logout: ReturnType<typeof vi.fn>; currentUser$: BehaviorSubject<User | null> };
+  let mockDialog: { open: ReturnType<typeof vi.fn> };
   let currentUserSubject: BehaviorSubject<User | null>;
 
   const mockUser: User = {
@@ -21,10 +21,11 @@ describe('ShellbarComponent', () => {
 
   beforeEach(async () => {
     currentUserSubject = new BehaviorSubject<User | null>(mockUser);
-    mockAuthService = jasmine.createSpyObj('AuthService', ['logout'], {
-      currentUser$: currentUserSubject.asObservable()
-    });
-    mockDialog = jasmine.createSpyObj('MatDialog', ['open']);
+    mockAuthService = {
+      logout: vi.fn(),
+      currentUser$: currentUserSubject
+    };
+    mockDialog = { open: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [ShellbarComponent, NoopAnimationsModule],
@@ -66,14 +67,14 @@ describe('ShellbarComponent', () => {
   });
 
   it('should emit search value on input', () => {
-    spyOn(component.searchOutput, 'emit');
+    const emitSpy = vi.spyOn(component.searchOutput, 'emit');
     const searchInput = fixture.nativeElement.querySelector('.search-input') as HTMLInputElement;
     searchInput.value = 'test query';
     searchInput.dispatchEvent(new Event('input'));
     fixture.detectChanges();
 
     expect(component.searchValue()).toBe('test query');
-    expect(component.searchOutput.emit).toHaveBeenCalledWith('test query');
+    expect(emitSpy).toHaveBeenCalledWith('test query');
   });
 
   it('should render Create Task button with aria-label', () => {
@@ -84,7 +85,7 @@ describe('ShellbarComponent', () => {
   });
 
   it('should open task form dialog when Create Task is clicked', () => {
-    mockDialog.open.and.returnValue({ componentInstance: { mode: '' }, afterClosed: () => of(null) } as any);
+    mockDialog.open.mockReturnValue({ componentInstance: { mode: '' }, afterClosed: () => of(null) } as any);
     component.onCreateTask();
     expect(mockDialog.open).toHaveBeenCalled();
   });
@@ -133,11 +134,11 @@ describe('ShellbarComponent', () => {
   });
 
   it('should update profileMenuOpen signal on menu open/close', () => {
-    expect(component.profileMenuOpen()).toBeFalse();
+    expect(component.profileMenuOpen()).toBe(false);
     component.onProfileMenuOpened();
-    expect(component.profileMenuOpen()).toBeTrue();
+    expect(component.profileMenuOpen()).toBe(true);
     component.onProfileMenuClosed();
-    expect(component.profileMenuOpen()).toBeFalse();
+    expect(component.profileMenuOpen()).toBe(false);
   });
 
   it('should have 64px height shellbar', () => {

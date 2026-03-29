@@ -4,6 +4,12 @@ import { TimeTrackingService } from './time-tracking.service';
 import { TimeEntryCreateDto, TimeEntryResponseDto, EntryType } from '../../shared/models/time-entry.model';
 import { environment } from '../../../environments/environment';
 
+const baseTimeEntryResponse = {
+  isBillable: false,
+  taskName: 'Task name',
+  projectName: 'Project name'
+};
+
 describe('TimeTrackingService', () => {
   let service: TimeTrackingService;
   let httpMock: HttpTestingController;
@@ -39,7 +45,8 @@ describe('TimeTrackingService', () => {
         minutes,
         entryDate: new Date().toISOString(),
         note,
-        entryType: 'Manual',
+        entryType: EntryType.Manual,
+        ...baseTimeEntryResponse,
         createdAt: new Date().toISOString()
       };
 
@@ -108,7 +115,8 @@ describe('TimeTrackingService', () => {
           minutes: 60,
           entryDate: new Date().toISOString(),
           note: 'Note 1',
-          entryType: 'Manual',
+          entryType: EntryType.Manual,
+          ...baseTimeEntryResponse,
           createdAt: new Date().toISOString()
         },
         {
@@ -119,7 +127,8 @@ describe('TimeTrackingService', () => {
           minutes: 120,
           entryDate: new Date().toISOString(),
           note: 'Note 2',
-          entryType: 'Timer',
+          entryType: EntryType.Timer,
+          ...baseTimeEntryResponse,
           createdAt: new Date().toISOString()
         }
       ];
@@ -167,7 +176,7 @@ describe('TimeTrackingService', () => {
       const entryId = 'entry-1';
 
       service.deleteTimeEntry(entryId).subscribe(response => {
-        expect(response).toBeUndefined();
+        expect(response).toBeNull();
       });
 
       const req = httpMock.expectOne(`${environment.apiUrl}/api/timeentries/${entryId}`);
