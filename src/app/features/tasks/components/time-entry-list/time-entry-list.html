@@ -12,19 +12,12 @@
 
   @if (isLoading()) {
     <div class="loading-state">
-      Loading time entries...
+      <ui-spinner [diameter]="20" message="Loading time entries..." [inline]="true" />
     </div>
   } @else if (hasLoadError()) {
-    <div class="error-state" role="alert">
-      <mat-icon>error_outline</mat-icon>
-      <p>Couldn’t load time entries.</p>
-      <button mat-stroked-button color="warn" (click)="onRetryLoadTimeEntries()">Retry</button>
-    </div>
+    <ui-error-state heading="Couldn’t load time entries." (retryClicked)="onRetryLoadTimeEntries()" />
   } @else if (timeEntries().length === 0) {
-    <div class="empty-state">
-      <mat-icon>schedule</mat-icon>
-      <p>No time has been logged for this task yet.</p>
-    </div>
+    <ui-empty-state icon="schedule" heading="No time has been logged for this task yet." />
   } @else {
     <mat-list>
       @for (entry of timeEntries(); track entry.id) {

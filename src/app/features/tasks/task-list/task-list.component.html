@@ -81,26 +81,16 @@
 
   @if (isLoading() && tasks().length === 0) {
     <div class="loading-container">
-      <mat-spinner></mat-spinner>
-      <p>Loading tasks...</p>
+      <ui-spinner message="Loading tasks..." />
     </div>
   } @else {
     <!-- Empty State -->
     @if (tasks().length === 0) {
-      <div class="empty-state">
-        @if (hasActiveFilters()) {
-          <mat-icon>filter_list_off</mat-icon>
-          <h2>No tasks match your filters</h2>
-          <p>Try adjusting your filters to see more tasks</p>
-          <button mat-raised-button color="primary" (click)="onFiltersCleared()">
-            Clear Filters
-          </button>
-        } @else {
-          <mat-icon>inbox</mat-icon>
-          <h2>No tasks yet</h2>
-          <p>Get started by creating your first task</p>
-        }
-      </div>
+      @if (hasActiveFilters()) {
+        <ui-empty-state icon="filter_list_off" heading="No tasks match your filters" description="Try adjusting your filters to see more tasks" ctaLabel="Clear Filters" (ctaClicked)="onFiltersCleared()" />
+      } @else {
+        <ui-empty-state icon="inbox" heading="No tasks yet" description="Get started by creating your first task" />
+      }
     } @else {
       <!-- Desktop view: Card-wrapped table -->
       <div class="desktop-view">

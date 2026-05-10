@@ -9,3 +9,6 @@ export { UiQuickActionGroup } from './quick-action-group/ui-quick-action-group';
 export type { QuickActionOption } from './quick-action-group/ui-quick-action-group';
 export { UiStatusBadge } from './status-badge/ui-status-badge';
 export { UiPriorityIndicator } from './priority-indicator/ui-priority-indicator';
+export { UiSpinner } from './spinner/ui-spinner';
+export { UiEmptyState } from './empty-state/ui-empty-state';
+export { UiErrorState } from './error-state/ui-error-state';

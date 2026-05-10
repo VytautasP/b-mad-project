@@ -9,6 +9,9 @@ import { TimeTrackingService } from '../../../../core/services/time-tracking.ser
 import { NotificationService } from '../../../../core/services/notification.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../../shared/components/confirmation-dialog/confirmation-dialog.component';
+import { UiSpinner } from '../../../../shared/ui/spinner/ui-spinner';
+import { UiEmptyState } from '../../../../shared/ui/empty-state/ui-empty-state';
+import { UiErrorState } from '../../../../shared/ui/error-state/ui-error-state';
 
 @Component({
   selector: 'app-time-entry-list',
@@ -16,7 +19,10 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../..
     CommonModule,
     MatListModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    UiSpinner,
+    UiEmptyState,
+    UiErrorState
   ],
   templateUrl: './time-entry-list.html',
   styleUrl: './time-entry-list.css',

@@ -1,15 +1,10 @@
 <div class="task-tree-container">
   @if (isLoading()) {
     <div class="loading-container">
-      <mat-spinner diameter="40"></mat-spinner>
-      <p>Loading tasks...</p>
+      <ui-spinner [diameter]="40" message="Loading tasks..." />
     </div>
   } @else if (dataSource.data.length === 0) {
-    <div class="empty-state">
-      <mat-icon class="empty-icon">inbox</mat-icon>
-      <h3>No tasks yet</h3>
-      <p>Create your first task to get started</p>
-    </div>
+    <ui-empty-state icon="inbox" heading="No tasks yet" description="Create your first task to get started" />
   } @else {
     <div cdkDropListGroup class="drop-zone-container">
       <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="task-tree">

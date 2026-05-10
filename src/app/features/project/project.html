@@ -76,15 +76,10 @@
     <!-- Loading state -->
     @if (isLoading() && displayRows().length === 0) {
       <div class="loading-container">
-        <div class="loading-spinner"></div>
-        <p>Loading tasks...</p>
+        <ui-spinner message="Loading tasks..." />
       </div>
     } @else if (displayRows().length === 0) {
-      <div class="empty-state">
-        <mat-icon>inbox</mat-icon>
-        <h2>No tasks found</h2>
-        <p>Create a new task to get started</p>
-      </div>
+      <ui-empty-state icon="inbox" heading="No tasks found" description="Create a new task to get started" />
     } @else {
       <!-- Table Card — Figma 7:733 -->
       <div class="table-card">

@@ -13,23 +13,13 @@
 
   @if (isLoading()) {
     <div class="loading-state">
-      <mat-spinner diameter="28"></mat-spinner>
-      <span>Loading comments...</span>
+      <ui-spinner [diameter]="28" message="Loading comments..." [inline]="true" />
     </div>
   } @else if (hasLoadError()) {
-    <div class="error-state" role="alert">
-      <mat-icon>error_outline</mat-icon>
-      <p>Couldn’t load comments right now.</p>
-      <button mat-stroked-button color="warn" (click)="onRetryLoadComments()">
-        Retry
-      </button>
-    </div>
+    <ui-error-state heading="Couldn’t load comments right now." (retryClicked)="onRetryLoadComments()" />
   } @else {
     @if (comments().length === 0) {
-      <div class="empty-state">
-        <mat-icon>chat_bubble_outline</mat-icon>
-        <span>Be the first to comment</span>
-      </div>
+      <ui-empty-state icon="chat_bubble_outline" heading="Be the first to comment" />
     } @else {
       <div class="comment-list">
         @for (comment of comments(); track comment.id) {

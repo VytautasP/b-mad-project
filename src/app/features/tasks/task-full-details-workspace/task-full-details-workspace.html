@@ -2,24 +2,13 @@
   <div class="workspace-container">
     @if (isLoading()) {
       <section class="workspace-card state-card loading-card" aria-label="Loading task details">
-        <mat-spinner diameter="40"></mat-spinner>
-        <div>
-          <h2>Loading task workspace</h2>
-          <p>Pulling the latest task details, activity, and time context.</p>
-        </div>
+        <ui-spinner [diameter]="40" message="Loading task workspace" />
       </section>
     } @else if (hasLoadError()) {
       <section class="workspace-card state-card error-card" role="alert">
-        <div class="state-card-icon">
-          <mat-icon>error_outline</mat-icon>
-        </div>
-        <div class="state-copy">
-          <h2>We couldn’t load this task</h2>
-          <p>Try again or head back to the task list.</p>
-        </div>
+        <ui-error-state heading="We couldn’t load this task" description="Try again or head back to the task list." retryLabel="Retry" (retryClicked)="onRetryTask()" />
         <div class="state-actions">
           <button mat-stroked-button type="button" (click)="onBack()">Back</button>
-          <button mat-flat-button type="button" (click)="onRetryTask()">Retry</button>
         </div>
       </section>
     } @else if (task(); as currentTask) {
@@ -114,14 +103,10 @@
             <div class="subtasks-list">
               @if (isLoadingSubtasks()) {
                 <div class="subtasks-loading">
-                  <mat-spinner diameter="20"></mat-spinner>
-                  <span>Loading subtasks...</span>
+                  <ui-spinner [diameter]="20" message="Loading subtasks..." [inline]="true" />
                 </div>
               } @else if (childTasks().length === 0) {
-                <div class="subtasks-empty">
-                  <mat-icon>checklist</mat-icon>
-                  <span>No subtasks yet. Break this task into smaller pieces.</span>
-                </div>
+                <ui-empty-state icon="checklist" heading="No subtasks yet" description="Break this task into smaller pieces." />
               } @else {
                 @for (subtask of childTasks(); track subtask.id) {
                   <div class="subtask-row" [class.completed]="subtask.status === TaskStatus.Done">
@@ -176,10 +161,7 @@
               }
             </div>
 
-            <div class="attachment-empty-state">
-              <mat-icon>attach_file</mat-icon>
-              <span>No attachments have been added to this task yet.</span>
-            </div>
+            <ui-empty-state icon="attach_file" heading="No attachments have been added to this task yet." />
           </article>
         </div>
 
@@ -322,7 +304,7 @@
                 <span class="sidebar-field-label">Assignees</span>
                 <div class="sidebar-assignee-row">
                   @if (isLoadingAssignees()) {
-                    <mat-spinner diameter="20"></mat-spinner>
+                    <ui-spinner [diameter]="20" />
                   } @else {
                     <app-assignee-list
                       [assignees]="assignees()"

@@ -1,7 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { Subject, takeUntil } from 'rxjs';
@@ -12,6 +11,9 @@ import { NotificationService } from '../../../core/services/notification.service
 import { CommentItemComponent } from './components/comment-item/comment-item.component';
 import { CommentFormComponent } from './components/comment-form/comment-form.component';
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
+import { UiSpinner } from '../../../shared/ui/spinner/ui-spinner';
+import { UiEmptyState } from '../../../shared/ui/empty-state/ui-empty-state';
+import { UiErrorState } from '../../../shared/ui/error-state/ui-error-state';
 
 @Component({
   selector: 'app-comment-thread',
@@ -19,10 +21,12 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../sh
   imports: [
     CommonModule,
     MatIconModule,
-    MatProgressSpinnerModule,
     MatButtonModule,
     CommentItemComponent,
-    CommentFormComponent
+    CommentFormComponent,
+    UiSpinner,
+    UiEmptyState,
+    UiErrorState
   ],
   templateUrl: './comment-thread.component.html',
   styleUrl: './comment-thread.component.scss'

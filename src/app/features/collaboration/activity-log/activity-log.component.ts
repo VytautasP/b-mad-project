@@ -6,11 +6,14 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivityLogService } from '../services/activity-log.service';
 import { ActivityLog } from '../../../shared/models/activity-log.model';
 import { ActivityItemComponent } from './components/activity-item/activity-item.component';
+import { UiSpinner } from '../../../shared/ui/spinner/ui-spinner';
+import { UiEmptyState } from '../../../shared/ui/empty-state/ui-empty-state';
+import { UiErrorState } from '../../../shared/ui/error-state/ui-error-state';
 
 @Component({
   selector: 'app-activity-log',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, ActivityItemComponent],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule, ActivityItemComponent, UiSpinner, UiEmptyState, UiErrorState],
   templateUrl: './activity-log.component.html',
   styleUrl: './activity-log.component.scss'
 })

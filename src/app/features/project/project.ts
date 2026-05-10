@@ -16,6 +16,8 @@ import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../share
 import { getDialogAnimationDurations } from '../../shared/utils/motion.utils';
 import { getCreateTaskDialogConfig } from '../../shared/utils/task-form-dialog.utils';
 import { UiStatusBadge } from '../../shared/ui/status-badge/ui-status-badge';
+import { UiSpinner } from '../../shared/ui/spinner/ui-spinner';
+import { UiEmptyState } from '../../shared/ui/empty-state/ui-empty-state';
 
 /** Flat row model for the project table view */
 export interface ProjectTableRow {
@@ -32,7 +34,9 @@ export interface ProjectTableRow {
     MatIconModule,
     MatMenuModule,
     MatButtonModule,
-    UiStatusBadge
+    UiStatusBadge,
+    UiSpinner,
+    UiEmptyState
   ],
   templateUrl: './project.html',
   styleUrl: './project.css'

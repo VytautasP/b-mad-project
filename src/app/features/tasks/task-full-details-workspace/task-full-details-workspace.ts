@@ -11,7 +11,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Task, TaskAssignmentDto, TaskPriority, TaskStatus, TaskType } from '../../../shared/models/task.model';
 import { User } from '../../../shared/models/user.model';
@@ -38,6 +37,9 @@ import { TaskService } from '../services/task.service';
 import { getStatusLabel, getStatusClass, getPriorityLabel, getPriorityIcon, getPriorityClass } from '../../../shared/ui/utils/display.utils';
 import { UiStatusBadge } from '../../../shared/ui/status-badge/ui-status-badge';
 import { UiPriorityIndicator } from '../../../shared/ui/priority-indicator/ui-priority-indicator';
+import { UiSpinner } from '../../../shared/ui/spinner/ui-spinner';
+import { UiEmptyState } from '../../../shared/ui/empty-state/ui-empty-state';
+import { UiErrorState } from '../../../shared/ui/error-state/ui-error-state';
 
 const COMMENTS_DELAY_MS = 120;
 const ACTIVITY_DELAY_MS = 260;
@@ -56,7 +58,6 @@ const ACTIVITY_DELAY_MS = 260;
     MatInputModule,
     MatMenuModule,
     MatNativeDateModule,
-    MatProgressSpinnerModule,
     MatTooltipModule,
     ActivityLogComponent,
     AssigneeList,
@@ -64,7 +65,10 @@ const ACTIVITY_DELAY_MS = 260;
     TimeEntryList,
     UserPicker,
     UiStatusBadge,
-    UiPriorityIndicator
+    UiPriorityIndicator,
+    UiSpinner,
+    UiEmptyState,
+    UiErrorState
   ],
   templateUrl: './task-full-details-workspace.html',
   styleUrl: './task-full-details-workspace.css'

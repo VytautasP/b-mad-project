@@ -6,7 +6,6 @@ import { MatSortModule, MatSort, Sort } from '@angular/material/sort';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatCardModule } from '@angular/material/card';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
@@ -33,7 +32,7 @@ import { TimerStateService, TimerState } from '../../../core/services/state/time
 import { formatDuration, formatDurationWithTotal } from '../../../shared/utils/time.utils';
 import { getDialogAnimationDurations } from '../../../shared/utils/motion.utils';
 import { getCreateTaskDialogConfig } from '../../../shared/utils/task-form-dialog.utils';
-import { UiStatusBadge, UiPriorityIndicator, formatDate } from '../../../shared/ui';
+import { UiStatusBadge, UiPriorityIndicator, UiSpinner, UiEmptyState, formatDate } from '../../../shared/ui';
 
 interface CreateTaskDialogOptions {
   focusField: 'dueDate' | null;
@@ -51,7 +50,6 @@ interface CreateTaskDialogOptions {
     MatCheckboxModule,
     MatMenuModule,
     MatCardModule,
-    MatProgressSpinnerModule,
     MatProgressBarModule,
     MatChipsModule,
     MatIconModule,
@@ -67,7 +65,9 @@ interface CreateTaskDialogOptions {
     AssigneeList,
     TaskFiltersComponent,
     UiStatusBadge,
-    UiPriorityIndicator
+    UiPriorityIndicator,
+    UiSpinner,
+    UiEmptyState
   ],
   templateUrl: './task-list.component.html',
   styleUrl: './task-list.component.scss',

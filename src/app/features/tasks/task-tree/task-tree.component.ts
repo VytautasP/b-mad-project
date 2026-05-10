@@ -4,7 +4,6 @@ import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DragDropModule, CdkDragDrop, CdkDragStart, CdkDragMove } from '@angular/cdk/drag-drop';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject, takeUntil, fromEvent } from 'rxjs';
@@ -12,6 +11,8 @@ import { TaskService } from '../services/task.service';
 import { Task, TaskStatus, TaskPriority, TaskType } from '../../../shared/models/task.model';
 import { UiStatusBadge } from '../../../shared/ui/status-badge/ui-status-badge';
 import { UiPriorityIndicator } from '../../../shared/ui/priority-indicator/ui-priority-indicator';
+import { UiSpinner } from '../../../shared/ui/spinner/ui-spinner';
+import { UiEmptyState } from '../../../shared/ui/empty-state/ui-empty-state';
 
 // Tree node interface
 interface TreeNode {
@@ -27,10 +28,11 @@ interface TreeNode {
     MatTreeModule,
     MatIconModule,
     MatButtonModule,
-    MatProgressSpinnerModule,
     DragDropModule,
     UiStatusBadge,
-    UiPriorityIndicator
+    UiPriorityIndicator,
+    UiSpinner,
+    UiEmptyState
   ],
   templateUrl: './task-tree.component.html',
   styleUrls: ['./task-tree.component.scss']

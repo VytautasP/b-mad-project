@@ -1,21 +1,13 @@
 <div class="activity-log">
   @if (isLoading()) {
     <div class="loading-state">
-      <mat-spinner diameter="28"></mat-spinner>
-      <span>Loading activity...</span>
+      <ui-spinner [diameter]="28" message="Loading activity..." [inline]="true" />
     </div>
   } @else if (hasLoadError()) {
-    <div class="error-state" role="alert">
-      <mat-icon>error_outline</mat-icon>
-      <span>Couldn’t load activity right now.</span>
-      <button type="button" mat-stroked-button color="warn" (click)="onRetryLoad()">Retry</button>
-    </div>
+    <ui-error-state heading="Couldn’t load activity right now." (retryClicked)="onRetryLoad()" />
   } @else {
     @if (activities().length === 0) {
-      <div class="empty-state">
-        <mat-icon>history</mat-icon>
-        <span>No activity yet</span>
-      </div>
+      <ui-empty-state icon="history" heading="No activity yet" />
     } @else {
       <div class="feed" role="feed" aria-label="Task activity log">
         @for (activity of activities(); track activity.id) {
@@ -30,7 +22,7 @@
             <span>Load More</span>
           </button>
           @if (isLoadingMore()) {
-            <mat-spinner diameter="18"></mat-spinner>
+            <ui-spinner [diameter]="18" [inline]="true" />
           }
         </div>
 
