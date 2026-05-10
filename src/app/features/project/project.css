@@ -92,8 +92,7 @@
 }
 
 .heading-search .search-input:focus {
-  border-color: #137fec;
-  box-shadow: 0 0 0 2px rgba(19, 127, 236, 0.15);
+  box-shadow: none;
 }
 
 .heading-divider {

@@ -199,8 +199,7 @@
 }
 
 .login-field__input:focus {
-  border-color: #137fec;
-  box-shadow: 0 0 0 3px rgba(19, 127, 236, 0.15);
+  box-shadow: none;
 }
 
 .login-field__error {

@@ -102,8 +102,7 @@
 }
 
 .search-input:focus {
-  border-color: #137fec;
-  box-shadow: 0 0 0 2px rgba(19, 127, 236, 0.15);
+  box-shadow: none;
 }
 
 /* === Right Zone === */
@@ -274,7 +273,6 @@
 .search-input:focus-visible {
   outline: 2px solid #137fec;
   outline-offset: 2px;
-  border-color: #137fec;
 }
 
 .create-task-btn:focus-visible {

@@ -181,7 +181,6 @@ html, body {
 *:focus-visible {
   outline: 2px solid #3f51b5 !important; /* Primary color for focus */
   outline-offset: 2px !important;
-  box-shadow: 0 0 0 4px rgba(63, 81, 181, 0.2) !important;
 }
 
 /* 4. Minimum touch target size (44x44px) for interactive controls on mobile/tablet */
