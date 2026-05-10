@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { UiButton } from '../../../shared/ui/button/ui-button';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatNativeDateModule } from '@angular/material/core';
 import { filter } from 'rxjs/operators';
@@ -26,7 +26,7 @@ import { TaskFormDialogData, TaskFormInitialFocusField, TaskFormMode } from '../
     MatNativeDateModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule,
+    UiButton,
     UiTextInput,
     UiTextarea,
     UiSelect,

@@ -4,12 +4,10 @@
   <mat-dialog-content>
     <form [formGroup]="timeEntryForm">
       <!-- Quick Log Buttons -->
-      <div class="quick-log-buttons">
-        <button type="button" mat-stroked-button (click)="setQuickLog(15)">15m</button>
-        <button type="button" mat-stroked-button (click)="setQuickLog(30)">30m</button>
-        <button type="button" mat-stroked-button (click)="setQuickLog(60)">1h</button>
-        <button type="button" mat-stroked-button (click)="setQuickLog(120)">2h</button>
-      </div>
+      <ui-quick-action-group
+        [options]="quickLogOptions"
+        (selectionChanged)="setQuickLog($event)"
+      />
 
       <!-- Time Input Fields -->
       <div class="time-inputs">
@@ -55,12 +53,14 @@
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button mat-button (click)="onCancel()" [disabled]="isSubmitting">Cancel</button>
-    <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSubmitting || timeEntryForm.invalid">
-      @if (isSubmitting) {
-        <mat-icon>hourglass_empty</mat-icon>
-      }
+    <ui-button variant="text" (click)="onCancel()" [disabled]="isSubmitting">Cancel</ui-button>
+    <ui-button
+      variant="primary"
+      [loading]="isSubmitting"
+      [disabled]="isSubmitting || timeEntryForm.invalid"
+      (click)="onSubmit()"
+    >
       Log Time
-    </button>
+    </ui-button>
   </mat-dialog-actions>
 </div>

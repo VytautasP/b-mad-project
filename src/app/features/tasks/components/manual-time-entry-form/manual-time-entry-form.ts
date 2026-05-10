@@ -2,9 +2,9 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { UiTextInput } from '../../../../shared/ui/input/ui-text-input';
+import { UiButton } from '../../../../shared/ui/button/ui-button';
+import { UiQuickActionGroup, QuickActionOption } from '../../../../shared/ui/quick-action-group/ui-quick-action-group';
 import { UiTextarea } from '../../../../shared/ui/textarea/ui-textarea';
 import { UiDatepicker } from '../../../../shared/ui/datepicker/ui-datepicker';
 import { TimeTrackingService } from '../../../../core/services/time-tracking.service';
@@ -20,8 +20,8 @@ export interface ManualTimeEntryFormData {
     CommonModule,
     ReactiveFormsModule,
     MatDialogModule,
-    MatButtonModule,
-    MatIconModule,
+    UiButton,
+    UiQuickActionGroup,
     UiTextInput,
     UiTextarea,
     UiDatepicker,
@@ -38,6 +38,13 @@ export class ManualTimeEntryForm implements OnInit {
 
   timeEntryForm!: FormGroup;
   isSubmitting = false;
+
+  readonly quickLogOptions: QuickActionOption<number>[] = [
+    { value: 15, label: '15m' },
+    { value: 30, label: '30m' },
+    { value: 60, label: '1h' },
+    { value: 120, label: '2h' },
+  ];
 
   ngOnInit(): void {
     this.timeEntryForm = this.fb.group({

@@ -108,28 +108,23 @@
   </div>
 
   <footer class="task-form__footer" [class.task-form__footer--embedded]="embedded">
-    <button
-      mat-button
-      type="button"
+    <ui-button
+      variant="text"
       class="task-form__cancel"
       (click)="onCancel()"
       [disabled]="isSubmitting"
     >
       Cancel
-    </button>
+    </ui-button>
 
-    <button
-      mat-flat-button
+    <ui-button
+      variant="primary"
       type="submit"
       class="task-form__submit"
+      [loading]="isSubmitting"
       [disabled]="isSubmitting"
     >
-      @if (isSubmitting) {
-        <mat-spinner diameter="16"></mat-spinner>
-        <span>{{ submittingLabel }}</span>
-      } @else {
-        <span>{{ submitLabel }}</span>
-      }
-    </button>
+      {{ isSubmitting ? submittingLabel : submitLabel }}
+    </ui-button>
   </footer>
 </form>

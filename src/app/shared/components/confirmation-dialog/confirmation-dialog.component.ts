@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
+import { UiButton } from '../../ui/button/ui-button';
 
 export interface ConfirmationDialogData {
   title: string;
@@ -16,7 +16,7 @@ export interface ConfirmationDialogData {
   imports: [
     CommonModule,
     MatDialogModule,
-    MatButtonModule
+    UiButton
   ],
   templateUrl: './confirmation-dialog.component.html',
   styleUrl: './confirmation-dialog.component.scss'

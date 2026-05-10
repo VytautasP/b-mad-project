@@ -3,10 +3,10 @@
   <p>{{ data.message }}</p>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">
+  <ui-button variant="text" (click)="onCancel()">
     {{ data.cancelText || 'Cancel' }}
-  </button>
-  <button mat-raised-button color="warn" (click)="onConfirm()" cdkFocusInitial>
+  </ui-button>
+  <ui-button variant="danger" (click)="onConfirm()" cdkFocusInitial>
     {{ data.confirmText || 'Confirm' }}
-  </button>
+  </ui-button>
 </mat-dialog-actions>

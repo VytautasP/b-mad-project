@@ -26,14 +26,14 @@ Unit tests covering: variant rendering, loading state, disabled state, icon posi
 
 ## Acceptance criteria
 
-- [ ] `<ui-button>` component exists with all 6 variants, loading state, icon support
-- [ ] `<ui-quick-action-group>` component exists with action and radio modes
-- [ ] At least 3 consumer forms/dialogs migrated to `<ui-button>`
-- [ ] Time-log quick buttons migrated to `<ui-quick-action-group>`
-- [ ] Unit tests for both components
-- [ ] Existing tests pass for migrated consumers
-- [ ] `ng build` succeeds
-- [ ] Manual browser test: buttons render correctly in all variants, loading state works, quick actions fire correctly
+- [x] `<ui-button>` component exists with all 6 variants, loading state, icon support
+- [x] `<ui-quick-action-group>` component exists with action and radio modes
+- [x] At least 3 consumer forms/dialogs migrated to `<ui-button>`
+- [x] Time-log quick buttons migrated to `<ui-quick-action-group>`
+- [x] Unit tests for both components
+- [x] Existing tests pass for migrated consumers
+- [x] `ng build` succeeds
+- [x] Manual browser test: buttons render correctly in all variants, loading state works, quick actions fire correctly
 
 ## Blocked by
 

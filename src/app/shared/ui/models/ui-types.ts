@@ -1,4 +1,4 @@
-export type ButtonVariant = 'primary' | 'accent' | 'warn' | 'basic';
+export type ButtonVariant = 'primary' | 'secondary' | 'outlined' | 'text' | 'icon' | 'danger';
 
 export interface SelectOption<T> {
   value: T;
