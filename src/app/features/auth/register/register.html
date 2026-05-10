@@ -5,49 +5,40 @@
     </mat-card-header>
     <mat-card-content>
       <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4">
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Full Name</mat-label>
-          <input matInput type="text" formControlName="name" placeholder="John Doe">
-          @if (nameControl?.hasError('required') && nameControl?.touched) {
-            <mat-error>Name is required</mat-error>
-          }
-          @if (nameControl?.hasError('minlength') && nameControl?.touched) {
-            <mat-error>Name must be at least 2 characters</mat-error>
-          }
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Email</mat-label>
-          <input matInput type="email" formControlName="email" placeholder="you@example.com">
-          @if (emailControl?.hasError('required') && emailControl?.touched) {
-            <mat-error>Email is required</mat-error>
-          }
-          @if (emailControl?.hasError('email') && emailControl?.touched) {
-            <mat-error>Please enter a valid email address</mat-error>
-          }
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Password</mat-label>
-          <input matInput type="password" formControlName="password">
-          @if (passwordControl?.hasError('required') && passwordControl?.touched) {
-            <mat-error>Password is required</mat-error>
-          }
-          @if (passwordControl?.hasError('minlength') && passwordControl?.touched) {
-            <mat-error>Password must be at least 8 characters</mat-error>
-          }
-          @if (passwordControl?.hasError('passwordStrength') && passwordControl?.touched) {
-            <mat-error>{{ passwordControl?.errors?.['passwordStrength'] }}</mat-error>
-          }
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Confirm Password</mat-label>
-          <input matInput type="password" formControlName="confirmPassword">
-          @if (confirmPasswordControl?.hasError('required') && confirmPasswordControl?.touched) {
-            <mat-error>Please confirm your password</mat-error>
-          }
-          @if (registerForm.hasError('passwordMismatch') && confirmPasswordControl?.touched) {
-            <mat-error>Passwords do not match</mat-error>
-          }
-        </mat-form-field>
+        <ui-text-input
+          label="Full Name"
+          placeholder="John Doe"
+          formControlName="name"
+          [errorMessages]="{ required: 'Name is required', minlength: 'Name must be at least 2 characters' }"
+        />
+        <ui-text-input
+          label="Email"
+          type="email"
+          placeholder="you@example.com"
+          formControlName="email"
+          [errorMessages]="{ required: 'Email is required', email: 'Please enter a valid email address' }"
+        />
+        <ui-text-input
+          label="Password"
+          type="password"
+          [showPasswordToggle]="true"
+          formControlName="password"
+          [errorMessages]="{
+            required: 'Password is required',
+            minlength: 'Password must be at least 8 characters',
+            passwordStrength: 'Password must contain uppercase, lowercase, and number'
+          }"
+        />
+        <ui-text-input
+          label="Confirm Password"
+          type="password"
+          [showPasswordToggle]="true"
+          formControlName="confirmPassword"
+          [errorMessages]="{
+            required: 'Please confirm your password',
+            passwordMismatch: 'Passwords do not match'
+          }"
+        />
         <button mat-raised-button color="primary" type="submit" class="w-full" [disabled]="registerForm.invalid || isLoading">
           @if (isLoading) { <mat-spinner diameter="20" class="inline-block mr-2"></mat-spinner> }
           Create Account

@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { UiTextarea } from '../../ui/textarea/ui-textarea';
 
 export interface StopTimerDialogData {
   elapsedMinutes: number;
@@ -18,12 +17,10 @@ export interface StopTimerDialogResult {
 @Component({
   selector: 'app-stop-timer-dialog',
   imports: [
-    CommonModule,
     FormsModule,
     MatDialogModule,
     MatButtonModule,
-    MatFormFieldModule,
-    MatInputModule
+    UiTextarea
   ],
   templateUrl: './stop-timer-dialog.component.html',
   styleUrl: './stop-timer-dialog.component.scss'

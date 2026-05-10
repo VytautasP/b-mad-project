@@ -23,14 +23,14 @@ Unit tests for both components covering: value binding, validation error display
 
 ## Acceptance criteria
 
-- [ ] `<ui-text-input>` component exists with CVA, supports all specified inputs
-- [ ] `<ui-textarea>` component exists with CVA, supports all specified inputs
-- [ ] `register.html` uses `<ui-text-input>` for all 4 fields — form submission and validation still work
-- [ ] `stop-timer-dialog` uses `<ui-textarea>` for the note field
-- [ ] Unit tests for both new components
-- [ ] Existing register and stop-timer-dialog tests pass
-- [ ] `ng build` succeeds
-- [ ] Manual browser test: register form submits correctly, validation errors display, stop-timer dialog note works
+- [x] `<ui-text-input>` component exists with CVA, supports all specified inputs
+- [x] `<ui-textarea>` component exists with CVA, supports all specified inputs
+- [x] `register.html` uses `<ui-text-input>` for all 4 fields — form submission and validation still work
+- [x] `stop-timer-dialog` uses `<ui-textarea>` for the note field
+- [x] Unit tests for both new components
+- [x] Existing register and stop-timer-dialog tests pass
+- [x] `ng build` succeeds
+- [x] Manual browser test: register form submits correctly, validation errors display, stop-timer dialog note works
 
 ## Blocked by
 

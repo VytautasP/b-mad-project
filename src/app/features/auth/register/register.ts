@@ -1,28 +1,24 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCardModule } from '@angular/material/card';
 import { AuthService } from '../../../core/services/auth.service';
 import { RegisterRequest } from '../../../core/models/register-request.model';
+import { UiTextInput } from '../../../shared/ui/input/ui-text-input';
 
 @Component({
   selector: 'app-register',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     RouterLink,
-    MatFormFieldModule,
-    MatInputModule,
     MatButtonModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatCardModule
+    MatCardModule,
+    UiTextInput,
   ],
   templateUrl: './register.html',
   styleUrl: './register.css',
@@ -41,13 +37,13 @@ export class RegisterComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       name: ['', [Validators.required, Validators.minLength(2)]],
       password: ['', [Validators.required, Validators.minLength(8), this.passwordStrengthValidator]],
-      confirmPassword: ['', [Validators.required]]
+      confirmPassword: ['', [Validators.required]],
     }, {
-      validators: this.passwordMatchValidator
+      validators: this.passwordMatchValidator,
     });
   }
 
-  passwordStrengthValidator(control: AbstractControl): ValidationErrors | null {
+  private passwordStrengthValidator(control: AbstractControl): ValidationErrors | null {
     const value = control.value;
     if (!value) {
       return null;
@@ -57,21 +53,22 @@ export class RegisterComponent implements OnInit {
     const hasLowerCase = /[a-z]/.test(value);
     const hasNumber = /[0-9]/.test(value);
 
-    const passwordValid = hasUpperCase && hasLowerCase && hasNumber;
-
-    if (!passwordValid) {
+    if (!(hasUpperCase && hasLowerCase && hasNumber)) {
       return { passwordStrength: 'Password must contain uppercase, lowercase, and number' };
     }
 
     return null;
   }
 
-  passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
+  private passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
     const password = group.get('password')?.value;
-    const confirmPassword = group.get('confirmPassword')?.value;
+    const confirmPassword = group.get('confirmPassword');
 
-    if (password !== confirmPassword) {
-      return { passwordMismatch: true };
+    if (password !== confirmPassword?.value) {
+      confirmPassword?.setErrors({ ...confirmPassword.errors, passwordMismatch: true });
+    } else if (confirmPassword?.hasError('passwordMismatch')) {
+      const { passwordMismatch, ...rest } = confirmPassword.errors!;
+      confirmPassword.setErrors(Object.keys(rest).length ? rest : null);
     }
 
     return null;
@@ -111,19 +108,4 @@ export class RegisterComponent implements OnInit {
     });
   }
 
-  get emailControl() {
-    return this.registerForm.get('email');
-  }
-
-  get nameControl() {
-    return this.registerForm.get('name');
-  }
-
-  get passwordControl() {
-    return this.registerForm.get('password');
-  }
-
-  get confirmPasswordControl() {
-    return this.registerForm.get('confirmPassword');
-  }
 }
