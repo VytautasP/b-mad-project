@@ -15,13 +15,13 @@ Do NOT remove the duplicated helpers from their current files yet — that happe
 
 ## Acceptance criteria
 
-- [ ] `src/app/shared/ui/index.ts` barrel export exists
-- [ ] `src/app/shared/ui/models/ui-types.ts` defines shared types (`ButtonVariant`, `SelectOption<T>`, etc.)
-- [ ] `src/app/shared/ui/utils/display.utils.ts` contains all 7 extracted helper functions
-- [ ] `src/app/shared/ui/utils/display.utils.spec.ts` has unit tests covering all helpers
-- [ ] `tsconfig.json` has `@ui/*` path alias pointing to `src/app/shared/ui/*`
-- [ ] `ng build` succeeds with no errors
-- [ ] All existing tests continue to pass
+- [x] `src/app/shared/ui/index.ts` barrel export exists
+- [x] `src/app/shared/ui/models/ui-types.ts` defines shared types (`ButtonVariant`, `SelectOption<T>`, etc.)
+- [x] `src/app/shared/ui/utils/display.utils.ts` contains all 7 extracted helper functions
+- [x] `src/app/shared/ui/utils/display.utils.spec.ts` has unit tests covering all helpers
+- [x] `tsconfig.json` has `@ui/*` path alias pointing to `src/app/shared/ui/*`
+- [x] `ng build` succeeds with no errors
+- [x] All existing tests continue to pass
 
 ## Blocked by
 
