@@ -130,10 +130,7 @@
             <ng-container matColumnDef="status">
               <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
               <mat-cell *matCellDef="let task">
-                <div [class]="getStatusBadgeClass(task.status)">
-                  <span class="status-dot"></span>
-                  <span>{{ getStatusLabel(task.status) }}</span>
-                </div>
+                <ui-status-badge [status]="task.status" />
               </mat-cell>
             </ng-container>
 
@@ -152,10 +149,7 @@
             <ng-container matColumnDef="priority">
               <mat-header-cell *matHeaderCellDef mat-sort-header>Priority</mat-header-cell>
               <mat-cell *matCellDef="let task">
-                <div class="priority-indicator" [ngClass]="getPriorityClass(task.priority)">
-                  <mat-icon>{{ getPriorityIcon(task.priority) }}</mat-icon>
-                  <span>{{ getPriorityLabel(task.priority) }}</span>
-                </div>
+                <ui-priority-indicator [priority]="task.priority" />
               </mat-cell>
             </ng-container>
 
@@ -243,10 +237,7 @@
               <div class="task-details">
                 <div class="detail-row">
                   <span class="label">Status:</span>
-                  <div [class]="getStatusBadgeClass(task.status)">
-                    <span class="status-dot"></span>
-                    <span>{{ getStatusLabel(task.status) }}</span>
-                  </div>
+                  <ui-status-badge [status]="task.status" />
                 </div>
                 <div class="detail-row">
                   <span class="label">Due Date:</span>
@@ -268,10 +259,7 @@
                 </div>
                 <div class="detail-row">
                   <span class="label">Priority:</span>
-                  <div class="priority-indicator" [ngClass]="getPriorityClass(task.priority)">
-                    <mat-icon>{{ getPriorityIcon(task.priority) }}</mat-icon>
-                    <span>{{ getPriorityLabel(task.priority) }}</span>
-                  </div>
+                  <ui-priority-indicator [priority]="task.priority" />
                 </div>
               </div>
             </mat-card-content>

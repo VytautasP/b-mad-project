@@ -207,51 +207,15 @@ describe('TaskListComponent', () => {
     expect(formatted).toBe('-');
   });
 
-  it('should return correct priority labels', () => {
-    expect(component.getPriorityLabel(TaskPriority.Low)).toBe('Low');
-    expect(component.getPriorityLabel(TaskPriority.High)).toBe('High');
-  });
-
-  it('should return correct status labels', () => {
-    expect(component.getStatusLabel(TaskStatus.ToDo)).toBe('To Do');
-    expect(component.getStatusLabel(TaskStatus.Done)).toBe('Done');
-  });
-
-  it('should return explicit status icon mapping', () => {
-    expect(component.getStatusIcon(TaskStatus.Done)).toBe('check_circle');
-    expect(component.getStatusIcon(TaskStatus.Blocked)).toBe('block');
-    expect(component.getStatusIcon(TaskStatus.Waiting)).toBe('hourglass_top');
-  });
-
-  it('should return directional priority icons', () => {
-    expect(component.getPriorityIcon(TaskPriority.Critical)).toBe('keyboard_double_arrow_up');
-    expect(component.getPriorityIcon(TaskPriority.High)).toBe('arrow_upward');
-    expect(component.getPriorityIcon(TaskPriority.Medium)).toBe('arrow_forward');
-    expect(component.getPriorityIcon(TaskPriority.Low)).toBe('arrow_downward');
-  });
-
-  it('should return correct priority class mapping', () => {
-    expect(component.getPriorityClass(TaskPriority.Critical)).toBe('priority-critical');
-    expect(component.getPriorityClass(TaskPriority.High)).toBe('priority-high');
-    expect(component.getPriorityClass(TaskPriority.Medium)).toBe('priority-medium');
-    expect(component.getPriorityClass(TaskPriority.Low)).toBe('priority-low');
-  });
-
   it('should return correct type labels', () => {
     expect(component.getTypeLabel(TaskType.Task)).toBe('Task');
     expect(component.getTypeLabel(TaskType.Project)).toBe('Project');
   });
 
-  it('should return correct priority colors', () => {
-    expect(component.getPriorityColor(TaskPriority.Critical)).toBe('warn');
-    expect(component.getPriorityColor(TaskPriority.High)).toBe('accent');
-    expect(component.getPriorityColor(TaskPriority.Medium)).toBe('primary');
-  });
-
-  it('should return correct status colors', () => {
-    expect(component.getStatusColor(TaskStatus.Done)).toBe('primary');
-    expect(component.getStatusColor(TaskStatus.InProgress)).toBe('accent');
-    expect(component.getStatusColor(TaskStatus.Blocked)).toBe('warn');
+  it('should delegate formatDate to shared utility', () => {
+    const date = new Date('2024-06-15');
+    expect(component.formatDate(date)).toBe('Jun 15, 2024');
+    expect(component.formatDate(null)).toBe('-');
   });
 
   // Edit functionality tests

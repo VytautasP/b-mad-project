@@ -27,14 +27,14 @@ Unit tests for both components covering: all status/priority values render corre
 
 ## Acceptance criteria
 
-- [ ] `<ui-status-badge>` renders correct label, icon, dot, and CSS class for every `TaskStatus` value
-- [ ] `<ui-priority-indicator>` renders correct label, icon, and CSS class for every `TaskPriority` value
-- [ ] `task-list.component.html` uses `<ui-status-badge>` and `<ui-priority-indicator>` everywhere
-- [ ] Duplicated helper methods removed from `task-list.component.ts`
-- [ ] Unit tests for both new components
-- [ ] `task-list.component.spec.ts` passes
-- [ ] `ng build` succeeds
-- [ ] Manual browser test: task list renders status badges and priority indicators identically to before
+- [x] `<ui-status-badge>` renders correct label, icon, dot, and CSS class for every `TaskStatus` value
+- [x] `<ui-priority-indicator>` renders correct label, icon, and CSS class for every `TaskPriority` value
+- [x] `task-list.component.html` uses `<ui-status-badge>` and `<ui-priority-indicator>` everywhere
+- [x] Duplicated helper methods removed from `task-list.component.ts`
+- [x] Unit tests for both new components
+- [x] `task-list.component.spec.ts` passes
+- [x] `ng build` succeeds
+- [x] Manual browser test: task list renders status badges and priority indicators identically to before
 
 ## Blocked by
 

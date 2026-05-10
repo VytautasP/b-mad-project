@@ -7,3 +7,5 @@ export { UiDatepicker } from './datepicker/ui-datepicker';
 export { UiButton } from './button/ui-button';
 export { UiQuickActionGroup } from './quick-action-group/ui-quick-action-group';
 export type { QuickActionOption } from './quick-action-group/ui-quick-action-group';
+export { UiStatusBadge } from './status-badge/ui-status-badge';
+export { UiPriorityIndicator } from './priority-indicator/ui-priority-indicator';
