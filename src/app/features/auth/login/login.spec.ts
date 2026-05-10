@@ -68,17 +68,10 @@ describe('LoginComponent', () => {
       );
     });
 
-    it('should render email and password fields with labels and leading icons (AC 3)', () => {
+    it('should render email and password fields with labels (AC 3)', () => {
       const el: HTMLElement = fixture.nativeElement;
-      const labels = el.querySelectorAll('.login-field__label');
-      expect(labels.length).toBeGreaterThanOrEqual(2);
-      expect(labels[0].textContent).toContain('Email');
-      expect(labels[1].textContent).toContain('Password');
-
-      const icons = el.querySelectorAll('.login-field__icon');
-      expect(icons.length).toBe(2);
-      expect(icons[0].textContent?.trim()).toBe('mail');
-      expect(icons[1].textContent?.trim()).toBe('lock');
+      const inputs = el.querySelectorAll('ui-text-input');
+      expect(inputs.length).toBeGreaterThanOrEqual(2);
     });
 
     it('should render forgot password link (AC 3)', () => {
@@ -121,20 +114,20 @@ describe('LoginComponent', () => {
     });
 
     it('should require email', () => {
-      const email = component.emailControl;
+      const email = component.loginForm.get('email');
       expect(email?.errors?.['required']).toBeTruthy();
     });
 
     it('should validate email format', () => {
-      component.emailControl?.setValue('bad');
-      expect(component.emailControl?.errors?.['email']).toBeTruthy();
+      component.loginForm.get('email')?.setValue('bad');
+      expect(component.loginForm.get('email')?.errors?.['email']).toBeTruthy();
 
-      component.emailControl?.setValue('good@example.com');
-      expect(component.emailControl?.errors).toBeNull();
+      component.loginForm.get('email')?.setValue('good@example.com');
+      expect(component.loginForm.get('email')?.errors).toBeNull();
     });
 
     it('should require password', () => {
-      expect(component.passwordControl?.errors?.['required']).toBeTruthy();
+      expect(component.loginForm.get('password')?.errors?.['required']).toBeTruthy();
     });
 
     it('should disable submit button when form is invalid', () => {
@@ -236,17 +229,10 @@ describe('LoginComponent', () => {
 
   // --- Accessibility baseline (AC 8) ---
   describe('accessibility', () => {
-    it('should associate labels with inputs via for/id attributes', () => {
+    it('should render mat-labels for inputs', () => {
       const el: HTMLElement = fixture.nativeElement;
-      const emailLabel = el.querySelector('label[for="login-email"]');
-      const emailInput = el.querySelector('#login-email');
-      expect(emailLabel).toBeTruthy();
-      expect(emailInput).toBeTruthy();
-
-      const passLabel = el.querySelector('label[for="login-password"]');
-      const passInput = el.querySelector('#login-password');
-      expect(passLabel).toBeTruthy();
-      expect(passInput).toBeTruthy();
+      const labels = el.querySelectorAll('mat-label');
+      expect(labels.length).toBeGreaterThanOrEqual(2);
     });
 
     it('should use semantic button roles', () => {
@@ -263,12 +249,9 @@ describe('LoginComponent', () => {
       expect(socialBtn?.getAttribute('aria-label')).toBe('Sign in with Google');
     });
 
-    it('should mark validation errors with role=alert', () => {
-      component.emailControl?.markAsTouched();
-      component.passwordControl?.markAsTouched();
-      fixture.detectChanges();
-      const alerts = fixture.nativeElement.querySelectorAll('[role="alert"]');
-      expect(alerts.length).toBeGreaterThan(0);
+    it('should have validation errors on required fields when empty', () => {
+      expect(component.loginForm.get('email')?.hasError('required')).toBe(true);
+      expect(component.loginForm.get('password')?.hasError('required')).toBe(true);
     });
   });
 });

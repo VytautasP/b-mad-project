@@ -36,47 +36,31 @@
           class="login-form"
         >
           <!-- Email field -->
-          <div class="login-field">
-            <label for="login-email" class="login-field__label">Email</label>
-            <div class="login-field__input-wrap">
-              <mat-icon class="login-field__icon" aria-hidden="true">mail</mat-icon>
-              <input
-                id="login-email"
-                type="email"
-                formControlName="email"
-                placeholder="name&#64;company.com"
-                class="login-field__input"
-                autocomplete="email"
-              />
-            </div>
-            @if (emailControl?.hasError('required') && emailControl?.touched) {
-              <span class="login-field__error" role="alert">Email is required</span>
-            }
-            @if (emailControl?.hasError('email') && emailControl?.touched) {
-              <span class="login-field__error" role="alert">Please enter a valid email address</span>
-            }
-          </div>
+          <ui-text-input
+            label="Email"
+            type="email"
+            formControlName="email"
+            placeholder="name@company.com"
+            prefixIcon="mail"
+            [required]="true"
+            [errorMessages]="{ required: 'Email is required', email: 'Please enter a valid email address' }"
+          />
 
           <!-- Password field -->
           <div class="login-field">
             <div class="login-field__label-row">
-              <label for="login-password" class="login-field__label">Password</label>
               <a href="javascript:void(0)" class="login-field__forgot-link">Forgot password?</a>
             </div>
-            <div class="login-field__input-wrap">
-              <mat-icon class="login-field__icon" aria-hidden="true">lock</mat-icon>
-              <input
-                id="login-password"
-                type="password"
-                formControlName="password"
-                placeholder="Enter your password"
-                class="login-field__input"
-                autocomplete="current-password"
-              />
-            </div>
-            @if (passwordControl?.hasError('required') && passwordControl?.touched) {
-              <span class="login-field__error" role="alert">Password is required</span>
-            }
+            <ui-text-input
+              label="Password"
+              type="password"
+              formControlName="password"
+              placeholder="Enter your password"
+              prefixIcon="lock"
+              [required]="true"
+              [showPasswordToggle]="true"
+              [errorMessages]="{ required: 'Password is required' }"
+            />
           </div>
 
           <!-- Submit button -->

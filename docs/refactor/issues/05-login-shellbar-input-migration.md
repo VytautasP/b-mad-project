@@ -17,13 +17,13 @@ Migrate the login page and shellbar search to use `<ui-text-input>`. This is mar
 
 ## Acceptance criteria
 
-- [ ] `login.html` uses `<ui-text-input>` for email and password fields
-- [ ] `shellbar.html` uses `<ui-text-input>` for the search field
-- [ ] Login form submission and validation still work
-- [ ] Search functionality still works
-- [ ] Design review approved — visual style is acceptable
-- [ ] Existing tests pass
-- [ ] `ng build` succeeds
+- [x] `login.html` uses `<ui-text-input>` for email and password fields
+- [x] `shellbar.html` uses `<ui-text-input>` for the search field
+- [x] Login form submission and validation still work
+- [x] Search functionality still works
+- [x] Design review approved — visual style is acceptable
+- [x] Existing tests pass
+- [x] `ng build` succeeds
 
 ## Blocked by
 

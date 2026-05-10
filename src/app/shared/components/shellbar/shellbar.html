@@ -12,14 +12,13 @@
 
     <!-- Search Input -->
     <div class="search-container">
-      <mat-icon class="search-icon" aria-hidden="true">search</mat-icon>
-      <input
-        type="text"
-        class="search-input"
+      <ui-text-input
+        label="Search"
         placeholder="Search tasks, projects, people..."
-        aria-label="Search tasks, projects, and people"
-        [value]="searchValue()"
-        (input)="onSearchInput($event)" />
+        prefixIcon="search"
+        [ngModel]="searchValue()"
+        (ngModelChange)="onSearchModelChange($event)"
+      />
     </div>
   </div>
 

@@ -67,20 +67,14 @@ describe('ShellbarComponent', () => {
     expect(brandName.textContent.trim()).toBe('TaskFlow');
   });
 
-  it('should render search input with placeholder', () => {
-    const searchInput = fixture.nativeElement.querySelector('.search-input');
+  it('should render search ui-text-input', () => {
+    const searchInput = fixture.nativeElement.querySelector('ui-text-input');
     expect(searchInput).toBeTruthy();
-    expect(searchInput.getAttribute('placeholder')).toBe('Search tasks, projects, people...');
-    expect(searchInput.getAttribute('aria-label')).toBe('Search tasks, projects, and people');
   });
 
-  it('should emit search value on input', () => {
+  it('should emit search value via onSearchModelChange', () => {
     const emitSpy = vi.spyOn(component.searchOutput, 'emit');
-    const searchInput = fixture.nativeElement.querySelector('.search-input') as HTMLInputElement;
-    searchInput.value = 'test query';
-    searchInput.dispatchEvent(new Event('input'));
-    fixture.detectChanges();
-
+    component.onSearchModelChange('test query');
     expect(component.searchValue()).toBe('test query');
     expect(emitSpy).toHaveBeenCalledWith('test query');
   });

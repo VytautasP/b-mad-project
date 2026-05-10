@@ -5,9 +5,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
 import { TaskFormComponent } from '../../../features/tasks/task-form/task-form.component';
 import { TaskService } from '../../../features/tasks/services/task.service';
+import { UiTextInput } from '../../ui/input/ui-text-input';
 import { getCreateTaskDialogConfig } from '../../utils/task-form-dialog.utils';
 
 @Component({
@@ -16,7 +18,9 @@ import { getCreateTaskDialogConfig } from '../../utils/task-form-dialog.utils';
     CommonModule,
     MatIconModule,
     MatButtonModule,
-    MatMenuModule
+    MatMenuModule,
+    FormsModule,
+    UiTextInput,
   ],
   templateUrl: './shellbar.html',
   styleUrl: './shellbar.css'
@@ -33,8 +37,7 @@ export class ShellbarComponent {
 
   readonly searchOutput = output<string>({ alias: 'search' });
 
-  onSearchInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
+  onSearchModelChange(value: string): void {
     this.searchValue.set(value);
     this.searchOutput.emit(value);
   }

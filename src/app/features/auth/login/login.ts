@@ -7,6 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../../core/services/auth.service';
 import { LoginRequest } from '../../../core/models/login-request.model';
+import { UiTextInput } from '../../../shared/ui/input/ui-text-input';
 
 @Component({
   selector: 'app-login',
@@ -17,6 +18,7 @@ import { LoginRequest } from '../../../core/models/login-request.model';
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
+    UiTextInput,
   ],
   templateUrl: './login.html',
   styleUrl: './login.css',
@@ -79,11 +81,4 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  get emailControl() {
-    return this.loginForm.get('email');
-  }
-
-  get passwordControl() {
-    return this.loginForm.get('password');
-  }
 }
