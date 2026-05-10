@@ -49,6 +49,22 @@ export function getStatusBadgeClass(status: number): string {
   }
 }
 
+export function getStatusClass(status: number): string {
+  switch (status) {
+    case TaskStatus.Done:
+      return 'status-done';
+    case TaskStatus.InProgress:
+      return 'status-in-progress';
+    case TaskStatus.Blocked:
+      return 'status-blocked';
+    case TaskStatus.Waiting:
+      return 'status-waiting';
+    case TaskStatus.ToDo:
+    default:
+      return 'status-todo';
+  }
+}
+
 export function getPriorityLabel(priority: number): string {
   switch (priority) {
     case TaskPriority.Critical:

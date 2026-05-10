@@ -35,6 +35,9 @@ import { ManualTimeEntryForm, ManualTimeEntryFormData } from '../components/manu
 import { TimeEntryList } from '../components/time-entry-list/time-entry-list';
 import { UserPicker } from '../components/user-picker/user-picker';
 import { TaskService } from '../services/task.service';
+import { getStatusLabel, getStatusClass, getPriorityLabel, getPriorityIcon, getPriorityClass } from '../../../shared/ui/utils/display.utils';
+import { UiStatusBadge } from '../../../shared/ui/status-badge/ui-status-badge';
+import { UiPriorityIndicator } from '../../../shared/ui/priority-indicator/ui-priority-indicator';
 
 const COMMENTS_DELAY_MS = 120;
 const ACTIVITY_DELAY_MS = 260;
@@ -59,7 +62,9 @@ const ACTIVITY_DELAY_MS = 260;
     AssigneeList,
     CommentThreadComponent,
     TimeEntryList,
-    UserPicker
+    UserPicker,
+    UiStatusBadge,
+    UiPriorityIndicator
   ],
   templateUrl: './task-full-details-workspace.html',
   styleUrl: './task-full-details-workspace.css'
@@ -530,56 +535,11 @@ export class TaskFullDetailsWorkspaceComponent implements OnInit, AfterViewCheck
     return `TF-${task.id.replace(/[^a-zA-Z0-9]/g, '').slice(-4).toUpperCase()}`;
   }
 
-  getPriorityLabel(priority: number): string {
-    return TaskPriority[priority];
-  }
-
-  getPriorityClass(priority: number): string {
-    switch (priority) {
-      case TaskPriority.Critical:
-        return 'priority-critical';
-      case TaskPriority.High:
-        return 'priority-high';
-      case TaskPriority.Low:
-        return 'priority-low';
-      case TaskPriority.Medium:
-      default:
-        return 'priority-medium';
-    }
-  }
-
-  getStatusLabel(status: number): string {
-    switch (status) {
-      case TaskStatus.ToDo:
-        return 'To Do';
-      case TaskStatus.InProgress:
-        return 'In Progress';
-      case TaskStatus.Blocked:
-        return 'Blocked';
-      case TaskStatus.Waiting:
-        return 'Waiting';
-      case TaskStatus.Done:
-        return 'Done';
-      default:
-        return 'To Do';
-    }
-  }
-
-  getStatusClass(status: number): string {
-    switch (status) {
-      case TaskStatus.Done:
-        return 'status-done';
-      case TaskStatus.InProgress:
-        return 'status-in-progress';
-      case TaskStatus.Blocked:
-        return 'status-blocked';
-      case TaskStatus.Waiting:
-        return 'status-waiting';
-      case TaskStatus.ToDo:
-      default:
-        return 'status-todo';
-    }
-  }
+  readonly getStatusLabel = getStatusLabel;
+  readonly getStatusClass = getStatusClass;
+  readonly getPriorityLabel = getPriorityLabel;
+  readonly getPriorityIcon = getPriorityIcon;
+  readonly getPriorityClass = getPriorityClass;
 
   getTypeLabel(type: number): string {
     return TaskType[type];
@@ -642,20 +602,6 @@ export class TaskFullDetailsWorkspaceComponent implements OnInit, AfterViewCheck
       case TaskPriority.Medium:
       default:
         return 'priority-sidebar-medium';
-    }
-  }
-
-  getPriorityIcon(priority: number): string {
-    switch (priority) {
-      case TaskPriority.Critical:
-        return 'error';
-      case TaskPriority.High:
-        return 'local_fire_department';
-      case TaskPriority.Low:
-        return 'arrow_downward';
-      case TaskPriority.Medium:
-      default:
-        return 'local_fire_department';
     }
   }
 

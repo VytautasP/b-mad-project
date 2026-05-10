@@ -192,8 +192,6 @@ describe('TaskFormComponent', () => {
   });
 
   it('should convert enum values to labels', () => {
-    expect(component.getPriorityLabel(TaskPriority.High)).toBe('High');
-    expect(component.getStatusLabel(TaskStatus.InProgress)).toBe('InProgress');
     expect(component.getTypeLabel(TaskType.Task)).toBe('Task');
   });
 

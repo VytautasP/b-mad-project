@@ -270,13 +270,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     return '';
   }
 
-  getPriorityLabel(priority: number): string {
-    return TaskPriority[priority];
-  }
 
-  getStatusLabel(status: number): string {
-    return TaskStatus[status];
-  }
 
   getTypeLabel(type: number): string {
     return TaskType[type];

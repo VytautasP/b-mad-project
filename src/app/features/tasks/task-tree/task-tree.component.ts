@@ -10,6 +10,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subject, takeUntil, fromEvent } from 'rxjs';
 import { TaskService } from '../services/task.service';
 import { Task, TaskStatus, TaskPriority, TaskType } from '../../../shared/models/task.model';
+import { UiStatusBadge } from '../../../shared/ui/status-badge/ui-status-badge';
+import { UiPriorityIndicator } from '../../../shared/ui/priority-indicator/ui-priority-indicator';
 
 // Tree node interface
 interface TreeNode {
@@ -26,7 +28,9 @@ interface TreeNode {
     MatIconModule,
     MatButtonModule,
     MatProgressSpinnerModule,
-    DragDropModule
+    DragDropModule,
+    UiStatusBadge,
+    UiPriorityIndicator
   ],
   templateUrl: './task-tree.component.html',
   styleUrls: ['./task-tree.component.scss']
@@ -213,75 +217,6 @@ export class TaskTreeComponent implements OnInit, OnDestroy {
     
     search(nodes);
     return found;
-  }
-
-  /**
-   * Get status icon based on task status
-   */
-  getStatusIcon(status: TaskStatus): string {
-    switch (status) {
-      case TaskStatus.Done:
-        return 'check_circle';
-      case TaskStatus.InProgress:
-        return 'pending';
-      case TaskStatus.Blocked:
-        return 'block';
-      case TaskStatus.Waiting:
-        return 'hourglass_top';
-      case TaskStatus.ToDo:
-      default:
-        return 'radio_button_unchecked';
-    }
-  }
-
-  /**
-   * Get status color class
-   */
-  getStatusClass(status: TaskStatus): string {
-    switch (status) {
-      case TaskStatus.Done:
-        return 'status-done';
-      case TaskStatus.InProgress:
-        return 'status-in-progress';
-      case TaskStatus.Blocked:
-        return 'status-blocked';
-      case TaskStatus.Waiting:
-        return 'status-waiting';
-      case TaskStatus.ToDo:
-      default:
-        return 'status-todo';
-    }
-  }
-
-  /**
-   * Get priority icon
-   */
-  getPriorityIcon(priority: TaskPriority): string {
-    switch (priority) {
-      case TaskPriority.Critical:
-      case TaskPriority.High:
-      case TaskPriority.Medium:
-      case TaskPriority.Low:
-      default:
-        return 'flag';
-    }
-  }
-
-  /**
-   * Get priority color class
-   */
-  getPriorityClass(priority: TaskPriority): string {
-    switch (priority) {
-      case TaskPriority.Critical:
-        return 'priority-critical';
-      case TaskPriority.High:
-        return 'priority-high';
-      case TaskPriority.Low:
-        return 'priority-low';
-      case TaskPriority.Medium:
-      default:
-        return 'priority-medium';
-    }
   }
 
   /**

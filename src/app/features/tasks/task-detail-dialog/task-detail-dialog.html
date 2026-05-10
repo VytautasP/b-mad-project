@@ -10,10 +10,7 @@
       </button>
     </div>
     <div class="qi-status-row">
-      <div class="qi-status-pill" [ngClass]="getStatusPillClass(task.status)">
-        <mat-icon class="qi-status-icon">{{ getStatusIcon(task.status) }}</mat-icon>
-        <span class="qi-status-text">{{ getStatusLabel(task.status) }}</span>
-      </div>
+      <ui-status-badge [status]="task.status" [showIcon]="true" [showDot]="false"></ui-status-badge>
       <div class="qi-task-id">
         <span>{{ getTaskId() }}</span>
       </div>
@@ -30,8 +27,7 @@
       <div class="qi-meta-col">
         <span class="qi-meta-label">PRIORITY</span>
         <div class="qi-meta-value">
-          <mat-icon class="qi-meta-icon" [ngClass]="getPriorityIconClass(task.priority)">{{ getPriorityIcon(task.priority) }}</mat-icon>
-          <span>{{ getPriorityLabel(task.priority) }}</span>
+          <ui-priority-indicator [priority]="task.priority"></ui-priority-indicator>
         </div>
       </div>
       <div class="qi-meta-col">

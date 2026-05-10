@@ -19,14 +19,14 @@ Update all affected component tests. Verify that the display utils in `shared/ui
 
 ## Acceptance criteria
 
-- [ ] `project.html` uses `<ui-status-badge>` and `<ui-priority-indicator>`
-- [ ] `task-detail-dialog` uses `<ui-status-badge>` and `<ui-priority-indicator>`
-- [ ] `task-full-details-workspace` uses `<ui-status-badge>` and `<ui-priority-indicator>`
-- [ ] All duplicated status/priority helper methods removed from migrated component `.ts` files
-- [ ] No component outside `shared/ui/` contains `getStatusLabel`, `getStatusBadgeClass`, `getStatusIcon`, `getPriorityLabel`, `getPriorityIcon`, or `getPriorityClass`
-- [ ] All affected component tests pass
-- [ ] `ng build` succeeds
-- [ ] Manual browser test: project view, task detail dialog, and task details workspace render status/priority correctly
+- [x] `project.html` uses `<ui-status-badge>` and `<ui-priority-indicator>`
+- [x] `task-detail-dialog` uses `<ui-status-badge>` and `<ui-priority-indicator>`
+- [x] `task-full-details-workspace` uses `<ui-status-badge>` and `<ui-priority-indicator>`
+- [x] All duplicated status/priority helper methods removed from migrated component `.ts` files
+- [x] No component outside `shared/ui/` contains `getStatusLabel`, `getStatusBadgeClass`, `getStatusIcon`, `getPriorityLabel`, `getPriorityIcon`, or `getPriorityClass`
+- [x] All affected component tests pass
+- [x] `ng build` succeeds
+- [x] Manual browser test: project view, task detail dialog, and task details workspace render status/priority correctly
 
 ## Blocked by
 

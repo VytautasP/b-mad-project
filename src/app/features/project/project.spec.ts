@@ -355,20 +355,6 @@ describe('ProjectComponent', () => {
   });
 
   describe('Display helpers', () => {
-    it('should return correct status labels', () => {
-      expect(component.getStatusLabel(TaskStatus.ToDo)).toBe('To Do');
-      expect(component.getStatusLabel(TaskStatus.InProgress)).toBe('In Progress');
-      expect(component.getStatusLabel(TaskStatus.Blocked)).toBe('Blocked');
-      expect(component.getStatusLabel(TaskStatus.Waiting)).toBe('Waiting');
-      expect(component.getStatusLabel(TaskStatus.Done)).toBe('Done');
-    });
-
-    it('should return correct status badge classes', () => {
-      expect(component.getStatusBadgeClass(TaskStatus.ToDo)).toBe('status-badge status-todo');
-      expect(component.getStatusBadgeClass(TaskStatus.InProgress)).toBe('status-badge status-in-progress');
-      expect(component.getStatusBadgeClass(TaskStatus.Done)).toBe('status-badge status-done');
-    });
-
     it('should return correct task type icons', () => {
       expect(component.getTaskTypeIcon(TaskType.Project)).toBe('folder');
       expect(component.getTaskTypeIcon(TaskType.Milestone)).toBe('flag');

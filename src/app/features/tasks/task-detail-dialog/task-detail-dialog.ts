@@ -11,6 +11,8 @@ import { NotificationService } from '../../../core/services/notification.service
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { TaskFormComponent } from '../task-form/task-form.component';
 import { getDialogAnimationDurations } from '../../../shared/utils/motion.utils';
+import { UiStatusBadge } from '../../../shared/ui/status-badge/ui-status-badge';
+import { UiPriorityIndicator } from '../../../shared/ui/priority-indicator/ui-priority-indicator';
 
 export interface TaskDetailDialogData {
   task: Task;
@@ -25,7 +27,9 @@ export interface TaskDetailDialogData {
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
-    AssigneeList
+    AssigneeList,
+    UiStatusBadge,
+    UiPriorityIndicator
   ],
   templateUrl: './task-detail-dialog.html',
   styleUrl: './task-detail-dialog.css',
@@ -46,63 +50,6 @@ export class TaskDetailDialog {
   getTaskId(): string {
     const idPart = this.task.id.replace(/[^a-zA-Z0-9]/g, '').slice(-4).toUpperCase();
     return `TF-${idPart}`;
-  }
-
-  getPriorityLabel(priority: number): string {
-    return TaskPriority[priority] || 'None';
-  }
-
-  getPriorityIcon(priority: number): string {
-    switch (priority) {
-      case TaskPriority.Critical: return 'error';
-      case TaskPriority.High: return 'arrow_upward';
-      case TaskPriority.Medium: return 'remove';
-      case TaskPriority.Low: return 'arrow_downward';
-      default: return 'remove';
-    }
-  }
-
-  getPriorityIconClass(priority: number): string {
-    switch (priority) {
-      case TaskPriority.Critical: return 'priority-critical';
-      case TaskPriority.High: return 'priority-high';
-      case TaskPriority.Medium: return 'priority-medium';
-      case TaskPriority.Low: return 'priority-low';
-      default: return 'priority-none';
-    }
-  }
-
-  getStatusLabel(status: number): string {
-    switch (status) {
-      case TaskStatus.ToDo: return 'To Do';
-      case TaskStatus.InProgress: return 'In Progress';
-      case TaskStatus.Blocked: return 'Blocked';
-      case TaskStatus.Waiting: return 'Waiting';
-      case TaskStatus.Done: return 'Done';
-      default: return 'To Do';
-    }
-  }
-
-  getStatusIcon(status: number): string {
-    switch (status) {
-      case TaskStatus.Done: return 'check_circle';
-      case TaskStatus.Blocked: return 'block';
-      case TaskStatus.Waiting: return 'hourglass_top';
-      case TaskStatus.InProgress: return 'pending';
-      case TaskStatus.ToDo:
-      default: return 'radio_button_unchecked';
-    }
-  }
-
-  getStatusPillClass(status: number): string {
-    switch (status) {
-      case TaskStatus.Done: return 'status-done';
-      case TaskStatus.InProgress: return 'status-in-progress';
-      case TaskStatus.Blocked: return 'status-blocked';
-      case TaskStatus.Waiting: return 'status-waiting';
-      case TaskStatus.ToDo:
-      default: return 'status-todo';
-    }
   }
 
   formatDate(date: Date | null): string {

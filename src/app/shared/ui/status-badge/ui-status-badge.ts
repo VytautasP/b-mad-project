@@ -15,7 +15,9 @@ import { getStatusLabel, getStatusIcon, getStatusBadgeClass } from '../utils/dis
       @if (showIcon()) {
         <mat-icon class="status-icon">{{ icon() }}</mat-icon>
       }
-      <span class="status-label">{{ label() }}</span>
+      @if (showLabel()) {
+        <span class="status-label">{{ label() }}</span>
+      }
     </div>
   `,
   styles: [`
@@ -103,6 +105,7 @@ export class UiStatusBadge {
   readonly status = input.required<number>();
   readonly showIcon = input(false);
   readonly showDot = input(true);
+  readonly showLabel = input(true);
   readonly size = input<'sm' | 'md'>('md');
 
   readonly label = computed(() => getStatusLabel(this.status()));

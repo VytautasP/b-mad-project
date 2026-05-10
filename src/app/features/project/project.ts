@@ -15,6 +15,7 @@ import { TaskDetailDialog } from '../tasks/task-detail-dialog/task-detail-dialog
 import { ConfirmationDialogComponent, ConfirmationDialogData } from '../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { getDialogAnimationDurations } from '../../shared/utils/motion.utils';
 import { getCreateTaskDialogConfig } from '../../shared/utils/task-form-dialog.utils';
+import { UiStatusBadge } from '../../shared/ui/status-badge/ui-status-badge';
 
 /** Flat row model for the project table view */
 export interface ProjectTableRow {
@@ -30,7 +31,8 @@ export interface ProjectTableRow {
     CommonModule,
     MatIconModule,
     MatMenuModule,
-    MatButtonModule
+    MatButtonModule,
+    UiStatusBadge
   ],
   templateUrl: './project.html',
   styleUrl: './project.css'
@@ -364,26 +366,6 @@ export class ProjectComponent implements OnInit, OnDestroy {
   }
 
   // Display helpers
-  getStatusLabel(status: TaskStatus): string {
-    switch (status) {
-      case TaskStatus.InProgress: return 'In Progress';
-      case TaskStatus.Blocked: return 'Blocked';
-      case TaskStatus.Waiting: return 'Waiting';
-      case TaskStatus.Done: return 'Done';
-      default: return 'To Do';
-    }
-  }
-
-  getStatusBadgeClass(status: TaskStatus): string {
-    switch (status) {
-      case TaskStatus.Done: return 'status-badge status-done';
-      case TaskStatus.InProgress: return 'status-badge status-in-progress';
-      case TaskStatus.Blocked: return 'status-badge status-blocked';
-      case TaskStatus.Waiting: return 'status-badge status-waiting';
-      default: return 'status-badge status-todo';
-    }
-  }
-
   getTaskTypeIcon(type: TaskType): string {
     switch (type) {
       case TaskType.Project: return 'folder';

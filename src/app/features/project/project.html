@@ -149,10 +149,7 @@
               </div>
             </div>
             <div class="data-cell col-status">
-              <div [class]="getStatusBadgeClass(row.task.status)">
-                <span class="status-dot"></span>
-                <span>{{ getStatusLabel(row.task.status) }}</span>
-              </div>
+              <ui-status-badge [status]="row.task.status"></ui-status-badge>
             </div>
             <div class="data-cell col-due-date">
               <span class="due-date-text">{{ formatDate(row.task.dueDate) }}</span>
@@ -227,10 +224,7 @@
                   </div>
                 </div>
                 <div class="data-cell col-status">
-                  <div [class]="getStatusBadgeClass(child.task.status)">
-                    <span class="status-dot"></span>
-                    <span>{{ getStatusLabel(child.task.status) }}</span>
-                  </div>
+                  <ui-status-badge [status]="child.task.status"></ui-status-badge>
                 </div>
                 <div class="data-cell col-due-date">
                   <span class="due-date-text">{{ formatDate(child.task.dueDate) }}</span>
@@ -296,10 +290,7 @@
                       </div>
                     </div>
                     <div class="data-cell col-status">
-                      <div [class]="getStatusBadgeClass(grandchild.task.status)">
-                        <span class="status-dot"></span>
-                        <span>{{ getStatusLabel(grandchild.task.status) }}</span>
-                      </div>
+                      <ui-status-badge [status]="grandchild.task.status"></ui-status-badge>
                     </div>
                     <div class="data-cell col-due-date">
                       <span class="due-date-text">{{ formatDate(grandchild.task.dueDate) }}</span>

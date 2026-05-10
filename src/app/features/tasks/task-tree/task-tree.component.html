@@ -31,13 +31,9 @@
                    [class.invalid-drop-target]="!isValidDropTarget(node) && dropTargetNode && dropTargetNode.task.id === node.task.id"
                    [class.drop-target-active]="draggedNode && dropTargetNode && dropTargetNode.task.id === node.task.id">
                 <mat-icon class="type-icon">{{ getTypeIcon(node.task.type) }}</mat-icon>
-                <mat-icon class="status-icon" [ngClass]="getStatusClass(node.task.status)">
-                  {{ getStatusIcon(node.task.status) }}
-                </mat-icon>
+                <ui-status-badge [status]="node.task.status" [showIcon]="true" [showDot]="false" [showLabel]="false" size="sm"></ui-status-badge>
                 <span class="task-name" (click)="onTaskClick(node.task)" (keydown.enter)="onTaskClick(node.task)" (keydown.space)="onTaskClick(node.task)" role="button" tabindex="0">{{ node.task.name }}</span>
-                <mat-icon class="priority-icon" [ngClass]="getPriorityClass(node.task.priority)">
-                  {{ getPriorityIcon(node.task.priority) }}
-                </mat-icon>
+                <ui-priority-indicator [priority]="node.task.priority" [showLabel]="false" size="sm"></ui-priority-indicator>
               </div>
             </div>
           </div>
@@ -67,13 +63,9 @@
                    [class.invalid-drop-target]="!isValidDropTarget(node) && dropTargetNode && dropTargetNode.task.id === node.task.id"
                    [class.drop-target-active]="draggedNode && dropTargetNode && dropTargetNode.task.id === node.task.id">
                 <mat-icon class="type-icon">{{ getTypeIcon(node.task.type) }}</mat-icon>
-                <mat-icon class="status-icon" [ngClass]="getStatusClass(node.task.status)">
-                  {{ getStatusIcon(node.task.status) }}
-                </mat-icon>
+                <ui-status-badge [status]="node.task.status" [showIcon]="true" [showDot]="false" [showLabel]="false" size="sm"></ui-status-badge>
                 <span class="task-name" (click)="onTaskClick(node.task)" (keydown.enter)="onTaskClick(node.task)" (keydown.space)="onTaskClick(node.task)" role="button" tabindex="0">{{ node.task.name }}</span>
-                <mat-icon class="priority-icon" [ngClass]="getPriorityClass(node.task.priority)">
-                  {{ getPriorityIcon(node.task.priority) }}
-                </mat-icon>
+                <ui-priority-indicator [priority]="node.task.priority" [showLabel]="false" size="sm"></ui-priority-indicator>
               </div>
             </div>
           </div>

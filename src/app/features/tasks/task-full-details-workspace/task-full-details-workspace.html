@@ -87,12 +87,8 @@
             </div>
 
             <div class="overview-footer">
-              <span class="pill" [class]="'pill ' + getStatusClass(currentTask.status)">
-                {{ getStatusLabel(currentTask.status) }}
-              </span>
-              <span class="pill neutral-pill" [class]="getPriorityClass(currentTask.priority)">
-                {{ getPriorityLabel(currentTask.priority) }} priority
-              </span>
+              <ui-status-badge [status]="currentTask.status"></ui-status-badge>
+              <ui-priority-indicator [priority]="currentTask.priority"></ui-priority-indicator>
               <span class="meta-badge">
                 <mat-icon>event</mat-icon>
                 {{ formatDate(currentTask.dueDate) }}
