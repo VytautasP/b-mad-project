@@ -23,14 +23,14 @@ Unit tests for both components covering: single/multiple selection, option rende
 
 ## Acceptance criteria
 
-- [ ] `<ui-select>` component exists with CVA, supports single and multiple selection with optional icons
-- [ ] `<ui-datepicker>` component exists with CVA, supports min/max date constraints
-- [ ] `task-filters` uses `<ui-select>` for all dropdown filters and `<ui-datepicker>` for date range
-- [ ] `manual-time-entry-form` uses `<ui-datepicker>` for date, `<ui-text-input>` for number inputs, `<ui-textarea>` for note
-- [ ] Unit tests for both new components
-- [ ] Existing task-filters and manual-time-entry tests pass
-- [ ] `ng build` succeeds
-- [ ] Manual browser test: filters work correctly, manual time entry form submits, date pickers enforce constraints
+- [x] `<ui-select>` component exists with CVA, supports single and multiple selection with optional icons
+- [x] `<ui-datepicker>` component exists with CVA, supports min/max date constraints
+- [x] `task-filters` uses `<ui-select>` for all dropdown filters and `<ui-datepicker>` for date range
+- [x] `manual-time-entry-form` uses `<ui-datepicker>` for date, `<ui-text-input>` for number inputs, `<ui-textarea>` for note
+- [x] Unit tests for both new components
+- [x] Existing task-filters and manual-time-entry tests pass
+- [x] `ng build` succeeds
+- [x] Manual browser test: filters work correctly, manual time entry form submits, date pickers enforce constraints
 
 ## Blocked by
 

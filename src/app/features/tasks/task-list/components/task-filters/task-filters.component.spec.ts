@@ -1,16 +1,7 @@
-// @ts-nocheck
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatInputModule } from '@angular/material/input';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatIconModule } from '@angular/material/icon';
 import { MatNativeDateModule } from '@angular/material/core';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { TaskFiltersComponent, User } from './task-filters.component';
 import { TaskStatus, TaskPriority, TaskType, TaskFilters } from '../../../../../shared/models/task.model';
 
@@ -23,16 +14,8 @@ describe('TaskFiltersComponent', () => {
       imports: [
         TaskFiltersComponent,
         ReactiveFormsModule,
-        MatFormFieldModule,
-        MatSelectModule,
-        MatButtonModule,
-        MatChipsModule,
-        MatDatepickerModule,
         MatNativeDateModule,
-        MatInputModule,
-        MatExpansionModule,
-        MatIconModule,
-        BrowserAnimationsModule
+        NoopAnimationsModule,
       ]
     }).compileComponents();
 

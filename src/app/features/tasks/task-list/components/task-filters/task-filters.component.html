@@ -1,20 +1,23 @@
 <div class="task-filters-container">
   <form [formGroup]="filterForm" class="filters-form">
     <div class="quick-filter-row">
-      <mat-form-field appearance="outline" class="filter-field search-field">
-        <mat-label>Search</mat-label>
-        <input matInput formControlName="searchTerm" placeholder="Search tasks...">
-        <mat-icon matPrefix>search</mat-icon>
-      </mat-form-field>
+      <div class="filter-field search-field">
+        <ui-text-input
+          label="Search"
+          formControlName="searchTerm"
+          placeholder="Search tasks..."
+          prefixIcon="search"
+        />
+      </div>
 
-      <mat-form-field appearance="outline" class="filter-field status-field">
-        <mat-label>Status</mat-label>
-        <mat-select formControlName="status" multiple>
-          @for (option of statusOptions; track option.value) {
-            <mat-option [value]="option.value">{{ option.label }}</mat-option>
-          }
-        </mat-select>
-      </mat-form-field>
+      <div class="filter-field status-field">
+        <ui-select
+          label="Status"
+          formControlName="status"
+          [options]="statusOptions"
+          [multiple]="true"
+        />
+      </div>
 
       <div class="filter-actions">
         <button mat-stroked-button type="button" (click)="onApplyFilters()">
@@ -41,48 +44,48 @@
       </mat-expansion-panel-header>
 
       <div class="filter-row">
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Assignees</mat-label>
-          <mat-select formControlName="assigneeId" multiple>
-            @for (user of users; track user.id) {
-              <mat-option [value]="user.id">{{ user.name }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <div class="filter-field">
+          <ui-select
+            label="Assignees"
+            formControlName="assigneeId"
+            [options]="assigneeOptions"
+            [multiple]="true"
+          />
+        </div>
 
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Priority</mat-label>
-          <mat-select formControlName="priority" multiple>
-            @for (option of priorityOptions; track option.value) {
-              <mat-option [value]="option.value">{{ option.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <div class="filter-field">
+          <ui-select
+            label="Priority"
+            formControlName="priority"
+            [options]="priorityOptions"
+            [multiple]="true"
+          />
+        </div>
 
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Type</mat-label>
-          <mat-select formControlName="type" multiple>
-            @for (option of typeOptions; track option.value) {
-              <mat-option [value]="option.value">{{ option.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <div class="filter-field">
+          <ui-select
+            label="Type"
+            formControlName="type"
+            [options]="typeOptions"
+            [multiple]="true"
+          />
+        </div>
       </div>
 
       <div class="filter-row">
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Due Date From</mat-label>
-          <input matInput [matDatepicker]="pickerFrom" formControlName="dueDateFrom">
-          <mat-datepicker-toggle matIconSuffix [for]="pickerFrom"></mat-datepicker-toggle>
-          <mat-datepicker #pickerFrom></mat-datepicker>
-        </mat-form-field>
+        <div class="filter-field">
+          <ui-datepicker
+            label="Due Date From"
+            formControlName="dueDateFrom"
+          />
+        </div>
 
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Due Date To</mat-label>
-          <input matInput [matDatepicker]="pickerTo" formControlName="dueDateTo">
-          <mat-datepicker-toggle matIconSuffix [for]="pickerTo"></mat-datepicker-toggle>
-          <mat-datepicker #pickerTo></mat-datepicker>
-        </mat-form-field>
+        <div class="filter-field">
+          <ui-datepicker
+            label="Due Date To"
+            formControlName="dueDateTo"
+          />
+        </div>
       </div>
     </mat-expansion-panel>
   </form>

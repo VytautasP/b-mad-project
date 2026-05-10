@@ -2,12 +2,11 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
+import { UiTextInput } from '../../../../shared/ui/input/ui-text-input';
+import { UiTextarea } from '../../../../shared/ui/textarea/ui-textarea';
+import { UiDatepicker } from '../../../../shared/ui/datepicker/ui-datepicker';
 import { TimeTrackingService } from '../../../../core/services/time-tracking.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 
@@ -21,12 +20,11 @@ export interface ManualTimeEntryFormData {
     CommonModule,
     ReactiveFormsModule,
     MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
     MatButtonModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatIconModule
+    MatIconModule,
+    UiTextInput,
+    UiTextarea,
+    UiDatepicker,
   ],
   templateUrl: './manual-time-entry-form.html',
   styleUrl: './manual-time-entry-form.css',
