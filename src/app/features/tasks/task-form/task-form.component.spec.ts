@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MatNativeDateModule } from '@angular/material/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { TaskFormComponent } from './task-form.component';
@@ -56,7 +57,7 @@ describe('TaskFormComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [TaskFormComponent, NoopAnimationsModule],
+      imports: [TaskFormComponent, NoopAnimationsModule, MatNativeDateModule],
       providers: [
         {
           provide: TaskService,
@@ -85,15 +86,15 @@ describe('TaskFormComponent', () => {
     expect(component.taskForm.get('type')?.value).toBe(TaskType.Task);
   });
 
-  it('should render the dialog shell in Figma field order', () => {
-    const labels = [...fixture.nativeElement.querySelectorAll('.task-form__label')]
-      .map((label: HTMLElement) => label.textContent?.replace('*', '').trim());
-
+  it('should render the dialog shell structure', () => {
     expect(fixture.nativeElement.querySelector('.task-form__header')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('.task-form__body')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('.task-form__footer')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('.task-form__close')?.getAttribute('aria-label')).toBe('Close task dialog');
-    expect(labels).toEqual(['Task Name', 'Description', 'Due Date', 'Priority', 'Status', 'Type']);
+    expect(fixture.nativeElement.querySelector('ui-text-input')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('ui-textarea')).toBeTruthy();
+    expect(fixture.nativeElement.querySelectorAll('ui-select').length).toBe(2);
+    expect(fixture.nativeElement.querySelector('ui-datepicker')).toBeTruthy();
   });
 
   it('should not submit if form is invalid', () => {

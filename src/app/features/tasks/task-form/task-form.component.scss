@@ -116,10 +116,6 @@
   gap: 6px;
 }
 
-.task-form__field-group--textarea {
-  gap: 6px;
-}
-
 .task-form__label {
   display: flex;
   align-items: center;
@@ -137,82 +133,10 @@
   color: #64748b;
 }
 
-.task-form__required {
-  color: #137fec;
-}
-
 .task-form__planning-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
-}
-
-.task-form__field {
-  width: 100%;
-
-  ::ng-deep .mat-mdc-text-field-wrapper {
-    min-height: 42px;
-    background: #ffffff;
-  }
-
-  ::ng-deep .mdc-text-field--outlined {
-    --mdc-outlined-text-field-container-shape: 8px;
-    --mdc-outlined-text-field-outline-color: #e2e8f0;
-    --mdc-outlined-text-field-focus-outline-color: #137fec;
-    --mdc-outlined-text-field-hover-outline-color: #cbd5e1;
-    --mdc-outlined-text-field-input-text-color: #111418;
-    --mdc-outlined-text-field-label-text-color: #64748b;
-    --mat-select-enabled-trigger-text-color: #111418;
-    --mat-select-focused-arrow-color: #137fec;
-    --mat-select-enabled-arrow-color: #64748b;
-  }
-
-  ::ng-deep .mat-mdc-form-field-flex {
-    min-height: 42px;
-  }
-
-  ::ng-deep .mat-mdc-form-field-infix {
-    min-height: 42px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-  }
-
-  ::ng-deep .mdc-notched-outline__leading,
-  ::ng-deep .mdc-notched-outline__notch,
-  ::ng-deep .mdc-notched-outline__trailing {
-    transition: border-color var(--motion-duration-feedback) var(--motion-ease-standard);
-  }
-
-  ::ng-deep .mat-mdc-input-element,
-  ::ng-deep .mat-mdc-select-value-text,
-  ::ng-deep textarea.mat-mdc-input-element {
-    font-size: 14px;
-    line-height: 20px;
-    color: #111418;
-  }
-
-  ::ng-deep .mat-mdc-input-element:focus-visible,
-  ::ng-deep textarea.mat-mdc-input-element:focus-visible {
-    outline: none !important;
-  }
-
-  ::ng-deep .mat-mdc-form-field-subscript-wrapper,
-  ::ng-deep .mat-mdc-form-field-error-wrapper {
-    transition: opacity var(--motion-duration-feedback) var(--motion-ease-standard),
-      transform var(--motion-duration-feedback) var(--motion-ease-standard);
-    transform-origin: top;
-  }
-}
-
-.task-form__field--textarea {
-  ::ng-deep .mat-mdc-form-field-infix {
-    min-height: 94px;
-  }
-
-  ::ng-deep textarea.mat-mdc-input-element {
-    resize: vertical;
-    min-height: 74px;
-  }
 }
 
 .task-form__type-buttons {

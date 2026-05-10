@@ -20,14 +20,14 @@ Update existing `task-form.component.spec.ts`. Ensure form submission, validatio
 
 ## Acceptance criteria
 
-- [ ] `task-form.component.html` uses `<ui-text-input>`, `<ui-textarea>`, `<ui-select>`, and `<ui-datepicker>` for all form fields
-- [ ] Form submission works for both create and edit modes
-- [ ] Validation errors display correctly for all fields
-- [ ] Pre-populated values render correctly in edit mode
-- [ ] Any `::ng-deep` overrides are resolved (internalized into UI components or removed)
-- [ ] `task-form.component.spec.ts` passes
-- [ ] `ng build` succeeds
-- [ ] Manual browser test: create a task, edit a task, trigger validation errors — all work as before
+- [x] `task-form.component.html` uses `<ui-text-input>`, `<ui-textarea>`, `<ui-select>`, and `<ui-datepicker>` for all form fields
+- [x] Form submission works for both create and edit modes
+- [x] Validation errors display correctly for all fields
+- [x] Pre-populated values render correctly in edit mode
+- [x] Any `::ng-deep` overrides are resolved (internalized into UI components or removed)
+- [x] `task-form.component.spec.ts` passes
+- [x] `ng build` succeeds
+- [x] Manual browser test: create a task, edit a task, trigger validation errors — all work as before
 
 ## Blocked by
 

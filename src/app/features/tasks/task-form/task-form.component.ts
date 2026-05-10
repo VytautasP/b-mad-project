@@ -2,16 +2,17 @@ import { AfterViewInit, Component, DestroyRef, ElementRef, EventEmitter, Input, 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MatNativeDateModule } from '@angular/material/core';
 import { filter } from 'rxjs/operators';
+import { UiTextInput } from '../../../shared/ui/input/ui-text-input';
+import { UiTextarea } from '../../../shared/ui/textarea/ui-textarea';
+import { UiSelect } from '../../../shared/ui/select/ui-select';
+import { UiDatepicker } from '../../../shared/ui/datepicker/ui-datepicker';
+import { SelectOption } from '../../../shared/ui/models/ui-types';
 import { TaskService } from '../services/task.service';
 import { Task, TaskCreateDto, TaskUpdateDto, TaskPriority, TaskStatus, TaskType } from '../../../shared/models/task.model';
 import { TaskFormDialogData, TaskFormInitialFocusField, TaskFormMode } from '../../../shared/utils/task-form-dialog.utils';
@@ -22,14 +23,14 @@ import { TaskFormDialogData, TaskFormInitialFocusField, TaskFormMode } from '../
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatDatepickerModule,
     MatNativeDateModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    UiTextInput,
+    UiTextarea,
+    UiSelect,
+    UiDatepicker,
   ],
   templateUrl: './task-form.component.html',
   styleUrl: './task-form.component.scss'
@@ -46,8 +47,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   @Input() initialFocusField: TaskFormInitialFocusField = this.dialogData?.initialFocusField ?? null;
   @Input() embedded = this.dialogData?.embedded ?? false;
 
-  @ViewChild('taskNameInput') taskNameInput?: ElementRef<HTMLInputElement>;
-  @ViewChild('dueDateInput') dueDateInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('nameField', { read: ElementRef }) nameFieldRef?: ElementRef;
+  @ViewChild('dueDateField', { read: ElementRef }) dueDateFieldRef?: ElementRef;
 
   @Output() taskCreated = new EventEmitter<void>();
   @Output() taskUpdated = new EventEmitter<Task>();
@@ -63,6 +64,16 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   priorities = Object.values(TaskPriority).filter(v => typeof v === 'number') as number[];
   statuses = Object.values(TaskStatus).filter(v => typeof v === 'number') as number[];
   types = Object.values(TaskType).filter(v => typeof v === 'number') as number[];
+
+  priorityOptions: SelectOption<number>[] = this.priorities.map(p => ({
+    value: p,
+    label: TaskPriority[p]
+  }));
+
+  statusOptions: SelectOption<number>[] = this.statuses.map(s => ({
+    value: s,
+    label: TaskStatus[s]
+  }));
 
   TaskPriority = TaskPriority;
   TaskStatus = TaskStatus;
@@ -123,12 +134,12 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    const focusTarget = this.initialFocusField === 'dueDate'
-      ? this.dueDateInput?.nativeElement
-      : this.taskNameInput?.nativeElement;
+    const targetRef = this.initialFocusField === 'dueDate'
+      ? this.dueDateFieldRef
+      : this.nameFieldRef;
 
     setTimeout(() => {
-      focusTarget?.focus();
+      targetRef?.nativeElement?.querySelector('input')?.focus();
     }, 0);
   }
 
@@ -182,7 +193,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   onSubmit(): void {
     if (this.taskForm.invalid) {
       this.taskForm.markAllAsTouched();
-      this.taskNameInput?.nativeElement.focus();
+      this.nameFieldRef?.nativeElement?.querySelector('input')?.focus();
       return;
     }
 

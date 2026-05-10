@@ -39,73 +39,49 @@
     }
 
     <div class="task-form__field-group task-form__field-group--name">
-      <label class="task-form__label" for="task-form-name">
-        Task Name <span class="task-form__required" aria-hidden="true">*</span>
-      </label>
-      <mat-form-field appearance="outline" class="task-form__field">
-        <input
-          #taskNameInput
-          id="task-form-name"
-          matInput
-          formControlName="name"
-          placeholder="e.g., Finalize Q3 Marketing Report"
-          required
-        >
-        @if (taskForm.get('name')?.invalid && taskForm.get('name')?.touched) {
-          <mat-error>{{ getErrorMessage('name') }}</mat-error>
-        }
-      </mat-form-field>
+      <ui-text-input
+        #nameField
+        label="Task Name"
+        placeholder="e.g., Finalize Q3 Marketing Report"
+        formControlName="name"
+        [required]="true"
+        [errorMessages]="{ required: 'Name is required', maxlength: 'Name is too long' }"
+      ></ui-text-input>
     </div>
 
     <div class="task-form__field-group task-form__field-group--textarea">
-      <label class="task-form__label" for="task-form-description">Description</label>
-      <mat-form-field appearance="outline" class="task-form__field task-form__field--textarea">
-        <textarea
-          id="task-form-description"
-          matInput
-          formControlName="description"
-          placeholder="Add more details about this task..."
-          rows="4"
-        ></textarea>
-      </mat-form-field>
+      <ui-textarea
+        label="Description"
+        formControlName="description"
+        [rows]="4"
+      ></ui-textarea>
     </div>
 
     <div class="task-form__planning-grid" role="group" aria-label="Planning details">
       <div class="task-form__field-group">
-        <label class="task-form__label" for="task-form-due-date">
-          <mat-icon class="task-form__label-icon">calendar_today</mat-icon> Due Date
-        </label>
-        <mat-form-field appearance="outline" class="task-form__field">
-          <input #dueDateInput id="task-form-due-date" matInput [matDatepicker]="picker" formControlName="dueDate" (click)="picker.open()" readonly>
-          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-          <mat-datepicker #picker></mat-datepicker>
-        </mat-form-field>
+        <ui-datepicker
+          #dueDateField
+          label="Due Date"
+          formControlName="dueDate"
+        ></ui-datepicker>
       </div>
 
       <div class="task-form__field-group">
-        <label class="task-form__label" id="task-form-priority-label">
-          <mat-icon class="task-form__label-icon">flag</mat-icon> Priority
-        </label>
-        <mat-form-field appearance="outline" class="task-form__field">
-          <mat-select formControlName="priority" aria-labelledby="task-form-priority-label" required>
-            @for (priority of priorities; track priority) {
-              <mat-option [value]="priority">{{ getPriorityLabel(priority) }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <ui-select
+          label="Priority"
+          formControlName="priority"
+          [options]="priorityOptions"
+          [errorMessages]="{ required: 'Priority is required' }"
+        ></ui-select>
       </div>
 
       <div class="task-form__field-group">
-        <label class="task-form__label" id="task-form-status-label">
-          <mat-icon class="task-form__label-icon">radio_button_checked</mat-icon> Status
-        </label>
-        <mat-form-field appearance="outline" class="task-form__field">
-          <mat-select formControlName="status" aria-labelledby="task-form-status-label" required>
-            @for (status of statuses; track status) {
-              <mat-option [value]="status">{{ getStatusLabel(status) }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <ui-select
+          label="Status"
+          formControlName="status"
+          [options]="statusOptions"
+          [errorMessages]="{ required: 'Status is required' }"
+        ></ui-select>
       </div>
     </div>
 
